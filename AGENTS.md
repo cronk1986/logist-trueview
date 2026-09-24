@@ -132,6 +132,59 @@ app/
 
   Any other exception returns a 500 with no details and is logged.
 
+## Commits
+
+Every commit follows [Conventional Commits](https://www.conventionalcommits.org):
+
+```
+<type>(<scope>)!: <description>
+
+<body>
+
+<footers>
+```
+
+- **Subject:** at most 72 characters, including the type and scope. English, imperative mood ("add", not "added" or "adds"), lowercase after the colon, no final period. It must complete the sentence *"If applied, this commit will…"*.
+- **Body** (optional for trivial changes): separated from the subject by a blank line, wrapped at 72 characters. It explains what changed and why, not how.
+- **Footers:** git trailers such as `Refs: specs/SPEC — Authentication.md`, `Closes: #12` or `Co-Authored-By: …`. A breaking change adds `!` after the type or scope and a `BREAKING CHANGE: <explanation>` footer.
+- One logical change per commit. Don't mix a refactor with a feature or a fix.
+
+| Type | Use |
+|---|---|
+| `feat` | New functionality |
+| `fix` | Bug fix |
+| `refactor` | Code change that neither fixes a bug nor adds functionality |
+| `perf` | Performance improvement |
+| `test` | Adding or fixing tests only |
+| `docs` | Documentation only: OpenAPI, specs, `AGENTS.md`, README |
+| `style` | Formatting only, no logic change |
+| `build` | Dependencies, composer, Docker images |
+| `ci` | Continuous integration configuration |
+| `chore` | Maintenance that touches neither `app/` nor tests |
+| `revert` | Reverts a previous commit |
+
+| Scope | Area |
+|---|---|
+| `auth` | Authentication, access tokens, rate limiting |
+| `search` | Global search endpoint |
+| `views` | Custom asset views |
+| `shared` | `SharedContext`: buses, domain events, response format, exception rendering |
+| `docker` | `compose.dev.yaml`, `docker/`, containers |
+| `docs` | OpenAPI and Swagger UI |
+| `specs` | `specs/` (SPEC and PLAN documents) |
+| `agents` | `AGENTS.md` and `CLAUDE.md` |
+| `qa` | Quality tooling: Pint, Larastan and its custom rules, Deptrac, Makefile targets |
+
+The scope may be omitted when a change spans several areas. Examples:
+
+```
+feat(auth): rotate access tokens on every authenticated request
+fix(auth): revoke rotated successors on logout
+docs(docs): document the refresh endpoint in the OpenAPI spec
+build(docker): add a scheduler service for token pruning
+chore(qa): enforce named arguments with a Larastan rule
+```
+
 ## Specs and plans
 
 - Every new spec is created with `agent-skills:spec` and saved in `specs/` as `SPEC — <spec name>.md`.
