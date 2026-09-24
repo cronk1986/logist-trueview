@@ -1,0 +1,436 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Logis API",
+    "version": "1.0",
+    "license": {
+      "name": "Proprietary"
+    },
+    "description": "Logis API: authentication, global search and custom asset views.\n\n## Authentication and token rotation\n\n1. `POST /auth/login` returns a bearer token that expires after 60 minutes without use.\n2. Every authenticated request (except `logout` and `refresh`) rotates the token. The new token arrives in the\n   `X-Refreshed-Token` response header. Whenever that header is present, replace the stored token.\n   When it is absent, keep the current one.\n3. The previous token keeps working for a 10 second grace period, so requests fired in parallel with the\n   old token still succeed. Only one of them receives a new token.\n4. `POST /auth/refresh` rotates explicitly and returns the new token in the body.\n5. `POST /auth/logout` revokes the current token and its predecessor if it is still in its grace period.\n\nIn this Swagger UI the token is handled automatically. Login and refresh authorize the session, every\n`X-Refreshed-Token` replaces the stored token, and logout clears it. Log in with `demo@logis.test` / `password`.\n\nEvery response, success or error, uses the same format: `{ success, data, message, meta }`.\nThe HTTP status tells the client what happened. The API allows 60 requests per minute.\n"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:8000/api/v1"
+    }
+  ],
+  "security": [
+    {
+      "sanctum": []
+    }
+  ],
+  "tags": [
+    {
+      "name": "Auth",
+      "description": "Login, token rotation, refresh, logout and the authenticated user."
+    }
+  ],
+  "paths": {
+    "/auth/login": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Log in with email and password",
+        "operationId": "login",
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "email",
+                  "password"
+                ],
+                "properties": {
+                  "email": {
+                    "type": "string",
+                    "format": "email",
+                    "maxLength": 255,
+                    "example": "demo@logis.test"
+                  },
+                  "password": {
+                    "type": "string",
+                    "maxLength": 255,
+                    "example": "password"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Logged in",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccessTokenResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "422": {
+            "$ref": "#/components/responses/ValidationFailed"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          }
+        }
+      }
+    },
+    "/auth/refresh": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Rotate the current token explicitly",
+        "operationId": "refresh",
+        "responses": {
+          "200": {
+            "description": "Token refreshed. The previous token keeps working during the grace period.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccessTokenResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "409": {
+            "description": "The token was already rotated by a concurrent request.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          }
+        }
+      }
+    },
+    "/auth/logout": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Revoke the current token",
+        "operationId": "logout",
+        "responses": {
+          "200": {
+            "description": "Logged out",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EmptyResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          }
+        }
+      }
+    },
+    "/auth/me": {
+      "get": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Get the authenticated user",
+        "operationId": "me",
+        "responses": {
+          "200": {
+            "description": "Authenticated user",
+            "headers": {
+              "X-Refreshed-Token": {
+                "$ref": "#/components/headers/XRefreshedToken"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "sanctum": {
+        "type": "http",
+        "scheme": "bearer",
+        "description": "Sanctum access token. When it is rotated, the new one arrives in the X-Refreshed-Token header."
+      }
+    },
+    "headers": {
+      "XRefreshedToken": {
+        "description": "The rotated token. Replace the stored token with it. Absent when a concurrent request already rotated the token.",
+        "schema": {
+          "type": "string"
+        }
+      }
+    },
+    "schemas": {
+      "Meta": {
+        "type": "object",
+        "required": [
+          "timestamp",
+          "version"
+        ],
+        "properties": {
+          "timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-09-25T10:00:00Z"
+          },
+          "version": {
+            "type": "string",
+            "example": "1.0"
+          },
+          "execution_time_ms": {
+            "type": "integer",
+            "example": 12
+          }
+        }
+      },
+      "AccessToken": {
+        "type": "object",
+        "required": [
+          "token",
+          "expires_at"
+        ],
+        "properties": {
+          "token": {
+            "type": "string",
+            "example": "Xk29b1Q7aT0mZc8FvL3nR5pW2yH6jD4sE9uK1oB0c3a8f71e"
+          },
+          "expires_at": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-09-25T11:00:00Z"
+          }
+        }
+      },
+      "User": {
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "email"
+        ],
+        "properties": {
+          "id": {
+            "type": "integer",
+            "example": 1
+          },
+          "name": {
+            "type": "string",
+            "example": "Demo"
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "example": "demo@logis.test"
+          }
+        }
+      },
+      "AccessTokenResponse": {
+        "type": "object",
+        "required": [
+          "success",
+          "data",
+          "message",
+          "meta"
+        ],
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "const": true
+          },
+          "data": {
+            "$ref": "#/components/schemas/AccessToken"
+          },
+          "message": {
+            "type": "string",
+            "example": "Logged in"
+          },
+          "meta": {
+            "$ref": "#/components/schemas/Meta"
+          }
+        }
+      },
+      "UserResponse": {
+        "type": "object",
+        "required": [
+          "success",
+          "data",
+          "message",
+          "meta"
+        ],
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "const": true
+          },
+          "data": {
+            "$ref": "#/components/schemas/User"
+          },
+          "message": {
+            "type": "string",
+            "example": "Authenticated user"
+          },
+          "meta": {
+            "$ref": "#/components/schemas/Meta"
+          }
+        }
+      },
+      "EmptyResponse": {
+        "type": "object",
+        "required": [
+          "success",
+          "data",
+          "message",
+          "meta"
+        ],
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "const": true
+          },
+          "data": {
+            "type": "object",
+            "maxProperties": 0
+          },
+          "message": {
+            "type": "string",
+            "example": "Logged out"
+          },
+          "meta": {
+            "$ref": "#/components/schemas/Meta"
+          }
+        }
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "required": [
+          "success",
+          "data",
+          "message",
+          "meta"
+        ],
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "const": false
+          },
+          "data": {
+            "type": "object",
+            "description": "Error details. Validation errors list the messages per field.",
+            "additionalProperties": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "message": {
+            "type": "string"
+          },
+          "meta": {
+            "$ref": "#/components/schemas/Meta"
+          }
+        }
+      }
+    },
+    "responses": {
+      "Unauthorized": {
+        "description": "Missing, invalid or expired token, or invalid credentials",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorResponse"
+            },
+            "example": {
+              "success": false,
+              "data": {},
+              "message": "Unauthenticated",
+              "meta": {
+                "timestamp": "2026-09-25T10:00:00Z",
+                "version": "1.0",
+                "execution_time_ms": 3
+              }
+            }
+          }
+        }
+      },
+      "ValidationFailed": {
+        "description": "The request data is not valid",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorResponse"
+            },
+            "example": {
+              "success": false,
+              "data": {
+                "email": [
+                  "The email field must be a valid email address."
+                ]
+              },
+              "message": "Validation failed",
+              "meta": {
+                "timestamp": "2026-09-25T10:00:00Z",
+                "version": "1.0",
+                "execution_time_ms": 4
+              }
+            }
+          }
+        }
+      },
+      "TooManyRequests": {
+        "description": "More than 60 requests in a minute",
+        "headers": {
+          "Retry-After": {
+            "description": "Seconds to wait before retrying",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorResponse"
+            }
+          }
+        }
+      }
+    }
+  }
+}

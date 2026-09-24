@@ -1,0 +1,17 @@
+includes:
+    - vendor/larastan/larastan/extension.neon
+
+parameters:
+    paths:
+        - app/
+        - config/
+        - database/
+        - routes/
+        - tests/
+        - tools/
+    level: 8
+
+rules:
+    - Tools\PHPStan\HandlerSignatureRule
+    - Tools\PHPStan\SemanticExceptionRule
+    - Tools\PHPStan\NamedArgumentsRule

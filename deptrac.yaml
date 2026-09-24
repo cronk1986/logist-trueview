@@ -1,0 +1,69 @@
+deptrac:
+  paths:
+    - ./app
+
+  layers:
+    - name: SharedDomain
+      collectors:
+        - type: directory
+          value: app/SharedContext/Domain/.*
+
+    - name: SharedInfrastructure
+      collectors:
+        - type: directory
+          value: app/SharedContext/Infrastructure/.*
+
+    - name: Domain
+      collectors:
+        - type: directory
+          value: app/LogisContext/Domain/.*
+
+    - name: Application
+      collectors:
+        - type: directory
+          value: app/LogisContext/Application/.*
+
+    - name: Infrastructure
+      collectors:
+        - type: directory
+          value: app/LogisContext/Infrastructure/.*
+
+    # Whitelist: third-party libraries the domain may use (not the framework)
+    - name: DomainVendor
+      collectors:
+        - type: classLike
+          value: '^Carbon\\.*'
+
+    # Any other third-party class, Laravel included. Native PHP classes have no
+    # namespace, so they are not collected here and are allowed in every layer.
+    - name: Vendor
+      collectors:
+        - type: bool
+          must:
+            - type: classLike
+              value: '^(?!Logis\\|Database\\|Tests\\)[A-Za-z0-9_]+\\.+'
+          must_not:
+            - type: classLike
+              value: '^Carbon\\.*'
+
+  ruleset:
+    SharedDomain:
+      - DomainVendor
+    Domain:
+      - SharedDomain
+      - DomainVendor
+    Application:
+      - Domain
+      - SharedDomain
+      - DomainVendor
+    SharedInfrastructure:
+      - SharedDomain
+      - DomainVendor
+      - Vendor
+    Infrastructure:
+      - Application
+      - Domain
+      - SharedDomain
+      - SharedInfrastructure
+      - DomainVendor
+      - Vendor
