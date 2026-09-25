@@ -180,6 +180,7 @@ Every commit follows [Conventional Commits](https://www.conventionalcommits.org)
 | `docs` | OpenAPI and Swagger UI |
 | `specs` | `specs/` (SPEC and PLAN documents) |
 | `agents` | `AGENTS.md` and `CLAUDE.md` |
+| `core` | Core domain model: customers, contracts, locations, assets, tickets, their migrations, factories and seeders |
 | `qa` | Quality tooling: Pint, Larastan and its custom rules, Deptrac, Makefile targets |
 
 The scope may be omitted when a change spans several areas. Examples:
