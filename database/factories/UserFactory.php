@@ -7,6 +7,7 @@ namespace Database\Factories;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
+use Logis\LogisContext\Infrastructure\Persistence\Customer\CustomerModel;
 use Logis\LogisContext\Infrastructure\Persistence\User\UserModel;
 
 /**
@@ -25,11 +26,17 @@ final class UserFactory extends Factory
     public function definition(): array
     {
         return [
+            'customer_id' => CustomerModel::factory(),
             'name' => fake()->name(),
             'email' => fake()->unique()->safeEmail(),
             'email_verified_at' => now(),
             'password' => self::$password ??= Hash::make('password'),
             'remember_token' => Str::random(length: 10),
         ];
+    }
+
+    public function withoutCustomer(): self
+    {
+        return $this->state(state: ['customer_id' => null]);
     }
 }

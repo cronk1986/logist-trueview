@@ -7,6 +7,7 @@ namespace Tests\Feature\Database;
 use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Logis\LogisContext\Infrastructure\Persistence\Customer\CustomerModel;
+use Logis\LogisContext\Infrastructure\Persistence\User\UserModel;
 use Tests\TestCase;
 
 final class SchemaTest extends TestCase
@@ -30,5 +31,15 @@ final class SchemaTest extends TestCase
         $this->expectException(QueryException::class);
 
         $parent->delete();
+    }
+
+    public function test_a_customer_with_users_cannot_be_deleted(): void
+    {
+        $customer = CustomerModel::factory()->create();
+        UserModel::factory()->create(attributes: ['customer_id' => $customer->id]);
+
+        $this->expectException(QueryException::class);
+
+        $customer->delete();
     }
 }

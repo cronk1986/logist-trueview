@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Logis\LogisContext\Domain\Model\User;
 
+use Logis\LogisContext\Domain\Model\Customer\Customer;
 use Logis\LogisContext\Domain\ValueObject\User\Email;
 use Logis\LogisContext\Domain\ValueObject\User\UserId;
 
@@ -14,6 +15,7 @@ final class User
         private readonly string $name,
         private readonly Email $email,
         private readonly string $passwordHash,
+        private readonly ?Customer $customer,
     ) {
     }
 
@@ -35,5 +37,10 @@ final class User
     public function passwordHash(): string
     {
         return $this->passwordHash;
+    }
+
+    public function customer(): ?Customer
+    {
+        return $this->customer;
     }
 }

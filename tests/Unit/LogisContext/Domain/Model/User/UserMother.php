@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Unit\LogisContext\Domain\Model\User;
 
+use Logis\LogisContext\Domain\Model\Customer\Customer;
 use Logis\LogisContext\Domain\Model\User\User;
 use Logis\LogisContext\Domain\ValueObject\User\Email;
 use Logis\LogisContext\Domain\ValueObject\User\UserId;
@@ -15,7 +16,14 @@ final class UserMother
         string $name = 'Demo',
         string $email = 'demo@logis.test',
         string $password = 'password',
+        ?Customer $customer = null,
     ): User {
-        return new User(id: UserId::fromInt(value: $id), name: $name, email: Email::fromString(value: $email), passwordHash: InMemoryPasswordHasher::hash(password: $password));
+        return new User(
+            id: UserId::fromInt(value: $id),
+            name: $name,
+            email: Email::fromString(value: $email),
+            passwordHash: InMemoryPasswordHasher::hash(password: $password),
+            customer: $customer,
+        );
     }
 }

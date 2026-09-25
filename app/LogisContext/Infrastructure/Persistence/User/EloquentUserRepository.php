@@ -17,7 +17,7 @@ final class EloquentUserRepository implements UserRepository
 
     public function findById(UserId $id): ?User
     {
-        $model = UserModel::query()->find(id: $id->value());
+        $model = UserModel::query()->with(relations: UserMapper::relations())->find(id: $id->value());
 
         if ($model === null) {
             return null;
@@ -28,7 +28,7 @@ final class EloquentUserRepository implements UserRepository
 
     public function findByEmail(Email $email): ?User
     {
-        $model = UserModel::query()->where(column: 'email', operator: $email->value())->first();
+        $model = UserModel::query()->with(relations: UserMapper::relations())->where(column: 'email', operator: $email->value())->first();
 
         if ($model === null) {
             return null;
