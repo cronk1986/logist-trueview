@@ -8,6 +8,7 @@ use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Logis\LogisContext\Infrastructure\Persistence\Contract\ContractModel;
 use Logis\LogisContext\Infrastructure\Persistence\Customer\CustomerModel;
+use Logis\LogisContext\Infrastructure\Persistence\Location\LocationModel;
 use Logis\LogisContext\Infrastructure\Persistence\TicketStatus\TicketStatusModel;
 use Logis\LogisContext\Infrastructure\Persistence\User\UserModel;
 use Tests\TestCase;
@@ -61,5 +62,14 @@ final class SchemaTest extends TestCase
         $this->expectException(QueryException::class);
 
         CustomerModel::query()->whereKey(id: $contract->customer_id)->delete();
+    }
+
+    public function test_a_customer_with_locations_cannot_be_deleted(): void
+    {
+        $location = LocationModel::factory()->create();
+
+        $this->expectException(QueryException::class);
+
+        CustomerModel::query()->whereKey(id: $location->customer_id)->delete();
     }
 }
