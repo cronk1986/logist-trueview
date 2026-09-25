@@ -23,7 +23,7 @@ app/
         ├── Http/Controller/          # <Aggregate>Controller
         ├── Http/Request/<Aggregate>/ # one FormRequest per action
         ├── Http/Middleware/
-        ├── Persistence/              # Eloquent models, repository implementations
+        ├── Persistence/<Aggregate>/  # <Aggregate>Model, <Aggregate>Mapper, Eloquent<Aggregate>Repository, other adapters
         ├── Listeners/
         └── AsyncListeners/
 ```
@@ -31,6 +31,12 @@ app/
 - Domain code is grouped by kind first and by aggregate second. For example, `Domain/ValueObject/User/Email.php` and `Domain/Exception/User/UserNotFoundException.php`, never `Domain/Model/User/Email.php`.
 - Each bounded context has exactly one ServiceProvider, registered in `bootstrap/providers.php`.
 - The domain is framework-agnostic. Eloquent models live in Infrastructure, and repositories map them to domain entities and back.
+- **Persistence is grouped by aggregate**, mirroring `Domain/Model/<Aggregate>/`: `Persistence/User/{UserModel, UserMapper, EloquentUserRepository, BcryptPasswordHasher}`, `Persistence/AccessToken/{AccessTokenModel, AccessTokenMapper, EloquentAccessTokenRepository}`. An adapter lives in the folder of the aggregate whose domain interface it implements. `BcryptPasswordHasher` implements `Domain/Model/User/PasswordHasher`, so it goes in `Persistence/User/`. Never put a class directly in `Persistence/`.
+- **Every Eloquent model has a domain model.** Each `<Aggregate>Model` maps to the entity `Domain/Model/<Aggregate>/<Aggregate>`. `Persistence/<Aggregate>/<Aggregate>Mapper::toDomain()` is the only place that builds the entity from the model, and the repositories use it. No Eloquent model exists without its domain counterpart, and Eloquent models never leave Infrastructure.
+- **Every foreign key with a constraint is held as an object.** If the database enforces referential integrity on a relation, the entity holds the related entity, never a bare id: `Asset::customer(): Customer`. A nullable foreign key gives a nullable object: `Asset::contract(): ?Contract`.
+  - Related objects are read-only snapshots. An aggregate never changes or saves another one: each aggregate changes only through its own repository.
+  - The repository eager loads the whole graph with `with()`, never lazily, so the number of queries is fixed.
+  - Columns that hold external identifiers with no table and no constraint (`repair_id`, `erp_id`) are value objects, not relations.
 - Dates are always `CarbonImmutable::now()->utc()`.
 
 ## Layer dependencies
