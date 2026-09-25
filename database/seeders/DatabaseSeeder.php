@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
-use Logis\LogisContext\Infrastructure\Persistence\User\UserModel;
 
 final class DatabaseSeeder extends Seeder
 {
@@ -17,10 +16,6 @@ final class DatabaseSeeder extends Seeder
             return;
         }
 
-        UserModel::factory()->create(attributes: [
-            'name' => 'Demo',
-            'email' => 'demo@logis.test',
-            'password' => 'password',
-        ]);
+        $this->call(class: DemoDataSeeder::class);
     }
 }
