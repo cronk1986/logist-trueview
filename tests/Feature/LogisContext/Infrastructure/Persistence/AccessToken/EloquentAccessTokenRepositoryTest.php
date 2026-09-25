@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace Tests\Feature\LogisContext\Infrastructure\Persistence;
+namespace Tests\Feature\LogisContext\Infrastructure\Persistence\AccessToken;
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Logis\LogisContext\Domain\ValueObject\AccessToken\PlainTextToken;
-use Logis\LogisContext\Infrastructure\Persistence\EloquentAccessTokenRepository;
-use Logis\LogisContext\Infrastructure\Persistence\UserModel;
+use Logis\LogisContext\Infrastructure\Persistence\AccessToken\EloquentAccessTokenRepository;
+use Logis\LogisContext\Infrastructure\Persistence\User\UserModel;
 use Tests\TestCase;
 use Tests\Unit\LogisContext\Domain\Model\AccessToken\AccessTokenMother;
 

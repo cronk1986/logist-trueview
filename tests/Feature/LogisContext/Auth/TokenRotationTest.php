@@ -7,7 +7,7 @@ namespace Tests\Feature\LogisContext\Auth;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Route;
 use Logis\LogisContext\Infrastructure\Http\Middleware\RotateAccessTokenMiddleware;
-use Logis\LogisContext\Infrastructure\Persistence\AccessTokenModel;
+use Logis\LogisContext\Infrastructure\Persistence\AccessToken\AccessTokenModel;
 use Logis\SharedContext\Infrastructure\Http\ApiResponse;
 use Tests\TestCase;
 

@@ -6,8 +6,8 @@ namespace Logis\LogisContext\Infrastructure\Http;
 
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Http\Request;
-use Logis\LogisContext\Infrastructure\Persistence\AccessTokenModel;
-use Logis\LogisContext\Infrastructure\Persistence\UserModel;
+use Logis\LogisContext\Infrastructure\Persistence\AccessToken\AccessTokenModel;
+use Logis\LogisContext\Infrastructure\Persistence\User\UserModel;
 
 final class CurrentAccessToken
 {

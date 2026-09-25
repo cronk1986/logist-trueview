@@ -81,7 +81,7 @@ These come from the spec; they are not redecided here:
 
 **Dependencies:** T1
 
-**Files:** `composer.json`, `routes/api.php`, `bootstrap/app.php`, `bootstrap/providers.php`, `config/sanctum.php`, `config/access_tokens.php`, the migration, `Persistence/User.php`, `Persistence/AccessTokenModel.php`, `Providers/LogisServiceProvider.php`, `deptrac.yaml`
+**Files:** `composer.json`, `routes/api.php`, `bootstrap/app.php`, `bootstrap/providers.php`, `config/sanctum.php`, `config/access_tokens.php`, the migration, `Persistence/User/UserModel.php`, `Persistence/AccessToken/AccessTokenModel.php`, `Providers/LogisServiceProvider.php`, `deptrac.yaml`
 
 **Scope:** M. There are many files, but the changes are mechanical.
 
@@ -174,7 +174,7 @@ These come from the spec; they are not redecided here:
 
 **Dependencies:** T3, T5
 
-**Files:** `Persistence/*Repository.php`, `Persistence/BcryptPasswordHasher.php`, `Http/PlainTextTokenGenerator.php`, `Http/Controller/AuthController.php`, `Http/Request/Auth/LoginRequest.php`, `routes/api.php`, the provider, the seeder, tests
+**Files:** `Persistence/{User,AccessToken}/Eloquent*Repository.php`, `Persistence/User/BcryptPasswordHasher.php`, `Http/PlainTextTokenGenerator.php`, `Http/Controller/AuthController.php`, `Http/Request/Auth/LoginRequest.php`, `routes/api.php`, the provider, the seeder, tests
 
 **Scope:** L. It is the first end-to-end slice. Split it into infrastructure and HTTP if it grows.
 

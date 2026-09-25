@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Logis\LogisContext\Infrastructure\Persistence;
+namespace Logis\LogisContext\Infrastructure\Persistence\User;
 
 use Illuminate\Contracts\Hashing\Hasher;
 use Logis\LogisContext\Domain\Model\User\PasswordHasher;

@@ -7,7 +7,7 @@ namespace Database\Factories;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
-use Logis\LogisContext\Infrastructure\Persistence\UserModel;
+use Logis\LogisContext\Infrastructure\Persistence\User\UserModel;
 
 /**
  * @extends Factory<UserModel>

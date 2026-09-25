@@ -14,11 +14,11 @@ use Logis\LogisContext\Domain\Model\AccessToken\AccessTokenRepository;
 use Logis\LogisContext\Domain\Model\User\PasswordHasher;
 use Logis\LogisContext\Domain\Model\User\UserRepository;
 use Logis\LogisContext\Infrastructure\Http\PlainTextTokenGenerator;
-use Logis\LogisContext\Infrastructure\Persistence\AccessTokenModel;
-use Logis\LogisContext\Infrastructure\Persistence\BcryptPasswordHasher;
-use Logis\LogisContext\Infrastructure\Persistence\EloquentAccessTokenRepository;
-use Logis\LogisContext\Infrastructure\Persistence\EloquentUserRepository;
-use Logis\LogisContext\Infrastructure\Persistence\UserModel;
+use Logis\LogisContext\Infrastructure\Persistence\AccessToken\AccessTokenModel;
+use Logis\LogisContext\Infrastructure\Persistence\User\BcryptPasswordHasher;
+use Logis\LogisContext\Infrastructure\Persistence\AccessToken\EloquentAccessTokenRepository;
+use Logis\LogisContext\Infrastructure\Persistence\User\EloquentUserRepository;
+use Logis\LogisContext\Infrastructure\Persistence\User\UserModel;
 
 final class LogisServiceProvider extends ServiceProvider
 {

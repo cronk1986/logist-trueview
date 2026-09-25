@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Logis\LogisContext\Infrastructure\Persistence;
+namespace Logis\LogisContext\Infrastructure\Persistence\User;
 
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Logis\LogisContext\Infrastructure\Persistence;
+namespace Logis\LogisContext\Infrastructure\Persistence\AccessToken;
 
 use Carbon\CarbonImmutable;
 use DateTimeInterface;
@@ -10,6 +10,7 @@ use Logis\LogisContext\Domain\Model\AccessToken\AccessToken;
 use Logis\LogisContext\Domain\Model\AccessToken\AccessTokenRepository;
 use Logis\LogisContext\Domain\ValueObject\AccessToken\TokenHash;
 use Logis\LogisContext\Domain\ValueObject\User\UserId;
+use Logis\LogisContext\Infrastructure\Persistence\User\UserModel;
 
 final class EloquentAccessTokenRepository implements AccessTokenRepository
 {

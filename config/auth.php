@@ -62,7 +62,7 @@ return [
     'providers' => [
         'users' => [
             'driver' => 'eloquent',
-            'model' => env('AUTH_MODEL', Logis\LogisContext\Infrastructure\Persistence\UserModel::class),
+            'model' => env('AUTH_MODEL', Logis\LogisContext\Infrastructure\Persistence\User\UserModel::class),
         ],
 
         // 'users' => [

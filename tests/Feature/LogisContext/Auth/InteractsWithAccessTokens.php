@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Tests\Feature\LogisContext\Auth;
 
 use Illuminate\Testing\TestResponse;
-use Logis\LogisContext\Infrastructure\Persistence\AccessTokenModel;
-use Logis\LogisContext\Infrastructure\Persistence\UserModel;
+use Logis\LogisContext\Infrastructure\Persistence\AccessToken\AccessTokenModel;
+use Logis\LogisContext\Infrastructure\Persistence\User\UserModel;
 use Symfony\Component\HttpFoundation\Response;
 
 trait InteractsWithAccessTokens

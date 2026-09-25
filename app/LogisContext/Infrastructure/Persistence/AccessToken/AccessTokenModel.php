@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Logis\LogisContext\Infrastructure\Persistence;
+namespace Logis\LogisContext\Infrastructure\Persistence\AccessToken;
 
 use Illuminate\Support\Carbon;
 use Laravel\Sanctum\PersonalAccessToken;

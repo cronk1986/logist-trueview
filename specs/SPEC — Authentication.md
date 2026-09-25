@@ -192,8 +192,8 @@ app/LogisContext/
         Http/Middleware/                   RotateAccessTokenMiddleware
         Http/PlainTextTokenGenerator.php
         Http/CurrentAccessToken.php        reads the current AccessTokenModel from the guard
-        Persistence/                       UserModel (Eloquent + HasApiTokens), AccessTokenModel (extends Sanctum's model),
-                                           EloquentUserRepository, EloquentAccessTokenRepository, BcryptPasswordHasher
+        Persistence/User/                  UserModel (Eloquent + HasApiTokens), EloquentUserRepository, BcryptPasswordHasher
+        Persistence/AccessToken/           AccessTokenModel (extends Sanctum's model), EloquentAccessTokenRepository
 config/access_tokens.php, config/cors.php, config/logging.php, routes/api.php (prefix v1), routes/console.php (schedule)
 ```
 
@@ -217,7 +217,7 @@ There are two separate models of the user, one per layer:
 
 - **Domain** `User` (`UserId`, name, `Email`, password hash) is a plain PHP entity that knows nothing about Sanctum or Eloquent. It is read through `UserRepository`.
 - `AccessToken` is a separate domain entity, identified by its `TokenHash`. It references `UserId` and holds `expiresAt`, `ipAddress`, `userAgent`, `rotatedAt` and `rotatedFrom`.
-- **Infrastructure** `Persistence\UserModel` is the Eloquent model with Sanctum's `HasApiTokens` trait, which Sanctum's guard needs. `auth:sanctum`:
+- **Infrastructure** `Persistence\User\UserModel` is the Eloquent model with Sanctum's `HasApiTokens` trait, which Sanctum's guard needs. `auth:sanctum`:
   1. reads the Bearer header;
   2. finds the `personal_access_tokens` row by hash and checks `expires_at`;
   3. loads the `tokenable` user;
