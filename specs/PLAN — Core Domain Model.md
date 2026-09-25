@@ -1,6 +1,6 @@
 # PLAN — Core Domain Model
 
-Spec: `specs/SPEC — Core Domain Model.md` (Status: approved)
+Spec: `specs/SPEC — Core Domain Model.md` (Status: done)
 Status: approved
 
 ## Overview
@@ -78,10 +78,10 @@ Each repository test asserts that `findById` runs a fixed number of queries (`DB
 **Description:** Move the existing classes into per-aggregate folders without changing any behaviour (D9).
 
 **Acceptance criteria:**
-- [ ] `Persistence/User/{UserModel, EloquentUserRepository, BcryptPasswordHasher}` and `Persistence/AccessToken/{AccessTokenModel, EloquentAccessTokenRepository}` exist, with their namespaces updated. No PHP file is left directly in `Persistence/`.
-- [ ] The imports are updated in `LogisServiceProvider`, `UserFactory`, `DatabaseSeeder`, `CurrentAccessToken`, the middleware and the tests. The Sanctum model and the morph map still resolve.
-- [ ] `tests/Feature/LogisContext/Infrastructure/Persistence/EloquentAccessTokenRepositoryTest.php` moves to `.../Persistence/AccessToken/`.
-- [ ] The file paths in `specs/SPEC — Authentication.md` and `specs/PLAN — Authentication.md` are updated.
+- [x] `Persistence/User/{UserModel, EloquentUserRepository, BcryptPasswordHasher}` and `Persistence/AccessToken/{AccessTokenModel, EloquentAccessTokenRepository}` exist, with their namespaces updated. No PHP file is left directly in `Persistence/`.
+- [x] The imports are updated in `LogisServiceProvider`, `UserFactory`, `DatabaseSeeder`, `CurrentAccessToken`, the middleware and the tests. The Sanctum model and the morph map still resolve.
+- [x] `tests/Feature/LogisContext/Infrastructure/Persistence/EloquentAccessTokenRepositoryTest.php` moves to `.../Persistence/AccessToken/`.
+- [x] The file paths in `specs/SPEC — Authentication.md` and `specs/PLAN — Authentication.md` are updated.
 
 **Verification:** `make check`. The 71 existing tests pass unchanged. `grep -rn "Infrastructure\\\\Persistence\\\\[A-Z][a-zA-Z]*;" app tests database` finds no import without an aggregate folder.
 
@@ -96,9 +96,9 @@ Each repository test asserts that `findById` runs a fixed number of queries (`DB
 **Description:** Move the private `toDomain()` methods of both repositories into mappers, which the repositories receive through their constructors (D4).
 
 **Acceptance criteria:**
-- [ ] `Persistence/User/UserMapper::toDomain(UserModel $model): User` and `Persistence/AccessToken/AccessTokenMapper::toDomain(AccessTokenModel $model): AccessToken` exist.
-- [ ] The repositories no longer have a private `toDomain()`. The container autowires the mappers.
-- [ ] Unit tests for each mapper build an unsaved model with `forceFill()` and assert every field of the entity.
+- [x] `Persistence/User/UserMapper::toDomain(UserModel $model): User` and `Persistence/AccessToken/AccessTokenMapper::toDomain(AccessTokenModel $model): AccessToken` exist.
+- [x] The repositories no longer have a private `toDomain()`. The container autowires the mappers.
+- [x] Unit tests for each mapper build an unsaved model with `forceFill()` and assert every field of the entity.
 
 **Verification:** `make check`. The existing repository tests pass unchanged.
 
@@ -109,8 +109,8 @@ Each repository test asserts that `findById` runs a fixed number of queries (`DB
 **Scope:** S · **Commit:** `refactor(auth): extract persistence mappers`
 
 ### Checkpoint: Regrouping
-- [ ] `make check` is green, and `make up` plus a manual login and `/me` in Swagger still work.
-- [ ] Post-implementation flow. Human review before continuing.
+- [x] `make check` is green, and `make up` plus a manual login and `/me` in Swagger still work.
+- [x] Post-implementation flow. Human review before continuing.
 
 ### Phase 2 — Customers and users
 
@@ -119,15 +119,15 @@ Each repository test asserts that `findById` runs a fixed number of queries (`DB
 **Description:** The `customers` table and the `Customer` aggregate, with a one-level hierarchy (R6).
 
 **Acceptance criteria:**
-- [ ] Migration `create_customers_table`: `erp_id` unique, `name`, `parent_customer_id` nullable FK to `customers` with `restrictOnDelete`, timestamps.
-- [ ] Domain:
+- [x] Migration `create_customers_table`: `erp_id` unique, `name`, `parent_customer_id` nullable FK to `customers` with `restrictOnDelete`, timestamps.
+- [x] Domain:
   - `CustomerId` and `ErpId` with `InvalidCustomerIdException` and `InvalidErpIdException`;
   - `Customer(id, erpId, name, ?Customer parent)` with `isSubAccount()`;
   - `CustomerCannotBeItsOwnParentException` when the parent has the same id;
   - `CustomerHierarchyTooDeepException` when the parent has a parent;
   - `CustomerRepository::findById`.
-- [ ] Infrastructure: `CustomerModel` (`parent()`, `subAccounts()`), `CustomerMapper` (maps the parent through itself), `EloquentCustomerRepository` (`with('parent')`), `CustomerFactory` (with a `subAccountOf()` state), and the binding.
-- [ ] Tests:
+- [x] Infrastructure: `CustomerModel` (`parent()`, `subAccounts()`), `CustomerMapper` (maps the parent through itself), `EloquentCustomerRepository` (`with('parent')`), `CustomerFactory` (with a `subAccountOf()` state), and the binding.
+- [x] Tests:
   - unit tests for the value objects and the entity invariants;
   - repository tests: a top-level customer, a sub-account with its parent, a missing id, and the query count;
   - schema test: duplicated `erp_id`, and deleting a parent that has sub-accounts fails.
@@ -143,10 +143,10 @@ Each repository test asserts that `findById` runs a fixed number of queries (`DB
 **Description:** Add `users.customer_id` and `User::customer(): ?Customer` (R5).
 
 **Acceptance criteria:**
-- [ ] Migration `add_customer_id_to_users_table`: nullable FK to `customers` with `restrictOnDelete`. `down()` drops the foreign key and the column.
-- [ ] `User` gains `?Customer $customer`. `UserMapper` uses `CustomerMapper`, and `EloquentUserRepository` loads `customer.parent`.
-- [ ] `UserModel::customer()` relation. `UserFactory` creates a customer by default and has a `withoutCustomer()` state.
-- [ ] Tests: the repository maps a user with and without a customer; the query count; `/auth/me` and the login tests are unchanged.
+- [x] Migration `add_customer_id_to_users_table`: nullable FK to `customers` with `restrictOnDelete`. `down()` drops the foreign key and the column.
+- [x] `User` gains `?Customer $customer`. `UserMapper` uses `CustomerMapper`, and `EloquentUserRepository` loads `customer.parent`.
+- [x] `UserModel::customer()` relation. `UserFactory` creates a customer by default and has a `withoutCustomer()` state.
+- [x] Tests: the repository maps a user with and without a customer; the query count; `/auth/me` and the login tests are unchanged.
 
 **Verification:** `make check`. `make fresh` migrates on the development database.
 
@@ -155,18 +155,18 @@ Each repository test asserts that `findById` runs a fixed number of queries (`DB
 **Scope:** M · **Commit:** `feat(auth): link users to an optional customer`
 
 ### Checkpoint: Customers and users
-- [ ] `make check` is green. Post-implementation flow. Human review.
+- [x] `make check` is green. Post-implementation flow. Human review.
 
 ### Phase 3 — Reference and customer-owned catalogs
 
 #### Task 5: TicketStatus aggregate and seeder
 
 **Acceptance criteria:**
-- [ ] Migration `create_ticket_statuses_table`: `name` unique, timestamps.
-- [ ] `TicketStatusId`, `InvalidTicketStatusIdException`, `TicketStatus(id, name)`, `TicketStatusRepository::findById`.
-- [ ] `TicketStatusModel`, `TicketStatusMapper`, `EloquentTicketStatusRepository`, `TicketStatusFactory`, and the binding.
-- [ ] `TicketStatusSeeder`, called from `DatabaseSeeder` in every environment: Open, In Progress, Awaiting Parts, Resolved, Closed. Idempotent through `upsert` on `name`.
-- [ ] Tests: unit tests, the repository test, and the seeder run twice without duplicates.
+- [x] Migration `create_ticket_statuses_table`: `name` unique, timestamps.
+- [x] `TicketStatusId`, `InvalidTicketStatusIdException`, `TicketStatus(id, name)`, `TicketStatusRepository::findById`.
+- [x] `TicketStatusModel`, `TicketStatusMapper`, `EloquentTicketStatusRepository`, `TicketStatusFactory`, and the binding.
+- [x] `TicketStatusSeeder`, called from `DatabaseSeeder` in every environment: Open, In Progress, Awaiting Parts, Resolved, Closed. Idempotent through `upsert` on `name`.
+- [x] Tests: unit tests, the repository test, and the seeder run twice without duplicates.
 
 **Verification:** `make check`
 
@@ -177,10 +177,10 @@ Each repository test asserts that `findById` runs a fixed number of queries (`DB
 #### Task 6: Contract aggregate
 
 **Acceptance criteria:**
-- [ ] Migration `create_contracts_table`: `customer_id` FK restrict, `name` indexed, `status` ENUM(`active`, `inactive`), timestamps.
-- [ ] `ContractId`, `ContractStatus`, `InvalidContractIdException`, `Contract(id, Customer customer, name, status)` with `isActive()`, `ContractRepository::findById`.
-- [ ] `ContractModel` (casts `status` to `ContractStatus`), `ContractMapper` (uses `CustomerMapper`), `EloquentContractRepository` (`with('customer.parent')`), `ContractFactory`, and the binding.
-- [ ] Tests: unit tests, the repository test (including the customer object and the query count), and the schema test (deleting a customer with contracts fails).
+- [x] Migration `create_contracts_table`: `customer_id` FK restrict, `name` indexed, `status` ENUM(`active`, `inactive`), timestamps.
+- [x] `ContractId`, `ContractStatus`, `InvalidContractIdException`, `Contract(id, Customer customer, name, status)` with `isActive()`, `ContractRepository::findById`.
+- [x] `ContractModel` (casts `status` to `ContractStatus`), `ContractMapper` (uses `CustomerMapper`), `EloquentContractRepository` (`with('customer.parent')`), `ContractFactory`, and the binding.
+- [x] Tests: unit tests, the repository test (including the customer object and the query count), and the schema test (deleting a customer with contracts fails).
 
 **Verification:** `make check`
 
@@ -191,10 +191,10 @@ Each repository test asserts that `findById` runs a fixed number of queries (`DB
 #### Task 7: Location aggregate
 
 **Acceptance criteria:**
-- [ ] Migration `create_locations_table`: `customer_id` FK restrict, `title`, nullable `full_address`, `city`, `state`, `postal_code`, timestamps.
-- [ ] `LocationId`, `InvalidLocationIdException`, `Location(id, Customer customer, title, ?fullAddress, ?city, ?state, ?postalCode)`, `LocationRepository::findById`.
-- [ ] `LocationModel`, `LocationMapper`, `EloquentLocationRepository`, `LocationFactory`, and the binding.
-- [ ] Tests: unit tests, and the repository test with null address fields.
+- [x] Migration `create_locations_table`: `customer_id` FK restrict, `title`, nullable `full_address`, `city`, `state`, `postal_code`, timestamps.
+- [x] `LocationId`, `InvalidLocationIdException`, `Location(id, Customer customer, title, ?fullAddress, ?city, ?state, ?postalCode)`, `LocationRepository::findById`.
+- [x] `LocationModel`, `LocationMapper`, `EloquentLocationRepository`, `LocationFactory`, and the binding.
+- [x] Tests: unit tests, and the repository test with null address fields.
 
 **Verification:** `make check`
 
@@ -207,23 +207,23 @@ Each repository test asserts that `findById` runs a fixed number of queries (`DB
 #### Task 8: Asset aggregate
 
 **Acceptance criteria:**
-- [ ] Migration `create_assets_table`:
+- [x] Migration `create_assets_table`:
   - `customer_id` FK restrict; `serial_number` unique; `manufacturer`, `model`, `item_name`;
   - `contract_id` and `location_id` nullable FKs with `nullOnDelete`;
   - `status` ENUM(`active`, `inactive`, `retired`);
   - timestamps and `softDeletes`;
   - composite index `(customer_id, status)`.
-- [ ] Domain:
+- [x] Domain:
   - `AssetId`, `SerialNumber` (trimmed, non-empty, at most 255 characters), `AssetStatus`, and their exceptions;
   - `Asset(id, Customer, SerialNumber, manufacturer, model, itemName, ?Contract, ?Location, AssetStatus, createdAt)` with `isActive()`;
   - `AssetRepository::findById`.
-- [ ] Infrastructure:
+- [x] Infrastructure:
   - `AssetModel` with `SoftDeletes`, relations and the status cast;
   - `AssetMapper` composing the customer, contract and location mappers;
   - `EloquentAssetRepository` with the graph from the table above;
   - `AssetFactory` with `withContract()` and `withLocation()` states;
   - the binding.
-- [ ] Tests:
+- [x] Tests:
   - unit tests;
   - repository tests: with and without a contract and a location, a soft-deleted asset returns `null`, and the query count;
   - schema tests: duplicated serial number, including a soft-deleted asset (R2); deleting a contract or a location nulls the FK.
@@ -237,18 +237,18 @@ Each repository test asserts that `findById` runs a fixed number of queries (`DB
 #### Task 9: Ticket aggregate
 
 **Acceptance criteria:**
-- [ ] Migration `create_tickets_table`:
+- [x] Migration `create_tickets_table`:
   - `customer_id` FK restrict; `asset_id` nullable FK with `nullOnDelete`;
   - `repair_id` and `incident_number` unique; `subject`; `status_id` FK restrict; `issue_description` text;
   - `created_by` FK to `users`, restrict;
   - timestamps and `softDeletes`;
   - composite index `(customer_id, status_id)`.
-- [ ] Domain:
+- [x] Domain:
   - `TicketId`, `RepairId`, `IncidentNumber`, and their exceptions;
   - `Ticket(id, Customer, ?Asset, RepairId, IncidentNumber, subject, TicketStatus, issueDescription, User createdBy, createdAt)`;
   - `TicketRepository::findById`.
-- [ ] Infrastructure: `TicketModel` (`SoftDeletes`, `asset()`, `status()`, `creator()`), `TicketMapper`, `EloquentTicketRepository` (the deepest graph), `TicketFactory`, and the binding.
-- [ ] Tests:
+- [x] Infrastructure: `TicketModel` (`SoftDeletes`, `asset()`, `status()`, `creator()`), `TicketMapper`, `EloquentTicketRepository` (the deepest graph), `TicketFactory`, and the binding.
+- [x] Tests:
   - unit tests;
   - repository tests: with and without an asset, soft-deleted, and a fixed query count with the whole graph;
   - schema tests: duplicated `repair_id` and `incident_number`; deleting an asset nulls `asset_id`; deleting a status in use fails.
@@ -260,7 +260,7 @@ Each repository test asserts that `findById` runs a fixed number of queries (`DB
 **Scope:** L (uniform files) · **Commit:** `feat(core): add the ticket aggregate`
 
 ### Checkpoint: Assets and tickets
-- [ ] `make check` is green, and `make fresh` migrates. Post-implementation flow. Human review.
+- [x] `make check` is green, and `make fresh` migrates. Post-implementation flow. Human review.
 
 ### Phase 5 — Custom views
 
@@ -269,10 +269,10 @@ Each repository test asserts that `findById` runs a fixed number of queries (`DB
 **Description:** Pure domain, with no persistence (D5).
 
 **Acceptance criteria:**
-- [ ] `ViewType` enum: `my_assets`, `my_tickets`, `my_contracts`, `my_locations`.
-- [ ] `ViewColumns::fromList()`: a non-empty list of unique, non-empty strings. It throws `InvalidViewColumnsException`.
-- [ ] `ViewFilter::fromArray()` takes `column`, `operator` and `value`, where the value is a scalar, null or a list of scalars. `ViewFilters::fromList()` wraps the filters. Both throw `InvalidViewFilterException`, and `toArray()` returns the JSON shape of D5.
-- [ ] Unit tests: valid cases, an empty list, duplicates, missing keys, a nested array value, and the `toArray()` round-trip.
+- [x] `ViewType` enum: `my_assets`, `my_tickets`, `my_contracts`, `my_locations`.
+- [x] `ViewColumns::fromList()`: a non-empty list of unique, non-empty strings. It throws `InvalidViewColumnsException`.
+- [x] `ViewFilter::fromArray()` takes `column`, `operator` and `value`, where the value is a scalar, null or a list of scalars. `ViewFilters::fromList()` wraps the filters. Both throw `InvalidViewFilterException`, and `toArray()` returns the JSON shape of D5.
+- [x] Unit tests: valid cases, an empty list, duplicates, missing keys, a nested array value, and the `toArray()` round-trip.
 
 **Verification:** `make check`
 
@@ -283,16 +283,16 @@ Each repository test asserts that `findById` runs a fixed number of queries (`DB
 #### Task 11: CustomView aggregate
 
 **Acceptance criteria:**
-- [ ] Migration `create_custom_views_table`:
+- [x] Migration `create_custom_views_table`:
   - `user_id` FK `cascadeOnDelete`; `customer_id` FK restrict;
   - `title`, nullable `description`, `view_type` ENUM of the four values, `columns` json, `filters` json;
   - `is_default` and `is_public` booleans, default `false`; timestamps;
   - unique `(user_id, title)`, index `(user_id, view_type)`.
-- [ ] Domain: `CustomViewId`, `InvalidCustomViewIdException`, `InvalidCustomViewTitleException`, `CustomView(id, User, Customer, title, ?description, ViewType, ViewColumns, ViewFilters, isDefault, isPublic)` and `CustomViewRepository::findById`.
-- [ ] Infrastructure:
+- [x] Domain: `CustomViewId`, `InvalidCustomViewIdException`, `InvalidCustomViewTitleException`, `CustomView(id, User, Customer, title, ?description, ViewType, ViewColumns, ViewFilters, isDefault, isPublic)` and `CustomViewRepository::findById`.
+- [x] Infrastructure:
   - `CustomViewModel` with casts: `columns` and `filters` to `array`, booleans, `view_type` to `ViewType`;
   - `CustomViewMapper`, `EloquentCustomViewRepository`, `CustomViewFactory` and the binding.
-- [ ] Tests:
+- [x] Tests:
   - unit tests;
   - repository test: the JSON is mapped to value objects, plus the query count;
   - schema tests: a duplicated title for the same user fails; the same title for different users is allowed; deleting the user deletes their views.
@@ -308,13 +308,13 @@ Each repository test asserts that `findById` runs a fixed number of queries (`DB
 #### Task 12: DemoDataSeeder
 
 **Acceptance criteria:**
-- [ ] `DemoDataSeeder` runs only in `local` and `testing`, and follows D8:
+- [x] `DemoDataSeeder` runs only in `local` and `testing`, and follows D8:
   - a "Logis Demo" parent customer (`C-1000`) with two sub-accounts, plus one unrelated customer;
   - `demo@logis.test` linked to the parent customer;
   - per customer: 3 contracts, 5 locations, 30 assets (some Zebra and Honeywell) and 20 tickets;
   - two views for the demo user: a default `my_assets` view and a public `my_tickets` view.
-- [ ] `DatabaseSeeder` calls `TicketStatusSeeder` always, and `DemoDataSeeder` only in `local` and `testing`.
-- [ ] Test: after seeding `logis_testing`, the counts match and the demo user can still log in.
+- [x] `DatabaseSeeder` calls `TicketStatusSeeder` always, and `DemoDataSeeder` only in `local` and `testing`.
+- [x] Test: after seeding `logis_testing`, the counts match and the demo user can still log in.
 
 **Verification:** `make fresh` then `make check`
 
@@ -323,16 +323,16 @@ Each repository test asserts that `findById` runs a fixed number of queries (`DB
 **Scope:** S · **Commit:** `feat(core): seed demo customers, assets, tickets and views`
 
 ### Checkpoint: Complete
-- [ ] Every success criterion in the spec is met.
-- [ ] `make fresh` and `make check` are green.
-- [ ] Post-implementation flow. Human review before the last commit.
+- [x] Every success criterion in the spec is met.
+- [x] `make fresh` and `make check` are green.
+- [x] Post-implementation flow. Human review before the last commit.
 
 ## Risks and mitigations
 
 | Risk | Impact | Mitigation |
 |---|---|---|
-| The eager-loaded graph misses a relation, and a mapper triggers a lazy load (N+1) | Medium | Query-count assertion in every repository test. `Model::preventLazyLoading()` is enabled in testing, so a missing `with()` fails loudly. |
-| Existing data breaks the one-level hierarchy, and the mapper throws | Low | Only seeders and factories write customers. The factory's `subAccountOf()` only accepts top-level parents. |
+| The eager-loaded graph misses a relation, and a mapper triggers a lazy load (N+1) | Medium | Query-count assertion in every repository test. `Model::preventLazyLoading()` is enabled outside production, but Laravel only enforces it on collections of several models (spec R9). |
+| Existing data breaks the one-level hierarchy, and the mapper throws | Low | Only seeders and factories write customers. `subAccountOf()` rejects sub-account parents, and the mapper reports corrupted rows as a 500 (spec R8). |
 | Moving the Sanctum model breaks auth at runtime (T1) | Medium | The 71 auth tests cover login, rotation and logout, plus a manual check in Swagger at the checkpoint. |
 | The ENUM cast fails on an unknown value | Low | Casts to backed enums fail loudly, and values are only written by factories and seeders. |
 | Test time grows with deeper factories | Low | The factories create only the required relations by default. Optional ones use states. |

@@ -346,3 +346,10 @@ make check     # qa + docs-lint + test, required before every commit
 - **R4. Relations.** Every foreign key with a constraint is held as an object in the aggregate. A nullable foreign key gives a nullable object (D2).
 - **R5. `users.customer_id`** is a nullable foreign key. The views example in the brief filters with `$user->customer_id`.
 - **R6. One-level customer hierarchy.** A customer can't be its own parent, and a sub-account's parent is always a top-level customer. The legacy code works this way, and the brief says nothing more.
+- **R7. A ticket keeps its soft-deleted asset.** `TicketModel::asset()` includes trashed assets, so the ticket's history keeps pointing at the device, and a future `save()` can't erase the link by accident. Only a hard delete nulls `tickets.asset_id`.
+- **R8. Corrupted hierarchies are server errors.** A stored customer whose parent is a sub-account (or itself) raises `CorruptedCustomerHierarchyException` in Infrastructure: a logged 500, not a 422 with internal ids. The domain exceptions stay for entities built in code, and `CustomerFactory::subAccountOf()` rejects a sub-account as parent.
+- **R9. Lazy loading is prevented outside production** (`Model::preventLazyLoading()`). Laravel only enforces it on models loaded in a collection of several, so the query-count tests remain the guard for `findById`.
+
+## Open questions
+
+- **Q5. Customer consistency across relations.** Nothing checks that an asset's contract and location, or a ticket's asset and creator, belong to the same customer as the record (or to its parent). The factories and seeders keep them consistent, but search scopes by `customer_id`, so a mismatched ticket could expose another customer's asset. To be decided in the `search` spec, when the first command writes these records: probably "same customer or its parent", enforced in the `Asset` and `Ticket` constructors.
