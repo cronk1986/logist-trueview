@@ -10,6 +10,7 @@ use Illuminate\Support\ServiceProvider;
 use Laravel\Sanctum\Sanctum;
 use Logis\LogisContext\Application\Command\LogIn\LogInHandler;
 use Logis\LogisContext\Application\Command\RotateAccessToken\RotateAccessTokenHandler;
+use Logis\LogisContext\Application\Query\GlobalSearch\EntitySearchers;
 use Logis\LogisContext\Domain\Model\AccessToken\AccessTokenRepository;
 use Logis\LogisContext\Domain\Model\Asset\AssetRepository;
 use Logis\LogisContext\Domain\Model\Contract\ContractRepository;
@@ -30,12 +31,15 @@ use Logis\LogisContext\Infrastructure\Persistence\Customer\EloquentCustomerRepos
 use Logis\LogisContext\Infrastructure\Persistence\Location\EloquentLocationRepository;
 use Logis\LogisContext\Infrastructure\Persistence\TicketStatus\EloquentTicketStatusRepository;
 use Logis\LogisContext\Infrastructure\Persistence\Ticket\EloquentTicketRepository;
+use Logis\LogisContext\Infrastructure\Persistence\Ticket\EloquentTicketSearcher;
 use Logis\LogisContext\Infrastructure\Persistence\User\BcryptPasswordHasher;
 use Logis\LogisContext\Infrastructure\Persistence\User\EloquentUserRepository;
 use Logis\LogisContext\Infrastructure\Persistence\User\UserModel;
 
 final class LogisServiceProvider extends ServiceProvider
 {
+    private const ENTITY_SEARCHERS = 'entity_searchers';
+
     /** @var array<class-string, class-string> */
     public array $bindings = [
         UserRepository::class => EloquentUserRepository::class,
@@ -63,11 +67,24 @@ final class LogisServiceProvider extends ServiceProvider
         $this->app->bind(abstract: PlainTextTokenGenerator::class, concrete: fn (Application $app) => new PlainTextTokenGenerator(
             prefix: (string) $app->make(abstract: 'config')->get(key: 'sanctum.token_prefix', default: ''),
         ));
+
+        $this->registerEntitySearchers();
     }
 
     public function boot(): void
     {
         Relation::enforceMorphMap(map: ['user' => UserModel::class]);
         Sanctum::usePersonalAccessTokenModel(model: AccessTokenModel::class);
+    }
+
+    private function registerEntitySearchers(): void
+    {
+        $this->app->tag(abstracts: [
+            EloquentTicketSearcher::class,
+        ], tags: self::ENTITY_SEARCHERS);
+
+        $this->app->when(concrete: EntitySearchers::class)
+            ->needs(abstract: '$searchers')
+            ->giveTagged(tag: self::ENTITY_SEARCHERS);
     }
 }
