@@ -129,7 +129,7 @@ paths:
   /search:
     get:
       tags: [Search]
-      summary: Search tickets and assets across the visible customers
+      summary: Search tickets, assets and contracts across the visible customers
       operationId: search
       description: |
         Searches each requested entity for `q` and returns, per entity, the newest matches up to `limit`,
@@ -142,6 +142,7 @@ paths:
         |---|---|---|
         | `tickets` | subject, repair id, incident number | not deleted |
         | `assets` | serial number, manufacturer, model | not deleted, any status |
+        | `contracts` | name | active only |
 
         The term is matched literally: `%` and `_` are not wildcards. Results are cached for 5 minutes.
       parameters:
@@ -272,7 +273,7 @@ components:
           $ref: "#/components/schemas/Meta"
     SearchableEntity:
       type: string
-      enum: [tickets, assets]
+      enum: [tickets, assets, contracts]
     TicketSearchResult:
       type: object
       required: [id, repair_id, incident_number, subject, status]
@@ -315,6 +316,20 @@ components:
         status:
           type: string
           enum: [active, inactive, retired]
+          example: active
+    ContractSearchResult:
+      type: object
+      required: [id, name, status]
+      properties:
+        id:
+          type: integer
+          example: 4
+        name:
+          type: string
+          example: TrueSupport 2024
+        status:
+          type: string
+          enum: [active]
           example: active
     SearchResults:
       type: object
@@ -372,6 +387,15 @@ components:
                       type: array
                       items:
                         $ref: "#/components/schemas/AssetSearchResult"
+            contracts:
+              allOf:
+                - $ref: "#/components/schemas/SearchResults"
+                - type: object
+                  properties:
+                    results:
+                      type: array
+                      items:
+                        $ref: "#/components/schemas/ContractSearchResult"
         message:
           type: string
           example: Search results

@@ -40,7 +40,7 @@ final class GlobalSearchHandlerTest extends TestCase
         $this->handler = new GlobalSearchHandler(
             users: $this->users,
             visibleCustomers: new VisibleCustomersResolver(customers: $this->customers),
-            searchers: new EntitySearchers(searchers: [$this->assets, $this->tickets]),
+            searchers: new EntitySearchers(searchers: $this->searchers()),
         );
 
         $parent = CustomerMother::create(id: 1);
@@ -134,6 +134,22 @@ final class GlobalSearchHandlerTest extends TestCase
         $this->expectException(UserNotFoundException::class);
 
         $this->handler->handle(query: $this->search(userId: 99));
+    }
+
+    /**
+     * @return list<InMemoryEntitySearcher>
+     */
+    private function searchers(): array
+    {
+        $searchers = [$this->tickets, $this->assets];
+
+        foreach (SearchableEntity::cases() as $entity) {
+            if ($entity !== SearchableEntity::Tickets && $entity !== SearchableEntity::Assets) {
+                $searchers[] = InMemoryEntitySearcher::returningNothing(entity: $entity);
+            }
+        }
+
+        return $searchers;
     }
 
     /**

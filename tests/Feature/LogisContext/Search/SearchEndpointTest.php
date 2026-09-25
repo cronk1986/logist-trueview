@@ -6,7 +6,9 @@ namespace Tests\Feature\LogisContext\Search;
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Testing\TestResponse;
+use Logis\LogisContext\Domain\ValueObject\Search\SearchableEntity;
 use Logis\LogisContext\Infrastructure\Persistence\Asset\AssetModel;
+use Logis\LogisContext\Infrastructure\Persistence\Contract\ContractModel;
 use Logis\LogisContext\Infrastructure\Persistence\Customer\CustomerModel;
 use Logis\LogisContext\Infrastructure\Persistence\Ticket\TicketModel;
 use Logis\LogisContext\Infrastructure\Persistence\User\UserModel;
@@ -116,8 +118,9 @@ final class SearchEndpointTest extends TestCase
     public function test_every_entity_is_searched_when_none_is_requested(): void
     {
         $response = $this->search(token: $this->logInAs(customer: $this->parent), query: ['q' => 'zebra'])->assertOk();
+        $everyEntity = array_map(callback: fn (SearchableEntity $entity): string => $entity->value, array: SearchableEntity::cases());
 
-        $this->assertSame(['tickets', 'assets'], array_keys(array: $response->json(key: 'data')));
+        $this->assertSame($everyEntity, array_keys(array: $response->json(key: 'data')));
     }
 
     public function test_the_entities_come_in_canonical_order_whatever_the_requested_order(): void
@@ -130,6 +133,20 @@ final class SearchEndpointTest extends TestCase
         $this->assertSame(['tickets', 'assets'], array_keys(array: $response->json(key: 'data')));
         $response->assertJsonPath(path: 'data.assets.results.0.id', expect: $asset->id)
             ->assertJsonStructure(structure: ['data' => ['assets' => ['results' => [['id', 'serial_number', 'manufacturer', 'model', 'item_name', 'status']]]]]);
+    }
+
+    public function test_it_only_returns_active_contracts(): void
+    {
+        $active = ContractModel::factory()->create(attributes: ['customer_id' => $this->parent->id, 'name' => 'Zebra TrueSupport']);
+        ContractModel::factory()->inactive()->create(attributes: ['customer_id' => $this->parent->id, 'name' => 'Zebra Depot Repair']);
+
+        $this->search(token: $this->logInAs(customer: $this->parent), query: ['q' => 'zebra', 'entities' => 'contracts'])
+            ->assertOk()
+            ->assertJsonPath(path: 'data.contracts', expect: [
+                'results' => [['id' => $active->id, 'name' => 'Zebra TrueSupport', 'status' => 'active']],
+                'total' => 1,
+                'has_more' => false,
+            ]);
     }
 
     public function test_a_user_without_the_permission_only_sees_their_own_customer(): void

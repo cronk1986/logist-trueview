@@ -27,6 +27,7 @@ use Logis\LogisContext\Infrastructure\Persistence\AccessToken\EloquentAccessToke
 use Logis\LogisContext\Infrastructure\Persistence\Asset\EloquentAssetRepository;
 use Logis\LogisContext\Infrastructure\Persistence\Asset\EloquentAssetSearcher;
 use Logis\LogisContext\Infrastructure\Persistence\Contract\EloquentContractRepository;
+use Logis\LogisContext\Infrastructure\Persistence\Contract\EloquentContractSearcher;
 use Logis\LogisContext\Infrastructure\Persistence\CustomView\EloquentCustomViewRepository;
 use Logis\LogisContext\Infrastructure\Persistence\Customer\EloquentCustomerRepository;
 use Logis\LogisContext\Infrastructure\Persistence\Location\EloquentLocationRepository;
@@ -83,6 +84,7 @@ final class LogisServiceProvider extends ServiceProvider
         $this->app->tag(abstracts: [
             EloquentTicketSearcher::class,
             EloquentAssetSearcher::class,
+            EloquentContractSearcher::class,
         ], tags: self::ENTITY_SEARCHERS);
 
         $this->app->when(concrete: EntitySearchers::class)
