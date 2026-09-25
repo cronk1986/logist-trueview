@@ -11,6 +11,7 @@ use Logis\LogisContext\Infrastructure\Persistence\Customer\CustomerModel;
 use Logis\LogisContext\Infrastructure\Persistence\CustomView\CustomViewModel;
 use Logis\LogisContext\Infrastructure\Persistence\CustomView\EloquentCustomViewRepository;
 use Logis\LogisContext\Infrastructure\Persistence\User\UserModel;
+use Logis\SharedContext\Infrastructure\Persistence\CorruptedRecordException;
 use Tests\Feature\CountsQueries;
 use Tests\TestCase;
 
@@ -70,5 +71,14 @@ final class EloquentCustomViewRepositoryTest extends TestCase
         $queries = $this->countQueries(callback: fn () => $this->repository->findById(id: CustomViewId::fromInt(value: $model->id)));
 
         $this->assertSame(6, $queries);
+    }
+
+    public function test_a_stored_view_of_another_customer_than_its_owner_is_reported_as_corrupted(): void
+    {
+        $model = CustomViewModel::factory()->create(attributes: ['customer_id' => CustomerModel::factory()->create()->id]);
+
+        $this->expectException(CorruptedRecordException::class);
+
+        $this->repository->findById(id: CustomViewId::fromInt(value: $model->id));
     }
 }

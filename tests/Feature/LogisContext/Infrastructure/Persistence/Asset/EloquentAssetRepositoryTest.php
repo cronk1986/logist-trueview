@@ -9,7 +9,9 @@ use Logis\LogisContext\Domain\ValueObject\Asset\AssetId;
 use Logis\LogisContext\Domain\ValueObject\Asset\AssetStatus;
 use Logis\LogisContext\Infrastructure\Persistence\Asset\AssetModel;
 use Logis\LogisContext\Infrastructure\Persistence\Asset\EloquentAssetRepository;
+use Logis\LogisContext\Infrastructure\Persistence\Contract\ContractModel;
 use Logis\LogisContext\Infrastructure\Persistence\Customer\CustomerModel;
+use Logis\SharedContext\Infrastructure\Persistence\CorruptedRecordException;
 use Tests\Feature\CountsQueries;
 use Tests\TestCase;
 
@@ -84,5 +86,14 @@ final class EloquentAssetRepositoryTest extends TestCase
         $queries = $this->countQueries(callback: fn () => $this->repository->findById(id: AssetId::fromInt(value: $model->id)));
 
         $this->assertSame(9, $queries);
+    }
+
+    public function test_a_stored_asset_with_a_contract_of_another_customer_is_reported_as_corrupted(): void
+    {
+        $model = AssetModel::factory()->create(attributes: ['contract_id' => ContractModel::factory()->create()->id]);
+
+        $this->expectException(CorruptedRecordException::class);
+
+        $this->repository->findById(id: AssetId::fromInt(value: $model->id));
     }
 }

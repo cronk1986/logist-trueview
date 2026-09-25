@@ -11,6 +11,7 @@ use Logis\LogisContext\Infrastructure\Persistence\Customer\CustomerModel;
 use Logis\LogisContext\Infrastructure\Persistence\Ticket\EloquentTicketRepository;
 use Logis\LogisContext\Infrastructure\Persistence\Ticket\TicketModel;
 use Logis\LogisContext\Infrastructure\Persistence\TicketStatus\TicketStatusModel;
+use Logis\SharedContext\Infrastructure\Persistence\CorruptedRecordException;
 use Tests\Feature\CountsQueries;
 use Tests\TestCase;
 
@@ -100,5 +101,14 @@ final class EloquentTicketRepositoryTest extends TestCase
         $queries = $this->countQueries(callback: fn () => $this->repository->findById(id: TicketId::fromInt(value: $model->id)));
 
         $this->assertSame(16, $queries);
+    }
+
+    public function test_a_stored_ticket_with_an_asset_of_another_customer_is_reported_as_corrupted(): void
+    {
+        $model = TicketModel::factory()->create(attributes: ['asset_id' => AssetModel::factory()->create()->id]);
+
+        $this->expectException(CorruptedRecordException::class);
+
+        $this->repository->findById(id: TicketId::fromInt(value: $model->id));
     }
 }

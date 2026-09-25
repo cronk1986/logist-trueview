@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Unit\LogisContext\Domain\Model\CustomView;
 
+use Logis\LogisContext\Domain\Model\Customer\Customer;
 use Logis\LogisContext\Domain\Model\CustomView\CustomView;
 use Logis\LogisContext\Domain\Model\User\User;
 use Logis\LogisContext\Domain\ValueObject\CustomView\CustomViewId;
@@ -16,13 +17,14 @@ use Tests\Unit\LogisContext\Domain\Model\User\UserMother;
 
 final class CustomViewMother
 {
-    public static function create(int $id = 1, ?User $user = null, bool $isDefault = false, bool $isPublic = false): CustomView
+    public static function create(int $id = 1, ?User $user = null, ?Customer $customer = null, bool $isDefault = false, bool $isPublic = false): CustomView
     {
-        $customer = CustomerMother::create();
+        $user ??= UserMother::create(customer: CustomerMother::create());
+        $customer ??= $user->customer() ?? CustomerMother::create();
 
         return new CustomView(
             id: CustomViewId::fromInt(value: $id),
-            user: $user ?? UserMother::create(customer: $customer),
+            user: $user,
             customer: $customer,
             title: CustomViewTitle::fromString(value: 'Zebra scanners'),
             description: 'Every Zebra device',

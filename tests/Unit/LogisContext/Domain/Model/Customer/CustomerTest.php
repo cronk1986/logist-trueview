@@ -46,4 +46,10 @@ final class CustomerTest extends TestCase
 
         CustomerMother::create(id: 3, erpId: 'C-1002', parent: $subAccount);
     }
+
+    public function test_two_customers_with_the_same_id_are_the_same(): void
+    {
+        $this->assertTrue(CustomerMother::create(id: 1)->isSameAs(other: CustomerMother::create(id: 1, name: 'Renamed')));
+        $this->assertFalse(CustomerMother::create(id: 1)->isSameAs(other: CustomerMother::create(id: 2, erpId: 'C-1001')));
+    }
 }

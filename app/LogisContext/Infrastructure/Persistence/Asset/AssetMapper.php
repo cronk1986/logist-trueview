@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Logis\LogisContext\Infrastructure\Persistence\Asset;
 
 use Carbon\CarbonImmutable;
+use Logis\LogisContext\Domain\Exception\Asset\AssetLinkedToAnotherCustomerException;
 use Logis\LogisContext\Domain\Model\Asset\Asset;
 use Logis\LogisContext\Domain\Model\Contract\Contract;
 use Logis\LogisContext\Domain\Model\Location\Location;
@@ -13,6 +14,7 @@ use Logis\LogisContext\Domain\ValueObject\Asset\SerialNumber;
 use Logis\LogisContext\Infrastructure\Persistence\Contract\ContractMapper;
 use Logis\LogisContext\Infrastructure\Persistence\Customer\CustomerMapper;
 use Logis\LogisContext\Infrastructure\Persistence\Location\LocationMapper;
+use Logis\SharedContext\Infrastructure\Persistence\CorruptedRecordException;
 use Logis\SharedContext\Infrastructure\Persistence\EagerLoad;
 
 final class AssetMapper
@@ -37,6 +39,15 @@ final class AssetMapper
     }
 
     public function toDomain(AssetModel $model): Asset
+    {
+        try {
+            return $this->build(model: $model);
+        } catch (AssetLinkedToAnotherCustomerException $exception) {
+            throw CorruptedRecordException::in(table: $model->getTable(), id: $model->id, reason: $exception);
+        }
+    }
+
+    private function build(AssetModel $model): Asset
     {
         return new Asset(
             id: AssetId::fromInt(value: $model->id),

@@ -40,6 +40,11 @@ final class Customer
         return $this->parent;
     }
 
+    public function isSameAs(Customer $other): bool
+    {
+        return $this->id->equals(other: $other->id());
+    }
+
     public function isSubAccount(): bool
     {
         return $this->parent !== null;

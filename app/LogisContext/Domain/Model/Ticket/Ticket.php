@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Logis\LogisContext\Domain\Model\Ticket;
 
 use Carbon\CarbonImmutable;
+use Logis\LogisContext\Domain\Exception\Ticket\TicketLinkedToAnotherCustomerException;
 use Logis\LogisContext\Domain\Model\Asset\Asset;
 use Logis\LogisContext\Domain\Model\Customer\Customer;
 use Logis\LogisContext\Domain\Model\TicketStatus\TicketStatus;
@@ -27,6 +28,7 @@ final class Ticket
         private readonly User $createdBy,
         private readonly CarbonImmutable $createdAt,
     ) {
+        $this->ensureTheAssetBelongsToTheCustomer();
     }
 
     public function id(): TicketId
@@ -77,5 +79,16 @@ final class Ticket
     public function createdAt(): CarbonImmutable
     {
         return $this->createdAt;
+    }
+
+    private function ensureTheAssetBelongsToTheCustomer(): void
+    {
+        if ($this->asset === null) {
+            return;
+        }
+
+        if (!$this->asset->customer()->isSameAs(other: $this->customer)) {
+            throw TicketLinkedToAnotherCustomerException::asset(ticketId: $this->id->value(), assetId: $this->asset->id()->value());
+        }
     }
 }

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Logis\LogisContext\Domain\Model\CustomView;
 
+use Logis\LogisContext\Domain\Exception\CustomView\CustomViewLinkedToAnotherCustomerException;
 use Logis\LogisContext\Domain\Model\Customer\Customer;
 use Logis\LogisContext\Domain\Model\User\User;
 use Logis\LogisContext\Domain\ValueObject\CustomView\CustomViewId;
@@ -26,6 +27,7 @@ final class CustomView
         private readonly bool $isDefault,
         private readonly bool $isPublic,
     ) {
+        $this->ensureTheViewBelongsToTheCustomerOfItsOwner();
     }
 
     public function id(): CustomViewId
@@ -76,5 +78,14 @@ final class CustomView
     public function isPublic(): bool
     {
         return $this->isPublic;
+    }
+
+    private function ensureTheViewBelongsToTheCustomerOfItsOwner(): void
+    {
+        $ownerCustomer = $this->user->customer();
+
+        if ($ownerCustomer === null || !$ownerCustomer->isSameAs(other: $this->customer)) {
+            throw CustomViewLinkedToAnotherCustomerException::owner(viewId: $this->id->value(), userId: $this->user->id()->value());
+        }
     }
 }

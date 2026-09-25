@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Logis\LogisContext\Domain\Model\Asset;
 
 use Carbon\CarbonImmutable;
+use Logis\LogisContext\Domain\Exception\Asset\AssetLinkedToAnotherCustomerException;
 use Logis\LogisContext\Domain\Model\Contract\Contract;
 use Logis\LogisContext\Domain\Model\Customer\Customer;
 use Logis\LogisContext\Domain\Model\Location\Location;
@@ -26,6 +27,8 @@ final class Asset
         private readonly AssetStatus $status,
         private readonly CarbonImmutable $createdAt,
     ) {
+        $this->ensureTheContractBelongsToTheCustomer();
+        $this->ensureTheLocationBelongsToTheCustomer();
     }
 
     public function id(): AssetId
@@ -81,5 +84,27 @@ final class Asset
     public function isActive(): bool
     {
         return $this->status === AssetStatus::Active;
+    }
+
+    private function ensureTheContractBelongsToTheCustomer(): void
+    {
+        if ($this->contract === null) {
+            return;
+        }
+
+        if (!$this->contract->customer()->isSameAs(other: $this->customer)) {
+            throw AssetLinkedToAnotherCustomerException::contract(assetId: $this->id->value(), contractId: $this->contract->id()->value());
+        }
+    }
+
+    private function ensureTheLocationBelongsToTheCustomer(): void
+    {
+        if ($this->location === null) {
+            return;
+        }
+
+        if (!$this->location->customer()->isSameAs(other: $this->customer)) {
+            throw AssetLinkedToAnotherCustomerException::location(assetId: $this->id->value(), locationId: $this->location->id()->value());
+        }
     }
 }

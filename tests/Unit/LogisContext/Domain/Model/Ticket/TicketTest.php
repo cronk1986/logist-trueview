@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Unit\LogisContext\Domain\Model\Ticket;
 
+use Logis\LogisContext\Domain\Exception\Ticket\TicketLinkedToAnotherCustomerException;
 use PHPUnit\Framework\TestCase;
 use Tests\Unit\LogisContext\Domain\Model\Asset\AssetMother;
 use Tests\Unit\LogisContext\Domain\Model\Customer\CustomerMother;
@@ -34,5 +35,21 @@ final class TicketTest extends TestCase
     public function test_the_asset_is_optional(): void
     {
         $this->assertNull(TicketMother::create()->asset());
+    }
+
+    public function test_a_ticket_cannot_refer_to_an_asset_of_another_customer(): void
+    {
+        $this->expectException(TicketLinkedToAnotherCustomerException::class);
+
+        TicketMother::create(customer: CustomerMother::create(id: 1), asset: AssetMother::create(customer: CustomerMother::create(id: 2)));
+    }
+
+    public function test_the_creator_may_belong_to_another_customer(): void
+    {
+        $creator = UserMother::create(customer: CustomerMother::create(id: 2));
+
+        $ticket = TicketMother::create(customer: CustomerMother::create(id: 1), createdBy: $creator);
+
+        $this->assertSame($creator, $ticket->createdBy());
     }
 }

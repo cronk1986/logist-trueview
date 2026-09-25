@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Logis\LogisContext\Infrastructure\Persistence\Ticket;
 
 use Carbon\CarbonImmutable;
+use Logis\LogisContext\Domain\Exception\Ticket\TicketLinkedToAnotherCustomerException;
 use Logis\LogisContext\Domain\Model\Asset\Asset;
 use Logis\LogisContext\Domain\Model\Ticket\Ticket;
 use Logis\LogisContext\Domain\ValueObject\Ticket\IncidentNumber;
@@ -14,6 +15,7 @@ use Logis\LogisContext\Infrastructure\Persistence\Asset\AssetMapper;
 use Logis\LogisContext\Infrastructure\Persistence\Customer\CustomerMapper;
 use Logis\LogisContext\Infrastructure\Persistence\TicketStatus\TicketStatusMapper;
 use Logis\LogisContext\Infrastructure\Persistence\User\UserMapper;
+use Logis\SharedContext\Infrastructure\Persistence\CorruptedRecordException;
 use Logis\SharedContext\Infrastructure\Persistence\EagerLoad;
 
 final class TicketMapper
@@ -40,6 +42,15 @@ final class TicketMapper
     }
 
     public function toDomain(TicketModel $model): Ticket
+    {
+        try {
+            return $this->build(model: $model);
+        } catch (TicketLinkedToAnotherCustomerException $exception) {
+            throw CorruptedRecordException::in(table: $model->getTable(), id: $model->id, reason: $exception);
+        }
+    }
+
+    private function build(TicketModel $model): Ticket
     {
         return new Ticket(
             id: TicketId::fromInt(value: $model->id),
