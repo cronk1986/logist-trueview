@@ -6,6 +6,7 @@ namespace Tests\Feature\Database;
 
 use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Schema;
 use Logis\LogisContext\Infrastructure\Persistence\Asset\AssetModel;
 use Logis\LogisContext\Infrastructure\Persistence\Contract\ContractModel;
 use Logis\LogisContext\Infrastructure\Persistence\Customer\CustomerModel;
@@ -14,6 +15,7 @@ use Logis\LogisContext\Infrastructure\Persistence\Location\LocationModel;
 use Logis\LogisContext\Infrastructure\Persistence\Ticket\TicketModel;
 use Logis\LogisContext\Infrastructure\Persistence\TicketStatus\TicketStatusModel;
 use Logis\LogisContext\Infrastructure\Persistence\User\UserModel;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
 
 final class SchemaTest extends TestCase
@@ -173,5 +175,32 @@ final class SchemaTest extends TestCase
         }
 
         $this->fail('The database was expected to reject the statement.');
+    }
+
+    #[DataProvider('searchedColumns')]
+    public function test_every_column_the_search_filters_on_leads_an_index(string $table, string $column): void
+    {
+        $leadingColumns = array_map(callback: fn (array $index): string => $index['columns'][0], array: Schema::getIndexes($table));
+
+        $this->assertContains($column, $leadingColumns);
+    }
+
+    /**
+     * @return iterable<string, array{string, string}>
+     */
+    public static function searchedColumns(): iterable
+    {
+        $columns = [
+            'tickets' => ['customer_id', 'subject', 'repair_id', 'incident_number', 'deleted_at'],
+            'assets' => ['customer_id', 'serial_number', 'manufacturer', 'model', 'deleted_at'],
+            'contracts' => ['customer_id', 'name', 'status'],
+            'locations' => ['customer_id', 'title', 'full_address', 'city', 'state', 'postal_code'],
+        ];
+
+        foreach ($columns as $table => $tableColumns) {
+            foreach ($tableColumns as $column) {
+                yield $table . '.' . $column => [$table, $column];
+            }
+        }
     }
 }
