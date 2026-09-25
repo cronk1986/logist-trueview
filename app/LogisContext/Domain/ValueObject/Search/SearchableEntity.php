@@ -7,4 +7,5 @@ namespace Logis\LogisContext\Domain\ValueObject\Search;
 enum SearchableEntity: string
 {
     case Tickets = 'tickets';
+    case Assets = 'assets';
 }

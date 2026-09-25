@@ -22,6 +22,7 @@ final class GlobalSearchHandlerTest extends TestCase
     private InMemoryUserRepository $users;
     private InMemoryCustomerRepository $customers;
     private InMemoryEntitySearcher $tickets;
+    private InMemoryEntitySearcher $assets;
     private GlobalSearchHandler $handler;
 
     protected function setUp(): void
@@ -32,10 +33,14 @@ final class GlobalSearchHandlerTest extends TestCase
             entity: SearchableEntity::Tickets,
             result: EntitySearchResult::from(results: [['id' => 1], ['id' => 2]], total: 7),
         );
+        $this->assets = new InMemoryEntitySearcher(
+            entity: SearchableEntity::Assets,
+            result: EntitySearchResult::from(results: [['id' => 3]], total: 1),
+        );
         $this->handler = new GlobalSearchHandler(
             users: $this->users,
             visibleCustomers: new VisibleCustomersResolver(customers: $this->customers),
-            searchers: new EntitySearchers(searchers: [$this->tickets]),
+            searchers: new EntitySearchers(searchers: [$this->assets, $this->tickets]),
         );
 
         $parent = CustomerMother::create(id: 1);
@@ -52,6 +57,26 @@ final class GlobalSearchHandlerTest extends TestCase
         $this->assertSame([
             'tickets' => ['results' => [['id' => 1], ['id' => 2]], 'total' => 7, 'has_more' => true],
         ], $response->data());
+    }
+
+    public function test_it_returns_the_entities_in_canonical_order_whatever_the_requested_order(): void
+    {
+        $this->users->add(user: UserMother::create(id: 5, customer: CustomerMother::create(id: 1)));
+
+        $response = $this->handler->handle(query: $this->search(userId: 5, entities: ['assets', 'tickets']));
+
+        $this->assertSame(['tickets', 'assets'], array_keys(array: $response->data()));
+    }
+
+    public function test_it_only_asks_the_searchers_of_the_requested_entities(): void
+    {
+        $this->users->add(user: UserMother::create(id: 5, customer: CustomerMother::create(id: 1)));
+
+        $response = $this->handler->handle(query: $this->search(userId: 5, entities: ['assets']));
+
+        $this->assertSame(['assets'], array_keys(array: $response->data()));
+        $this->assertSame([], $this->tickets->calls());
+        $this->assertCount(1, $this->assets->calls());
     }
 
     public function test_has_more_is_false_when_the_limit_covers_the_total(): void

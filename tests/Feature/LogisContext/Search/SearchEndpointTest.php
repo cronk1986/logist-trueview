@@ -6,6 +6,7 @@ namespace Tests\Feature\LogisContext\Search;
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Testing\TestResponse;
+use Logis\LogisContext\Infrastructure\Persistence\Asset\AssetModel;
 use Logis\LogisContext\Infrastructure\Persistence\Customer\CustomerModel;
 use Logis\LogisContext\Infrastructure\Persistence\Ticket\TicketModel;
 use Logis\LogisContext\Infrastructure\Persistence\User\UserModel;
@@ -114,9 +115,21 @@ final class SearchEndpointTest extends TestCase
 
     public function test_every_entity_is_searched_when_none_is_requested(): void
     {
-        $this->search(token: $this->logInAs(customer: $this->parent), query: ['q' => 'zebra'])
-            ->assertOk()
-            ->assertJsonStructure(structure: ['data' => ['tickets']]);
+        $response = $this->search(token: $this->logInAs(customer: $this->parent), query: ['q' => 'zebra'])->assertOk();
+
+        $this->assertSame(['tickets', 'assets'], array_keys(array: $response->json(key: 'data')));
+    }
+
+    public function test_the_entities_come_in_canonical_order_whatever_the_requested_order(): void
+    {
+        $asset = AssetModel::factory()->create(attributes: ['customer_id' => $this->parent->id, 'manufacturer' => 'Zebra']);
+        $this->ticket(customer: $this->parent, subject: 'Zebra printer');
+
+        $response = $this->search(token: $this->logInAs(customer: $this->parent), query: ['q' => 'zebra', 'entities' => 'assets,tickets'])->assertOk();
+
+        $this->assertSame(['tickets', 'assets'], array_keys(array: $response->json(key: 'data')));
+        $response->assertJsonPath(path: 'data.assets.results.0.id', expect: $asset->id)
+            ->assertJsonStructure(structure: ['data' => ['assets' => ['results' => [['id', 'serial_number', 'manufacturer', 'model', 'item_name', 'status']]]]]);
     }
 
     public function test_a_user_without_the_permission_only_sees_their_own_customer(): void
