@@ -4,12 +4,14 @@ declare(strict_types=1);
 
 namespace Logis\LogisContext\Infrastructure\Providers;
 
+use Illuminate\Contracts\Cache\Repository;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\ServiceProvider;
 use Laravel\Sanctum\Sanctum;
 use Logis\LogisContext\Application\Command\LogIn\LogInHandler;
 use Logis\LogisContext\Application\Command\RotateAccessToken\RotateAccessTokenHandler;
+use Logis\LogisContext\Application\Query\GlobalSearch\EntitySearcher;
 use Logis\LogisContext\Application\Query\GlobalSearch\EntitySearchers;
 use Logis\LogisContext\Domain\Model\AccessToken\AccessTokenRepository;
 use Logis\LogisContext\Domain\Model\Asset\AssetRepository;
@@ -21,6 +23,7 @@ use Logis\LogisContext\Domain\Model\TicketStatus\TicketStatusRepository;
 use Logis\LogisContext\Domain\Model\Ticket\TicketRepository;
 use Logis\LogisContext\Domain\Model\User\PasswordHasher;
 use Logis\LogisContext\Domain\Model\User\UserRepository;
+use Logis\LogisContext\Infrastructure\Cache\CachedEntitySearcher;
 use Logis\LogisContext\Infrastructure\Http\PlainTextTokenGenerator;
 use Logis\LogisContext\Infrastructure\Persistence\AccessToken\AccessTokenModel;
 use Logis\LogisContext\Infrastructure\Persistence\AccessToken\EloquentAccessTokenRepository;
@@ -41,7 +44,15 @@ use Logis\LogisContext\Infrastructure\Persistence\User\UserModel;
 
 final class LogisServiceProvider extends ServiceProvider
 {
-    private const ENTITY_SEARCHERS = 'entity_searchers';
+    private const ENTITY_SEARCHERS_TAG = 'entity_searchers';
+
+    /** @var list<class-string<EntitySearcher>> */
+    private const ENTITY_SEARCHERS = [
+        EloquentTicketSearcher::class,
+        EloquentAssetSearcher::class,
+        EloquentContractSearcher::class,
+        EloquentLocationSearcher::class,
+    ];
 
     /** @var array<class-string, class-string> */
     public array $bindings = [
@@ -82,15 +93,18 @@ final class LogisServiceProvider extends ServiceProvider
 
     private function registerEntitySearchers(): void
     {
-        $this->app->tag(abstracts: [
-            EloquentTicketSearcher::class,
-            EloquentAssetSearcher::class,
-            EloquentContractSearcher::class,
-            EloquentLocationSearcher::class,
-        ], tags: self::ENTITY_SEARCHERS);
+        foreach (self::ENTITY_SEARCHERS as $searcher) {
+            $this->app->extend(abstract: $searcher, closure: fn (EntitySearcher $searcher, Application $app): EntitySearcher => new CachedEntitySearcher(
+                searcher: $searcher,
+                cache: $app->make(abstract: Repository::class),
+                ttlSeconds: (int) $app->make(abstract: 'config')->get(key: 'search.cache_ttl_seconds'),
+            ));
+        }
+
+        $this->app->tag(abstracts: self::ENTITY_SEARCHERS, tags: self::ENTITY_SEARCHERS_TAG);
 
         $this->app->when(concrete: EntitySearchers::class)
             ->needs(abstract: '$searchers')
-            ->giveTagged(tag: self::ENTITY_SEARCHERS);
+            ->giveTagged(tag: self::ENTITY_SEARCHERS_TAG);
     }
 }

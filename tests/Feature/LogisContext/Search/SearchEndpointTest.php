@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Feature\LogisContext\Search;
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Testing\TestResponse;
 use Logis\LogisContext\Domain\ValueObject\Search\SearchableEntity;
 use Logis\LogisContext\Infrastructure\Persistence\Asset\AssetModel;
@@ -167,7 +168,7 @@ final class SearchEndpointTest extends TestCase
     {
         $this->seedMatches(term: 'Qxalpha', count: 1);
         $this->seedMatches(term: 'Qxomega', count: 30);
-        $first = $this->search(token: $this->logInAs(customer: $this->parent), query: ['q' => 'qxalpha'])->assertOk();
+        $first = $this->search(token: $this->logInAs(customer: $this->parent), query: ['q' => 'warm-up'])->assertOk();
         $token = $this->refreshedToken(response: $first);
 
         $withOneMatch = $this->countQueries(callback: function () use (&$token): void {
@@ -181,6 +182,35 @@ final class SearchEndpointTest extends TestCase
         });
 
         $this->assertSame($withOneMatch, $withThirtyMatches);
+    }
+
+    public function test_a_repeated_search_runs_no_search_queries(): void
+    {
+        $this->seedMatches(term: 'Qxalpha', count: 2);
+        $first = $this->search(token: $this->logInAs(customer: $this->parent), query: ['q' => 'qxalpha'])->assertOk();
+
+        DB::flushQueryLog();
+        DB::enableQueryLog();
+        $second = $this->search(token: $this->refreshedToken(response: $first), query: ['q' => 'QXALPHA'])->assertOk();
+        $searchQueries = array_filter(
+            array: DB::getQueryLog(),
+            callback: fn (array $query): bool => preg_match(pattern: '/from `(tickets|assets|contracts|locations)`/', subject: $query['query']) === 1,
+        );
+        DB::disableQueryLog();
+
+        $this->assertSame([], $searchQueries);
+        $this->assertSame($first->json(key: 'data'), $second->json(key: 'data'));
+    }
+
+    public function test_a_cached_search_is_not_shared_with_a_user_who_sees_other_customers(): void
+    {
+        $this->ticket(customer: $this->parent, subject: 'Zebra printer');
+        $this->search(token: $this->logInAs(customer: $this->parent), query: ['q' => 'zebra'])->assertOk();
+        UserModel::factory()->create(attributes: ['customer_id' => $this->unrelated->id, 'email' => 'other@logis.test', 'password' => 'password']);
+
+        $this->search(token: $this->logIn(email: 'other@logis.test'), query: ['q' => 'zebra'])
+            ->assertOk()
+            ->assertJsonPath(path: 'data.tickets.total', expect: 0);
     }
 
     public function test_a_user_without_the_permission_only_sees_their_own_customer(): void
