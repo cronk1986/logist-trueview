@@ -188,9 +188,9 @@
         "tags": [
           "Search"
         ],
-        "summary": "Search tickets, assets and contracts across the visible customers",
+        "summary": "Search tickets, assets, contracts and locations across the visible customers",
         "operationId": "search",
-        "description": "Searches each requested entity for `q` and returns, per entity, the newest matches up to `limit`,\nthe total number of matches and whether there are more.\n\nThe server decides which customers the user can see: their own customer and, when the user has the\nsub-account permission, its sub-accounts. A user without a customer gets empty results.\n\n| Entity | Searched fields (contains, case-insensitive) | Extra filter |\n|---|---|---|\n| `tickets` | subject, repair id, incident number | not deleted |\n| `assets` | serial number, manufacturer, model | not deleted, any status |\n| `contracts` | name | active only |\n\nThe term is matched literally: `%` and `_` are not wildcards. Results are cached for 5 minutes.\n",
+        "description": "Searches each requested entity for `q` and returns, per entity, the newest matches up to `limit`,\nthe total number of matches and whether there are more.\n\nThe server decides which customers the user can see: their own customer and, when the user has the\nsub-account permission, its sub-accounts. A user without a customer gets empty results.\n\n| Entity | Searched fields (contains, case-insensitive) | Extra filter |\n|---|---|---|\n| `tickets` | subject, repair id, incident number | not deleted |\n| `assets` | serial number, manufacturer, model | not deleted, any status |\n| `contracts` | name | active only |\n| `locations` | title, full address, city, state, postal code | — |\n\nThe term is matched literally: `%` and `_` are not wildcards. Results are cached for 5 minutes.\n",
         "parameters": [
           {
             "name": "q",
@@ -394,7 +394,8 @@
         "enum": [
           "tickets",
           "assets",
-          "contracts"
+          "contracts",
+          "locations"
         ]
       },
       "TicketSearchResult": {
@@ -494,6 +495,47 @@
               "active"
             ],
             "example": "active"
+          }
+        }
+      },
+      "LocationSearchResult": {
+        "type": "object",
+        "required": [
+          "id",
+          "title",
+          "city",
+          "state",
+          "postal_code"
+        ],
+        "properties": {
+          "id": {
+            "type": "integer",
+            "example": 9
+          },
+          "title": {
+            "type": "string",
+            "example": "Austin Warehouse"
+          },
+          "city": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "example": "Austin"
+          },
+          "state": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "example": "Texas"
+          },
+          "postal_code": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "example": "73301"
           }
         }
       },
@@ -610,6 +652,24 @@
                         "type": "array",
                         "items": {
                           "$ref": "#/components/schemas/ContractSearchResult"
+                        }
+                      }
+                    }
+                  }
+                ]
+              },
+              "locations": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/SearchResults"
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "results": {
+                        "type": "array",
+                        "items": {
+                          "$ref": "#/components/schemas/LocationSearchResult"
                         }
                       }
                     }

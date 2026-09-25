@@ -129,7 +129,7 @@ paths:
   /search:
     get:
       tags: [Search]
-      summary: Search tickets, assets and contracts across the visible customers
+      summary: Search tickets, assets, contracts and locations across the visible customers
       operationId: search
       description: |
         Searches each requested entity for `q` and returns, per entity, the newest matches up to `limit`,
@@ -143,6 +143,7 @@ paths:
         | `tickets` | subject, repair id, incident number | not deleted |
         | `assets` | serial number, manufacturer, model | not deleted, any status |
         | `contracts` | name | active only |
+        | `locations` | title, full address, city, state, postal code | — |
 
         The term is matched literally: `%` and `_` are not wildcards. Results are cached for 5 minutes.
       parameters:
@@ -273,7 +274,7 @@ components:
           $ref: "#/components/schemas/Meta"
     SearchableEntity:
       type: string
-      enum: [tickets, assets, contracts]
+      enum: [tickets, assets, contracts, locations]
     TicketSearchResult:
       type: object
       required: [id, repair_id, incident_number, subject, status]
@@ -331,6 +332,25 @@ components:
           type: string
           enum: [active]
           example: active
+    LocationSearchResult:
+      type: object
+      required: [id, title, city, state, postal_code]
+      properties:
+        id:
+          type: integer
+          example: 9
+        title:
+          type: string
+          example: Austin Warehouse
+        city:
+          type: [string, "null"]
+          example: Austin
+        state:
+          type: [string, "null"]
+          example: Texas
+        postal_code:
+          type: [string, "null"]
+          example: "73301"
     SearchResults:
       type: object
       required: [results, total, has_more]
@@ -396,6 +416,15 @@ components:
                       type: array
                       items:
                         $ref: "#/components/schemas/ContractSearchResult"
+            locations:
+              allOf:
+                - $ref: "#/components/schemas/SearchResults"
+                - type: object
+                  properties:
+                    results:
+                      type: array
+                      items:
+                        $ref: "#/components/schemas/LocationSearchResult"
         message:
           type: string
           example: Search results

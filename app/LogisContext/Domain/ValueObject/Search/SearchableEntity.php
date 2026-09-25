@@ -9,4 +9,5 @@ enum SearchableEntity: string
     case Tickets = 'tickets';
     case Assets = 'assets';
     case Contracts = 'contracts';
+    case Locations = 'locations';
 }

@@ -10,15 +10,18 @@ use Logis\LogisContext\Domain\ValueObject\Search\SearchableEntity;
 use Logis\LogisContext\Infrastructure\Persistence\Asset\AssetModel;
 use Logis\LogisContext\Infrastructure\Persistence\Contract\ContractModel;
 use Logis\LogisContext\Infrastructure\Persistence\Customer\CustomerModel;
+use Logis\LogisContext\Infrastructure\Persistence\Location\LocationModel;
 use Logis\LogisContext\Infrastructure\Persistence\Ticket\TicketModel;
 use Logis\LogisContext\Infrastructure\Persistence\User\UserModel;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Symfony\Component\HttpFoundation\Response;
+use Tests\Feature\CountsQueries;
 use Tests\Feature\LogisContext\Auth\InteractsWithAccessTokens;
 use Tests\TestCase;
 
 final class SearchEndpointTest extends TestCase
 {
+    use CountsQueries;
     use InteractsWithAccessTokens;
     use RefreshDatabase;
 
@@ -149,6 +152,37 @@ final class SearchEndpointTest extends TestCase
             ]);
     }
 
+    public function test_it_searches_locations_by_title_and_address(): void
+    {
+        $location = LocationModel::factory()->create(attributes: ['customer_id' => $this->parent->id, 'title' => 'Main depot', 'city' => 'Zebraville']);
+
+        $this->search(token: $this->logInAs(customer: $this->parent), query: ['q' => 'zebra', 'entities' => ['locations']])
+            ->assertOk()
+            ->assertJsonPath(path: 'data.locations.results.0.id', expect: $location->id)
+            ->assertJsonPath(path: 'data.locations.results.0.city', expect: 'Zebraville')
+            ->assertJsonStructure(structure: ['data' => ['locations' => ['results' => [['id', 'title', 'city', 'state', 'postal_code']], 'total', 'has_more']]]);
+    }
+
+    public function test_the_number_of_queries_does_not_grow_with_the_number_of_matches(): void
+    {
+        $this->seedMatches(term: 'Qxalpha', count: 1);
+        $this->seedMatches(term: 'Qxomega', count: 30);
+        $first = $this->search(token: $this->logInAs(customer: $this->parent), query: ['q' => 'qxalpha'])->assertOk();
+        $token = $this->refreshedToken(response: $first);
+
+        $withOneMatch = $this->countQueries(callback: function () use (&$token): void {
+            $token = $this->refreshedToken(response: $this->search(token: $token, query: ['q' => 'qxalpha', 'limit' => 50])->assertOk());
+        });
+        $withThirtyMatches = $this->countQueries(callback: function () use ($token): void {
+            $this->search(token: $token, query: ['q' => 'qxomega', 'limit' => 50])
+                ->assertOk()
+                ->assertJsonPath(path: 'data.tickets.total', expect: 30)
+                ->assertJsonPath(path: 'data.locations.total', expect: 30);
+        });
+
+        $this->assertSame($withOneMatch, $withThirtyMatches);
+    }
+
     public function test_a_user_without_the_permission_only_sees_their_own_customer(): void
     {
         $own = $this->ticket(customer: $this->parent, subject: 'Zebra printer');
@@ -214,6 +248,16 @@ final class SearchEndpointTest extends TestCase
         ]);
 
         return $this->logIn(email: 'searcher@logis.test');
+    }
+
+    private function seedMatches(string $term, int $count): void
+    {
+        $customer = ['customer_id' => $this->parent->id];
+
+        TicketModel::factory()->count(count: $count)->create(attributes: [...$customer, 'subject' => $term . ' ticket']);
+        AssetModel::factory()->count(count: $count)->create(attributes: [...$customer, 'model' => $term . ' model']);
+        ContractModel::factory()->count(count: $count)->create(attributes: [...$customer, 'name' => $term . ' contract']);
+        LocationModel::factory()->count(count: $count)->create(attributes: [...$customer, 'title' => $term . ' depot']);
     }
 
     private function ticket(CustomerModel $customer, string $subject): TicketModel
