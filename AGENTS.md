@@ -123,6 +123,7 @@ app/
   - **dynamic callables** such as `$next($request)`.
 
   The Larastan rule `tools/PHPStan/NamedArgumentsRule.php` enforces this in every file under the `Logis\`, `Tests\`, `Tools\` and `Database\` namespaces. It flags positional arguments where a name is allowed, and named arguments on magic methods. `config/` and `routes/` are declarative framework files and are not checked.
+- Questions about a state belong to its enum. `ContractStatus::isActive()` answers whether a contract is active, and the entity delegates to it (`return $this->status->isActive();`) instead of comparing cases itself, so each rule lives in one place.
 - Readability comes before brevity. Prefer an explicit `if` guard over compact constructs such as `?? throw`, `?: throw`, nested ternaries or long chained expressions. Keep one intention per line.
 - Negation has no space after `!`: `if (!$user->isActive())`, never `if (! $user->isActive())`. Pint enforces it with `unary_operator_spaces` and `not_operator_with_successor_space: false` in `pint.json`.
 - Every file starts with `declare(strict_types=1)`. Classes are `final` by default.
