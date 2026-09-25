@@ -29,6 +29,7 @@ app/
 ```
 
 - Domain code is grouped by kind first and by aggregate second. For example, `Domain/ValueObject/User/Email.php` and `Domain/Exception/User/UserNotFoundException.php`, never `Domain/Model/User/Email.php`.
+  - The only exception is `Search`, which is not an aggregate. Its value objects and exceptions live in `Domain/ValueObject/Search/` and `Domain/Exception/Search/`.
 - Each bounded context has exactly one ServiceProvider, registered in `bootstrap/providers.php`.
 - The domain is framework-agnostic. Eloquent models live in Infrastructure, and repositories map them to domain entities and back.
 - **Persistence is grouped by aggregate**, mirroring `Domain/Model/<Aggregate>/`: `Persistence/User/{UserModel, UserMapper, EloquentUserRepository, BcryptPasswordHasher}`, `Persistence/AccessToken/{AccessTokenModel, AccessTokenMapper, EloquentAccessTokenRepository}`. An adapter lives in the folder of the aggregate whose domain interface it implements. `BcryptPasswordHasher` implements `Domain/Model/User/PasswordHasher`, so it goes in `Persistence/User/`. Never put a class directly in `Persistence/`.

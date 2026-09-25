@@ -1,0 +1,10 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Logis\LogisContext\Domain\ValueObject\Search;
+
+enum SearchableEntity: string
+{
+    case Tickets = 'tickets';
+}
