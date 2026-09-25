@@ -7,6 +7,7 @@ namespace Tests\Feature\Database;
 use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Logis\LogisContext\Infrastructure\Persistence\Customer\CustomerModel;
+use Logis\LogisContext\Infrastructure\Persistence\TicketStatus\TicketStatusModel;
 use Logis\LogisContext\Infrastructure\Persistence\User\UserModel;
 use Tests\TestCase;
 
@@ -41,5 +42,14 @@ final class SchemaTest extends TestCase
         $this->expectException(QueryException::class);
 
         $customer->delete();
+    }
+
+    public function test_the_name_of_a_ticket_status_is_unique(): void
+    {
+        TicketStatusModel::factory()->create(attributes: ['name' => 'Open']);
+
+        $this->expectException(QueryException::class);
+
+        TicketStatusModel::factory()->create(attributes: ['name' => 'Open']);
     }
 }
