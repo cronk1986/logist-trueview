@@ -349,7 +349,9 @@ make check     # qa + docs-lint + test, required before every commit
 - **R7. A ticket keeps its soft-deleted asset.** `TicketModel::asset()` includes trashed assets, so the ticket's history keeps pointing at the device, and a future `save()` can't erase the link by accident. Only a hard delete nulls `tickets.asset_id`.
 - **R8. Corrupted hierarchies are server errors.** A stored customer whose parent is a sub-account (or itself) raises `CorruptedCustomerHierarchyException` in Infrastructure: a logged 500, not a 422 with internal ids. The domain exceptions stay for entities built in code, and `CustomerFactory::subAccountOf()` rejects a sub-account as parent.
 - **R9. Lazy loading is prevented outside production** (`Model::preventLazyLoading()`). Laravel only enforces it on models loaded in a collection of several, so the query-count tests remain the guard for `findById`.
+- **R10. Related records belong to the same customer.** Each record belongs to exactly one customer, and what it links to must belong to that same customer, not to its parent or a sub-account:
+  - `Asset`: its contract and its location (`AssetLinkedToAnotherCustomerException`);
+  - `Ticket`: its asset (`TicketLinkedToAnotherCustomerException`);
+  - `CustomView`: its customer is the customer of its owner, so a user without a customer can't own a view (`CustomViewLinkedToAnotherCustomerException`).
 
-## Open questions
-
-- **Q5. Customer consistency across relations.** Nothing checks that an asset's contract and location, or a ticket's asset and creator, belong to the same customer as the record (or to its parent). The factories and seeders keep them consistent, but search scopes by `customer_id`, so a mismatched ticket could expose another customer's asset. To be decided in the `search` spec, when the first command writes these records: probably "same customer or its parent", enforced in the `Asset` and `Ticket` constructors.
+  The parent hierarchy is about visibility, not ownership: search widens the list of customers a user may see, and every record still belongs to a single customer. `Ticket::createdBy()` is not checked, because it records who acted, not what the ticket owns. Whether a user may act on a customer is an authorization rule, enforced in the command or policy that creates tickets. A stored row that breaks R10 is reported by its mapper as `CorruptedRecordException` (a logged 500), like R8.
