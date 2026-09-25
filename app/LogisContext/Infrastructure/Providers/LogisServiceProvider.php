@@ -11,6 +11,7 @@ use Laravel\Sanctum\Sanctum;
 use Logis\LogisContext\Application\Command\LogIn\LogInHandler;
 use Logis\LogisContext\Application\Command\RotateAccessToken\RotateAccessTokenHandler;
 use Logis\LogisContext\Domain\Model\AccessToken\AccessTokenRepository;
+use Logis\LogisContext\Domain\Model\Asset\AssetRepository;
 use Logis\LogisContext\Domain\Model\Contract\ContractRepository;
 use Logis\LogisContext\Domain\Model\Customer\CustomerRepository;
 use Logis\LogisContext\Domain\Model\Location\LocationRepository;
@@ -20,6 +21,7 @@ use Logis\LogisContext\Domain\Model\User\UserRepository;
 use Logis\LogisContext\Infrastructure\Http\PlainTextTokenGenerator;
 use Logis\LogisContext\Infrastructure\Persistence\AccessToken\AccessTokenModel;
 use Logis\LogisContext\Infrastructure\Persistence\AccessToken\EloquentAccessTokenRepository;
+use Logis\LogisContext\Infrastructure\Persistence\Asset\EloquentAssetRepository;
 use Logis\LogisContext\Infrastructure\Persistence\Contract\EloquentContractRepository;
 use Logis\LogisContext\Infrastructure\Persistence\Customer\EloquentCustomerRepository;
 use Logis\LogisContext\Infrastructure\Persistence\Location\EloquentLocationRepository;
@@ -35,6 +37,7 @@ final class LogisServiceProvider extends ServiceProvider
         UserRepository::class => EloquentUserRepository::class,
         AccessTokenRepository::class => EloquentAccessTokenRepository::class,
         PasswordHasher::class => BcryptPasswordHasher::class,
+        AssetRepository::class => EloquentAssetRepository::class,
         LocationRepository::class => EloquentLocationRepository::class,
         ContractRepository::class => EloquentContractRepository::class,
         TicketStatusRepository::class => EloquentTicketStatusRepository::class,

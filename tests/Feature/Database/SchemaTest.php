@@ -6,6 +6,7 @@ namespace Tests\Feature\Database;
 
 use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Logis\LogisContext\Infrastructure\Persistence\Asset\AssetModel;
 use Logis\LogisContext\Infrastructure\Persistence\Contract\ContractModel;
 use Logis\LogisContext\Infrastructure\Persistence\Customer\CustomerModel;
 use Logis\LogisContext\Infrastructure\Persistence\Location\LocationModel;
@@ -71,5 +72,26 @@ final class SchemaTest extends TestCase
         $this->expectException(QueryException::class);
 
         CustomerModel::query()->whereKey(id: $location->customer_id)->delete();
+    }
+
+    public function test_the_serial_number_of_an_asset_is_unique_even_after_a_soft_delete(): void
+    {
+        AssetModel::factory()->create(attributes: ['serial_number' => 'SN-1'])->delete();
+
+        $this->expectException(QueryException::class);
+
+        AssetModel::factory()->create(attributes: ['serial_number' => 'SN-1']);
+    }
+
+    public function test_deleting_a_contract_or_a_location_unlinks_its_assets(): void
+    {
+        $asset = AssetModel::factory()->withContract()->withLocation()->create();
+
+        ContractModel::query()->whereKey(id: $asset->contract_id)->delete();
+        LocationModel::query()->whereKey(id: $asset->location_id)->delete();
+
+        $asset->refresh();
+        $this->assertNull($asset->contract_id);
+        $this->assertNull($asset->location_id);
     }
 }
