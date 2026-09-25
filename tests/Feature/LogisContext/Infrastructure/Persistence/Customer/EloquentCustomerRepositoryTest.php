@@ -84,4 +84,35 @@ final class EloquentCustomerRepositoryTest extends TestCase
 
         $this->assertSame(2, $queries);
     }
+
+    public function test_it_lists_the_direct_sub_accounts_of_a_customer(): void
+    {
+        $parent = CustomerModel::factory()->create();
+        $first = CustomerModel::factory()->subAccountOf(parent: $parent)->create();
+        $second = CustomerModel::factory()->subAccountOf(parent: $parent)->create();
+        $unrelated = CustomerModel::factory()->create();
+        CustomerModel::factory()->subAccountOf(parent: $unrelated)->create();
+
+        $subAccounts = $this->repository->subAccountsOf(id: CustomerId::fromInt(value: $parent->id));
+
+        $this->assertSame([$first->id, $second->id], array_map(callback: fn ($customer): int => $customer->id()->value(), array: $subAccounts));
+        $this->assertSame($parent->id, $subAccounts[0]->parent()?->id()->value());
+    }
+
+    public function test_a_customer_without_sub_accounts_has_none(): void
+    {
+        $customer = CustomerModel::factory()->create();
+
+        $this->assertSame([], $this->repository->subAccountsOf(id: CustomerId::fromInt(value: $customer->id)));
+    }
+
+    public function test_it_lists_sub_accounts_with_a_fixed_number_of_queries(): void
+    {
+        $parent = CustomerModel::factory()->create();
+        CustomerModel::factory()->count(count: 5)->subAccountOf(parent: $parent)->create();
+
+        $queries = $this->countQueries(callback: fn () => $this->repository->subAccountsOf(id: CustomerId::fromInt(value: $parent->id)));
+
+        $this->assertSame(2, $queries);
+    }
 }
