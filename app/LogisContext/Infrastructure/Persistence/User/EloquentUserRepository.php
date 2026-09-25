@@ -11,6 +11,10 @@ use Logis\LogisContext\Domain\ValueObject\User\UserId;
 
 final class EloquentUserRepository implements UserRepository
 {
+    public function __construct(private readonly UserMapper $mapper)
+    {
+    }
+
     public function findById(UserId $id): ?User
     {
         $model = UserModel::query()->find(id: $id->value());
@@ -19,7 +23,7 @@ final class EloquentUserRepository implements UserRepository
             return null;
         }
 
-        return $this->toDomain(model: $model);
+        return $this->mapper->toDomain(model: $model);
     }
 
     public function findByEmail(Email $email): ?User
@@ -30,16 +34,6 @@ final class EloquentUserRepository implements UserRepository
             return null;
         }
 
-        return $this->toDomain(model: $model);
-    }
-
-    private function toDomain(UserModel $model): User
-    {
-        return new User(
-            id: UserId::fromInt(value: $model->id),
-            name: $model->name,
-            email: Email::fromString(value: $model->email),
-            passwordHash: $model->password,
-        );
+        return $this->mapper->toDomain(model: $model);
     }
 }

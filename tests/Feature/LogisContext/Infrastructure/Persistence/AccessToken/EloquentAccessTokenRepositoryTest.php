@@ -21,7 +21,7 @@ final class EloquentAccessTokenRepositoryTest extends TestCase
     {
         parent::setUp();
 
-        $this->repository = new EloquentAccessTokenRepository();
+        $this->repository = $this->app->make(abstract: EloquentAccessTokenRepository::class);
     }
 
     public function test_successors_are_found_by_their_predecessor(): void

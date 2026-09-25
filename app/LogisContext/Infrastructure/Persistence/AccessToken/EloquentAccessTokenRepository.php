@@ -4,17 +4,18 @@ declare(strict_types=1);
 
 namespace Logis\LogisContext\Infrastructure\Persistence\AccessToken;
 
-use Carbon\CarbonImmutable;
-use DateTimeInterface;
 use Logis\LogisContext\Domain\Model\AccessToken\AccessToken;
 use Logis\LogisContext\Domain\Model\AccessToken\AccessTokenRepository;
 use Logis\LogisContext\Domain\ValueObject\AccessToken\TokenHash;
-use Logis\LogisContext\Domain\ValueObject\User\UserId;
 use Logis\LogisContext\Infrastructure\Persistence\User\UserModel;
 
 final class EloquentAccessTokenRepository implements AccessTokenRepository
 {
     private const TOKEN_NAME = 'api';
+
+    public function __construct(private readonly AccessTokenMapper $mapper)
+    {
+    }
 
     public function save(AccessToken $accessToken): void
     {
@@ -42,7 +43,7 @@ final class EloquentAccessTokenRepository implements AccessTokenRepository
             return null;
         }
 
-        return $this->toDomain(model: $model);
+        return $this->mapper->toDomain(model: $model);
     }
 
     public function claimRotation(AccessToken $rotatedAccessToken): bool
@@ -62,33 +63,11 @@ final class EloquentAccessTokenRepository implements AccessTokenRepository
     {
         $models = AccessTokenModel::query()->where(column: 'rotated_from', operator: $hash->value())->get();
 
-        return array_values(array: $models->map(callback: fn (AccessTokenModel $model): AccessToken => $this->toDomain(model: $model))->all());
+        return array_values(array: $models->map(callback: fn (AccessTokenModel $model): AccessToken => $this->mapper->toDomain(model: $model))->all());
     }
 
     public function delete(TokenHash $hash): void
     {
         AccessTokenModel::query()->where(column: 'token', operator: $hash->value())->delete();
-    }
-
-    private function toDomain(AccessTokenModel $model): AccessToken
-    {
-        return new AccessToken(
-            hash: TokenHash::fromString(value: $model->token),
-            userId: UserId::fromInt(value: $model->tokenable_id),
-            ipAddress: $model->ip_address ?? '',
-            userAgent: $model->user_agent ?? '',
-            expiresAt: CarbonImmutable::instance(date: $model->expires_at)->utc(),
-            rotatedAt: $this->toUtcOrNull(date: $model->rotated_at),
-            rotatedFrom: $model->rotated_from === null ? null : TokenHash::fromString(value: $model->rotated_from),
-        );
-    }
-
-    private function toUtcOrNull(?DateTimeInterface $date): ?CarbonImmutable
-    {
-        if ($date === null) {
-            return null;
-        }
-
-        return CarbonImmutable::instance(date: $date)->utc();
     }
 }
