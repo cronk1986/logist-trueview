@@ -1,6 +1,6 @@
 # SPEC — Global Search
 
-Status: approved
+Status: done
 
 ## Objective
 

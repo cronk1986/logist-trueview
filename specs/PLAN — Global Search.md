@@ -1,6 +1,6 @@
 # PLAN — Global Search
 
-Spec: `specs/SPEC — Global Search.md` (Status: approved)
+Spec: `specs/SPEC — Global Search.md` (Status: done)
 Status: approved
 
 ## Overview
@@ -69,9 +69,9 @@ T11 adds one `extend()` per searcher to wrap it in `CachedEntitySearcher`. Tagge
 **Description:** Start the work on a branch that follows the new branch convention. Commit the pending documents first, each as its own logical change.
 
 **Acceptance criteria:**
-- [ ] The branch `feat/global-search` is created from `main`.
-- [ ] `docs(agents): add branch naming convention` commits the `AGENTS.md` change.
-- [ ] `docs(specs): specify the global search endpoint` commits the spec and this plan.
+- [x] The branch `feat/global-search` is created from `main`.
+- [x] `docs(agents): add branch naming convention` commits the `AGENTS.md` change.
+- [x] `docs(specs): specify the global search endpoint` commits the spec and this plan.
 
 **Verification:** `make check` before each commit. `git log --oneline` shows both commits on the branch.
 
@@ -88,10 +88,10 @@ T11 adds one `extend()` per searcher to wrap it in `CachedEntitySearcher`. Tagge
 **Description:** Add the boolean `users.can_view_sub_accounts` and carry it to the domain `User`, the factory and the demo data (D1, D11).
 
 **Acceptance criteria:**
-- [ ] The migration `2026_09_25_100800_add_can_view_sub_accounts_to_users_table` adds `can_view_sub_accounts` (boolean, NOT NULL, default `false`), and its `down()` drops it.
-- [ ] `UserModel` casts it to `bool`. `UserMapper` passes it to `User`, which gains `canViewSubAccounts(): bool`.
-- [ ] `UserFactory` defaults to `false` and has a `withSubAccountAccess()` state.
-- [ ] `DemoDataSeeder` gives `demo@logis.test` the permission, and creates `limited@logis.test` (password `password`) in the same parent customer without it.
+- [x] The migration `2026_09_25_100800_add_can_view_sub_accounts_to_users_table` adds `can_view_sub_accounts` (boolean, NOT NULL, default `false`), and its `down()` drops it.
+- [x] `UserModel` casts it to `bool`. `UserMapper` passes it to `User`, which gains `canViewSubAccounts(): bool`.
+- [x] `UserFactory` defaults to `false` and has a `withSubAccountAccess()` state.
+- [x] `DemoDataSeeder` gives `demo@logis.test` the permission, and creates `limited@logis.test` (password `password`) in the same parent customer without it.
 
 **Verification:**
 - Unit tests for `User` and `UserMapper`.
@@ -110,9 +110,9 @@ T11 adds one `extend()` per searcher to wrap it in `CachedEntitySearcher`. Tagge
 **Description:** Add the value object that lists the customers a user may see, the domain service that decides it, and the repository method it needs (D1).
 
 **Acceptance criteria:**
-- [ ] `Domain/ValueObject/Customer/VisibleCustomers` is built from `CustomerId`s. It removes duplicates, keeps the ids sorted, and exposes `isEmpty()` and `values(): list<int>`.
-- [ ] `CustomerRepository::subAccountsOf(CustomerId $id): list<Customer>` is implemented in `EloquentCustomerRepository` (eager loading `parent`) and in a new `tests/Unit/LogisContext/Domain/Model/Customer/InMemoryCustomerRepository`.
-- [ ] `Domain/Model/Customer/VisibleCustomersResolver::for(User $user): VisibleCustomers` returns:
+- [x] `Domain/ValueObject/Customer/VisibleCustomers` is built from `CustomerId`s. It removes duplicates, keeps the ids sorted, and exposes `isEmpty()` and `values(): list<int>`.
+- [x] `CustomerRepository::subAccountsOf(CustomerId $id): list<Customer>` is implemented in `EloquentCustomerRepository` (eager loading `parent`) and in a new `tests/Unit/LogisContext/Domain/Model/Customer/InMemoryCustomerRepository`.
+- [x] `Domain/Model/Customer/VisibleCustomersResolver::for(User $user): VisibleCustomers` returns:
   - an empty list when the user has no customer;
   - only the user's customer without the permission;
   - the customer plus its sub-accounts with the permission.
@@ -129,7 +129,7 @@ T11 adds one `extend()` per searcher to wrap it in `CachedEntitySearcher`. Tagge
 **Scope:** M · **Commit:** `feat(search): resolve the customers a user can see`
 
 ### Checkpoint: Visibility
-- [ ] `make check` is green, and `make fresh` seeds both demo users.
+- [x] `make check` is green, and `make fresh` seeds both demo users.
 - [ ] Post-implementation flow. Human review before continuing.
 
 ### Phase 2 — Search vocabulary and application layer
@@ -139,12 +139,12 @@ T11 adds one `extend()` per searcher to wrap it in `CachedEntitySearcher`. Tagge
 **Description:** Add the domain vocabulary of the search, and record the agreed folder exception in `AGENTS.md` (D7, R6).
 
 **Acceptance criteria:**
-- [ ] `Domain/ValueObject/Search/`:
+- [x] `Domain/ValueObject/Search/`:
   - `SearchTerm::fromString()` trims, and rejects an empty result with `InvalidSearchTermException`;
   - `SearchLimit::fromInt()` accepts 1 to 50, rejects other values with `InvalidSearchLimitException`, and has `DEFAULT = 5`;
   - `SearchableEntity` is a backed enum with the single case `Tickets = 'tickets'`.
-- [ ] Both exceptions live in `Domain/Exception/Search/`, extend `InvalidValueException` (422) and are built with named constructors.
-- [ ] `AGENTS.md` notes that `Search` is a documented exception to the per-aggregate folder rule.
+- [x] Both exceptions live in `Domain/Exception/Search/`, extend `InvalidValueException` (422) and are built with named constructors.
+- [x] `AGENTS.md` notes that `Search` is a documented exception to the per-aggregate folder rule.
 
 **Verification:** unit tests for both value objects (bounds, trim, whitespace only). `make check`.
 
@@ -159,15 +159,15 @@ T11 adds one `extend()` per searcher to wrap it in `CachedEntitySearcher`. Tagge
 **Description:** Build the whole Application side against the `EntitySearcher` port, tested with in-memory doubles and no database (D2, D7, D8).
 
 **Acceptance criteria:**
-- [ ] `Application/Query/GlobalSearch/` contains:
+- [x] `Application/Query/GlobalSearch/` contains:
   - `GlobalSearch` (`userId`, `term`, `limit`, `entities: list<string>`);
   - `EntitySearcher`;
   - `SearchCriteria` (`term`, `limit`, `customers`);
   - `EntitySearchResult` (`empty()`, `from(results:, total:)`, `toArray()`, `fromArray()`);
   - `EntitySearchers`, which throws `EntitySearcherNotRegisteredException` from its constructor when a case has no searcher or has two;
   - `GlobalSearchHandler`.
-- [ ] The handler loads the user (`UserNotFoundException`) and resolves the visible customers. It asks only the requested entities, in the order of the enum cases. When the list of customers is empty, it doesn't call any searcher and returns empty results. It returns `meta.query` and `meta.limit_per_entity`.
-- [ ] `ModelView/Search/EntitySearchResultView` renders `results`, `total` and `has_more` (`total > limit`).
+- [x] The handler loads the user (`UserNotFoundException`) and resolves the visible customers. It asks only the requested entities, in the order of the enum cases. When the list of customers is empty, it doesn't call any searcher and returns empty results. It returns `meta.query` and `meta.limit_per_entity`.
+- [x] `ModelView/Search/EntitySearchResultView` renders `results`, `total` and `has_more` (`total > limit`).
 
 **Verification:**
 - The `GlobalSearchHandler` unit test uses `InMemoryUserRepository`, `InMemoryCustomerRepository` and a new `InMemoryEntitySearcher` that records its calls.
@@ -187,12 +187,12 @@ T11 adds one `extend()` per searcher to wrap it in `CachedEntitySearcher`. Tagge
 **Description:** Add the first adapter of the port, with the scopes it combines and the shared `LIKE` escaping (D3, D4).
 
 **Acceptance criteria:**
-- [ ] `SharedContext/Infrastructure/Persistence/LikePattern::contains()` escapes `\`, `%` and `_`, and wraps the result in `%…%`.
-- [ ] `TicketModel` has `scopeVisibleTo(Builder, VisibleCustomers)` and `scopeMatching(Builder, SearchTerm)`, the latter over `subject`, `repair_id` and `incident_number`.
-- [ ] `Persistence/Ticket/EloquentTicketSearcher`:
+- [x] `SharedContext/Infrastructure/Persistence/LikePattern::contains()` escapes `\`, `%` and `_`, and wraps the result in `%…%`.
+- [x] `TicketModel` has `scopeVisibleTo(Builder, VisibleCustomers)` and `scopeMatching(Builder, SearchTerm)`, the latter over `subject`, `repair_id` and `incident_number`.
+- [x] `Persistence/Ticket/EloquentTicketSearcher`:
   - counts first, and returns `EntitySearchResult::empty()` when there are no matches;
   - otherwise eager loads `status`, orders by `id DESC`, applies the limit and maps each row through `ModelView/Ticket/TicketSearchResultView`.
-- [ ] `LogisServiceProvider` tags the searcher as `entity_searchers` and injects the tag into `EntitySearchers` with `giveTagged()`.
+- [x] `LogisServiceProvider` tags the searcher as `entity_searchers` and injects the tag into `EntitySearchers` with `giveTagged()`.
 
 **Verification:**
 - A unit test for `LikePattern` and a view test.
@@ -217,13 +217,13 @@ T11 adds one `extend()` per searcher to wrap it in `CachedEntitySearcher`. Tagge
 **Description:** Expose the search over HTTP, with its FormRequest, controller, route and OpenAPI documentation. At this point it only searches tickets (D6, API contract).
 
 **Acceptance criteria:**
-- [ ] `Http/Request/Search/SearchRequest`:
+- [x] `Http/Request/Search/SearchRequest`:
   - `prepareForValidation()` turns a comma-separated `entities` into an array, trims the values and drops empty ones and duplicates, and keeps the array form as it is;
   - rules as in D6;
   - `toQuery()` builds `GlobalSearch` from `CurrentAccessToken`, falling back to every `SearchableEntity` case and to `SearchLimit::DEFAULT`.
-- [ ] `SearchController::search()` asks the query and returns `ApiResponse::fromQueryResponse(response:, message: 'Search results')`.
-- [ ] `GET v1/search` sits in the `auth:sanctum` + `RotateAccessTokenMiddleware` group.
-- [ ] `docs/openapi/openapi.yaml` documents the path:
+- [x] `SearchController::search()` asks the query and returns `ApiResponse::fromQueryResponse(response:, message: 'Search results')`.
+- [x] `GET v1/search` sits in the `auth:sanctum` + `RotateAccessTokenMiddleware` group.
+- [x] `docs/openapi/openapi.yaml` documents the path:
   - the `q`, `limit` and `entities` parameters (string or array, enum);
   - the 200 schema and the 401, 422 and 429 responses;
   - bearer security and `X-Refreshed-Token`.
@@ -244,7 +244,7 @@ T11 adds one `extend()` per searcher to wrap it in `CachedEntitySearcher`. Tagge
 **Scope:** M · **Commit:** `feat(search): expose the global search endpoint`
 
 ### Checkpoint: Tickets end to end
-- [ ] `GET /api/v1/search?q=…` returns tickets for `demo@logis.test`, and fewer for `limited@logis.test`.
+- [x] `GET /api/v1/search?q=…` returns tickets for `demo@logis.test`, and fewer for `limited@logis.test`.
 - [ ] `make check` is green. Post-implementation flow. Human review before adding entities.
 
 ### Phase 4 — The other entities
@@ -261,9 +261,9 @@ Tasks 7 to 9 follow the same template. Each one:
 #### Task 7: Assets
 
 **Acceptance criteria:**
-- [ ] `SearchableEntity::Assets`. `AssetModel::scopeMatching()` covers `serial_number`, `manufacturer` and `model`.
-- [ ] `EloquentAssetSearcher` returns assets of every `status` and excludes soft-deleted ones. `AssetSearchResultView` has the contract fields.
-- [ ] The feature test checks that the response lists `tickets` before `assets`, whatever the order of the request.
+- [x] `SearchableEntity::Assets`. `AssetModel::scopeMatching()` covers `serial_number`, `manufacturer` and `model`.
+- [x] `EloquentAssetSearcher` returns assets of every `status` and excludes soft-deleted ones. `AssetSearchResultView` has the contract fields.
+- [x] The feature test checks that the response lists `tickets` before `assets`, whatever the order of the request.
 
 **Verification:** `EloquentAssetSearcherTest` (the same cases as tickets, plus every status), the view test, the updated `EntitySearchers` test, `make docs`, `make check`.
 
@@ -272,8 +272,8 @@ Tasks 7 to 9 follow the same template. Each one:
 #### Task 8: Contracts
 
 **Acceptance criteria:**
-- [ ] `SearchableEntity::Contracts`. `ContractModel` gains `scopeMatching()` over `name`, and `scopeActive()`.
-- [ ] `EloquentContractSearcher` returns only active contracts.
+- [x] `SearchableEntity::Contracts`. `ContractModel` gains `scopeMatching()` over `name`, and `scopeActive()`.
+- [x] `EloquentContractSearcher` returns only active contracts.
 
 **Verification:** `EloquentContractSearcherTest` (including inactive contracts being excluded), the view test, `make docs`, `make check`.
 
@@ -282,9 +282,9 @@ Tasks 7 to 9 follow the same template. Each one:
 #### Task 9: Locations
 
 **Acceptance criteria:**
-- [ ] `SearchableEntity::Locations`. `LocationModel::scopeMatching()` covers `title`, `full_address`, `city`, `state` and `postal_code`.
-- [ ] `EloquentLocationSearcher` works with no extra filter. Null address fields never match, and never break the query.
-- [ ] With no `entities`, the response contains the four entities in canonical order.
+- [x] `SearchableEntity::Locations`. `LocationModel::scopeMatching()` covers `title`, `full_address`, `city`, `state` and `postal_code`.
+- [x] `EloquentLocationSearcher` works with no extra filter. Null address fields never match, and never break the query.
+- [x] With no `entities`, the response contains the four entities in canonical order.
 
 **Verification:**
 - `EloquentLocationSearcherTest` and the view test.
@@ -296,7 +296,7 @@ Tasks 7 to 9 follow the same template. Each one:
 **Dependencies:** T8 · **Scope:** M · **Commit:** `feat(search): search locations by title and address`
 
 ### Checkpoint: All entities
-- [ ] Success criteria 1, 2, 3 and 6 of the spec are met.
+- [x] Success criteria 1, 2, 3 and 6 of the spec are met.
 - [ ] `make check` is green. Post-implementation flow. Human review.
 
 ### Phase 5 — Performance
@@ -306,12 +306,12 @@ Tasks 7 to 9 follow the same template. Each one:
 **Description:** Add a single-column index for every column the search filters on that doesn't have one yet (D5).
 
 **Acceptance criteria:**
-- [ ] The migration `2026_09_25_100900_add_search_indexes` adds:
+- [x] The migration `2026_09_25_100900_add_search_indexes` adds:
   - `tickets`: `subject`, `deleted_at`;
   - `assets`: `manufacturer`, `model`, `deleted_at`;
   - `contracts`: `status`;
   - `locations`: `title`, `full_address`, `city`, `state`, `postal_code`.
-- [ ] `down()` drops exactly those indexes, and existing indexes are untouched.
+- [x] `down()` drops exactly those indexes, and existing indexes are untouched.
 
 **Verification:** `SchemaTest` asserts every new index (`Schema::getIndexes()`). `make migrate`, `make fresh`, then a manual `migrate:rollback --step=1` and `make migrate`. `make check`.
 
@@ -322,11 +322,11 @@ Tasks 7 to 9 follow the same template. Each one:
 **Description:** Cache each entity's result for 5 minutes behind a decorator. The handler and the searchers don't change (D9).
 
 **Acceptance criteria:**
-- [ ] `config/search.php` defines `cache_ttl_seconds`, read from `SEARCH_CACHE_TTL_SECONDS` with default `300`, and the variable is added to `.env.example`.
-- [ ] `Infrastructure/Cache/CachedEntitySearcher`:
+- [x] `config/search.php` defines `cache_ttl_seconds`, read from `SEARCH_CACHE_TTL_SECONDS` with default `300`, and the variable is added to `.env.example`.
+- [x] `Infrastructure/Cache/CachedEntitySearcher`:
   - wraps an `EntitySearcher` and delegates `entity()`;
   - caches `EntitySearchResult::toArray()` under `search:v1:{entity}:` followed by `sha256` of `{sorted customer ids}|{lower-cased term}|{limit}`.
-- [ ] `LogisServiceProvider` wraps each of the four searchers with `extend()`, and the TTL is injected from the config.
+- [x] `LogisServiceProvider` wraps each of the four searchers with `extend()`, and the TTL is injected from the config.
 
 **Verification:**
 - `CachedEntitySearcherTest` checks:
@@ -339,8 +339,8 @@ Tasks 7 to 9 follow the same template. Each one:
 **Dependencies:** T9 · **Files:** `config/search.php`, `.env.example`, `CachedEntitySearcher`, `LogisServiceProvider`, tests · **Scope:** M · **Commit:** `perf(search): cache search results for five minutes`
 
 ### Checkpoint: Complete
-- [ ] Every success criterion in the spec is met.
-- [ ] `make fresh`, `make docs` and `make check` are green.
+- [x] Every success criterion in the spec is met.
+- [x] `make fresh`, `make docs` and `make check` are green.
 - [ ] Post-implementation flow. Human review before opening the pull request from `feat/global-search`.
 
 ## Risks and mitigations
