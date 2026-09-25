@@ -50,6 +50,15 @@ final class EloquentUserRepositoryTest extends TestCase
         $this->assertNull($user->customer());
     }
 
+    public function test_it_maps_the_sub_account_permission(): void
+    {
+        $withAccess = UserModel::factory()->withSubAccountAccess()->create();
+        $withoutAccess = UserModel::factory()->create();
+
+        $this->assertTrue($this->repository->findById(id: UserId::fromInt(value: $withAccess->id))?->canViewSubAccounts());
+        $this->assertFalse($this->repository->findById(id: UserId::fromInt(value: $withoutAccess->id))?->canViewSubAccounts());
+    }
+
     public function test_a_missing_user_is_null(): void
     {
         $this->assertNull($this->repository->findById(id: UserId::fromInt(value: 999)));

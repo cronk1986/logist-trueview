@@ -27,6 +27,7 @@ final class UserFactory extends Factory
     {
         return [
             'customer_id' => CustomerModel::factory(),
+            'can_view_sub_accounts' => false,
             'name' => fake()->name(),
             'email' => fake()->unique()->safeEmail(),
             'email_verified_at' => now(),
@@ -38,5 +39,10 @@ final class UserFactory extends Factory
     public function withoutCustomer(): self
     {
         return $this->state(state: ['customer_id' => null]);
+    }
+
+    public function withSubAccountAccess(): self
+    {
+        return $this->state(state: ['can_view_sub_accounts' => true]);
     }
 }

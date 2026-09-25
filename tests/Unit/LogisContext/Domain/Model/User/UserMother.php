@@ -17,6 +17,7 @@ final class UserMother
         string $email = 'demo@logis.test',
         string $password = 'password',
         ?Customer $customer = null,
+        bool $canViewSubAccounts = false,
     ): User {
         return new User(
             id: UserId::fromInt(value: $id),
@@ -24,6 +25,7 @@ final class UserMother
             email: Email::fromString(value: $email),
             passwordHash: InMemoryPasswordHasher::hash(password: $password),
             customer: $customer,
+            canViewSubAccounts: $canViewSubAccounts,
         );
     }
 }

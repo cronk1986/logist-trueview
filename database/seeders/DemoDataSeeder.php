@@ -32,10 +32,16 @@ final class DemoDataSeeder extends Seeder
         ];
         $unrelated = CustomerModel::factory()->create(attributes: ['erp_id' => 'C-2000', 'name' => 'Other Company']);
 
-        $demoUser = UserModel::factory()->create(attributes: [
+        $demoUser = UserModel::factory()->withSubAccountAccess()->create(attributes: [
             'customer_id' => $parent->id,
             'name' => 'Demo',
             'email' => 'demo@logis.test',
+            'password' => 'password',
+        ]);
+        UserModel::factory()->create(attributes: [
+            'customer_id' => $parent->id,
+            'name' => 'Limited',
+            'email' => 'limited@logis.test',
             'password' => 'password',
         ]);
 

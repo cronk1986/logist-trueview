@@ -47,6 +47,16 @@ final class DemoDataSeederTest extends TestCase
         $this->assertSame(1, CustomViewModel::query()->where(column: 'user_id', operator: $demoUser->id)->where(column: 'is_public', operator: true)->count());
     }
 
+    public function test_only_the_demo_user_can_view_the_sub_accounts_of_the_parent_customer(): void
+    {
+        $demoUser = UserModel::query()->where(column: 'email', operator: 'demo@logis.test')->firstOrFail();
+        $limitedUser = UserModel::query()->where(column: 'email', operator: 'limited@logis.test')->firstOrFail();
+
+        $this->assertTrue($demoUser->can_view_sub_accounts);
+        $this->assertFalse($limitedUser->can_view_sub_accounts);
+        $this->assertSame($demoUser->customer_id, $limitedUser->customer_id);
+    }
+
     public function test_every_customer_gets_its_catalog(): void
     {
         $this->assertSame(self::CUSTOMERS * DemoDataSeeder::CONTRACTS_PER_CUSTOMER, ContractModel::query()->count());

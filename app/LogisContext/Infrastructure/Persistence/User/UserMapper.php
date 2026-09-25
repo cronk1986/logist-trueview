@@ -33,6 +33,7 @@ final class UserMapper
             email: Email::fromString(value: $model->email),
             passwordHash: $model->password,
             customer: $this->customer(model: $model),
+            canViewSubAccounts: $model->can_view_sub_accounts,
         );
     }
 

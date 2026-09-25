@@ -21,6 +21,15 @@ final class UserMapperTest extends TestCase
         $this->assertSame('demo@logis.test', $user->email()->value());
         $this->assertSame('hash', $user->passwordHash());
         $this->assertNull($user->customer());
+        $this->assertFalse($user->canViewSubAccounts());
+    }
+
+    public function test_it_maps_the_sub_account_permission(): void
+    {
+        $model = $this->model(customer: null);
+        $model->setAttribute(key: 'can_view_sub_accounts', value: 1);
+
+        $this->assertTrue($this->mapper()->toDomain(model: $model)->canViewSubAccounts());
     }
 
     public function test_it_maps_the_customer_of_a_user(): void
@@ -43,7 +52,7 @@ final class UserMapperTest extends TestCase
     private function model(?CustomerModel $customer): UserModel
     {
         $model = new UserModel();
-        $model->setRawAttributes(attributes: ['id' => 7, 'name' => 'Demo', 'email' => 'demo@logis.test', 'password' => 'hash', 'customer_id' => $customer?->id]);
+        $model->setRawAttributes(attributes: ['id' => 7, 'name' => 'Demo', 'email' => 'demo@logis.test', 'password' => 'hash', 'customer_id' => $customer?->id, 'can_view_sub_accounts' => 0]);
         $model->setRelation(relation: 'customer', value: $customer);
 
         return $model;

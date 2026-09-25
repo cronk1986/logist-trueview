@@ -17,6 +17,7 @@ use Logis\LogisContext\Infrastructure\Persistence\Customer\CustomerModel;
  * @property string $email
  * @property string $password
  * @property ?int $customer_id
+ * @property bool $can_view_sub_accounts
  * @property-read ?CustomerModel $customer
  */
 final class UserModel extends Authenticatable
@@ -33,6 +34,7 @@ final class UserModel extends Authenticatable
         'email',
         'password',
         'customer_id',
+        'can_view_sub_accounts',
     ];
 
     /** @var list<string> */
@@ -58,6 +60,7 @@ final class UserModel extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'can_view_sub_accounts' => 'boolean',
         ];
     }
 }

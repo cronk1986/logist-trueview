@@ -16,6 +16,7 @@ final class User
         private readonly Email $email,
         private readonly string $passwordHash,
         private readonly ?Customer $customer,
+        private readonly bool $canViewSubAccounts,
     ) {
     }
 
@@ -42,5 +43,10 @@ final class User
     public function customer(): ?Customer
     {
         return $this->customer;
+    }
+
+    public function canViewSubAccounts(): bool
+    {
+        return $this->canViewSubAccounts;
     }
 }
