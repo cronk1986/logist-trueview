@@ -9,4 +9,9 @@ enum AssetStatus: string
     case Active = 'active';
     case Inactive = 'inactive';
     case Retired = 'retired';
+
+    public function isActive(): bool
+    {
+        return $this === self::Active;
+    }
 }

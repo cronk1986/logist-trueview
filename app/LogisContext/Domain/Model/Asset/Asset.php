@@ -83,7 +83,7 @@ final class Asset
 
     public function isActive(): bool
     {
-        return $this->status === AssetStatus::Active;
+        return $this->status->isActive();
     }
 
     private function ensureTheContractBelongsToTheCustomer(): void

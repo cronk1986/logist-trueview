@@ -40,6 +40,6 @@ final class Contract
 
     public function isActive(): bool
     {
-        return $this->status === ContractStatus::Active;
+        return $this->status->isActive();
     }
 }
