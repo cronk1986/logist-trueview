@@ -107,6 +107,8 @@ T11 adds one `extend()` per searcher to wrap it in `CachedEntitySearcher`. Tagge
 
 #### Task 2: Resolve the visible customers of a user
 
+> Superseded after implementation by R9 of the spec: visibility became a rule (`User::visibleCustomers()`) turned into a subquery by `Persistence/Customer/VisibleCustomerIds`, and `VisibleCustomersResolver` and `CustomerRepository::subAccountsOf()` were removed.
+
 **Description:** Add the value object that lists the customers a user may see, the domain service that decides it, and the repository method it needs (D1).
 
 **Acceptance criteria:**

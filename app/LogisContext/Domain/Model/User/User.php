@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Logis\LogisContext\Domain\Model\User;
 
 use Logis\LogisContext\Domain\Model\Customer\Customer;
+use Logis\LogisContext\Domain\ValueObject\Customer\VisibleCustomers;
 use Logis\LogisContext\Domain\ValueObject\User\Email;
 use Logis\LogisContext\Domain\ValueObject\User\UserId;
 
@@ -48,5 +49,18 @@ final class User
     public function canViewSubAccounts(): bool
     {
         return $this->canViewSubAccounts;
+    }
+
+    public function visibleCustomers(): VisibleCustomers
+    {
+        if ($this->customer === null) {
+            return VisibleCustomers::none();
+        }
+
+        if (!$this->canViewSubAccounts) {
+            return VisibleCustomers::ownCustomer(customer: $this->customer->id());
+        }
+
+        return VisibleCustomers::customerWithSubAccounts(customer: $this->customer->id());
     }
 }

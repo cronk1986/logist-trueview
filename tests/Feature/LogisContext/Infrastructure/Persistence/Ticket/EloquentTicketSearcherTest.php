@@ -147,6 +147,6 @@ final class EloquentTicketSearcherTest extends TestCase
 
     private function criteria(string $term, int $limit = 5): SearchCriteria
     {
-        return SearchCriteriaMother::create(term: $term, limit: $limit, customerIds: [$this->customer->id]);
+        return SearchCriteriaMother::create(term: $term, limit: $limit, customerId: $this->customer->id);
     }
 }

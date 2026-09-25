@@ -13,6 +13,7 @@ use Logis\LogisContext\Domain\ValueObject\Contract\ContractStatus;
 use Logis\LogisContext\Domain\ValueObject\Customer\VisibleCustomers;
 use Logis\LogisContext\Domain\ValueObject\Search\SearchTerm;
 use Logis\LogisContext\Infrastructure\Persistence\Customer\CustomerModel;
+use Logis\LogisContext\Infrastructure\Persistence\Customer\VisibleCustomerIds;
 use Logis\SharedContext\Infrastructure\Persistence\LikePattern;
 
 /**
@@ -45,7 +46,7 @@ final class ContractModel extends Model
     /** @param Builder<ContractModel> $query */
     public function scopeVisibleTo(Builder $query, VisibleCustomers $customers): void
     {
-        $query->whereIn('customer_id', $customers->values());
+        $query->whereIn('customer_id', VisibleCustomerIds::of(customers: $customers));
     }
 
     /** @param Builder<ContractModel> $query */

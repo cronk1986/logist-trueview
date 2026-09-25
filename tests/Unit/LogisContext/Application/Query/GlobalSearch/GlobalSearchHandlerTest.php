@@ -9,18 +9,15 @@ use Logis\LogisContext\Application\Query\GlobalSearch\EntitySearchResult;
 use Logis\LogisContext\Application\Query\GlobalSearch\GlobalSearch;
 use Logis\LogisContext\Application\Query\GlobalSearch\GlobalSearchHandler;
 use Logis\LogisContext\Domain\Exception\User\UserNotFoundException;
-use Logis\LogisContext\Domain\Model\Customer\VisibleCustomersResolver;
 use Logis\LogisContext\Domain\ValueObject\Search\SearchableEntity;
 use PHPUnit\Framework\TestCase;
 use Tests\Unit\LogisContext\Domain\Model\Customer\CustomerMother;
-use Tests\Unit\LogisContext\Domain\Model\Customer\InMemoryCustomerRepository;
 use Tests\Unit\LogisContext\Domain\Model\User\InMemoryUserRepository;
 use Tests\Unit\LogisContext\Domain\Model\User\UserMother;
 
 final class GlobalSearchHandlerTest extends TestCase
 {
     private InMemoryUserRepository $users;
-    private InMemoryCustomerRepository $customers;
     private InMemoryEntitySearcher $tickets;
     private InMemoryEntitySearcher $assets;
     private GlobalSearchHandler $handler;
@@ -28,7 +25,6 @@ final class GlobalSearchHandlerTest extends TestCase
     protected function setUp(): void
     {
         $this->users = new InMemoryUserRepository();
-        $this->customers = new InMemoryCustomerRepository();
         $this->tickets = new InMemoryEntitySearcher(
             entity: SearchableEntity::Tickets,
             result: EntitySearchResult::from(results: [['id' => 1], ['id' => 2]], total: 7),
@@ -39,13 +35,8 @@ final class GlobalSearchHandlerTest extends TestCase
         );
         $this->handler = new GlobalSearchHandler(
             users: $this->users,
-            visibleCustomers: new VisibleCustomersResolver(customers: $this->customers),
             searchers: new EntitySearchers(searchers: $this->searchers()),
         );
-
-        $parent = CustomerMother::create(id: 1);
-        $this->customers->add(customer: $parent);
-        $this->customers->add(customer: CustomerMother::create(id: 2, erpId: 'C-1001', parent: $parent));
     }
 
     public function test_it_returns_the_results_of_each_requested_entity(): void
@@ -106,7 +97,8 @@ final class GlobalSearchHandlerTest extends TestCase
         $criteria = $this->tickets->calls()[0];
         $this->assertSame('zebra', $criteria->term->value());
         $this->assertSame(4, $criteria->limit->value());
-        $this->assertSame([1, 2], $criteria->customers->values());
+        $this->assertSame(1, $criteria->customers->customer()?->value());
+        $this->assertTrue($criteria->customers->includesSubAccounts());
     }
 
     public function test_it_skips_the_entities_that_were_not_requested(): void

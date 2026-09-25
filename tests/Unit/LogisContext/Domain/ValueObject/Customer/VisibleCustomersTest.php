@@ -15,21 +15,25 @@ final class VisibleCustomersTest extends TestCase
         $customers = VisibleCustomers::none();
 
         $this->assertTrue($customers->isEmpty());
-        $this->assertSame([], $customers->values());
+        $this->assertNull($customers->customer());
+        $this->assertFalse($customers->includesSubAccounts());
     }
 
-    public function test_it_sorts_the_ids(): void
+    public function test_the_own_customer_excludes_its_sub_accounts(): void
     {
-        $customers = VisibleCustomers::fromIds(ids: [CustomerId::fromInt(value: 9), CustomerId::fromInt(value: 2), CustomerId::fromInt(value: 5)]);
+        $customers = VisibleCustomers::ownCustomer(customer: CustomerId::fromInt(value: 7));
 
         $this->assertFalse($customers->isEmpty());
-        $this->assertSame([2, 5, 9], $customers->values());
+        $this->assertSame(7, $customers->customer()?->value());
+        $this->assertFalse($customers->includesSubAccounts());
     }
 
-    public function test_it_removes_duplicates(): void
+    public function test_a_customer_can_include_its_sub_accounts(): void
     {
-        $customers = VisibleCustomers::fromIds(ids: [CustomerId::fromInt(value: 3), CustomerId::fromInt(value: 3), CustomerId::fromInt(value: 1)]);
+        $customers = VisibleCustomers::customerWithSubAccounts(customer: CustomerId::fromInt(value: 7));
 
-        $this->assertSame([1, 3], $customers->values());
+        $this->assertFalse($customers->isEmpty());
+        $this->assertSame(7, $customers->customer()?->value());
+        $this->assertTrue($customers->includesSubAccounts());
     }
 }

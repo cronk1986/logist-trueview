@@ -12,15 +12,21 @@ use Logis\LogisContext\Domain\ValueObject\Search\SearchTerm;
 
 final class SearchCriteriaMother
 {
-    /**
-     * @param list<int> $customerIds
-     */
-    public static function create(string $term = 'zebra', int $limit = SearchLimit::DEFAULT, array $customerIds = [1]): SearchCriteria
+    public static function create(string $term = 'zebra', int $limit = SearchLimit::DEFAULT, int $customerId = 1, bool $withSubAccounts = false): SearchCriteria
     {
         return new SearchCriteria(
             term: SearchTerm::fromString(value: $term),
             limit: SearchLimit::fromInt(value: $limit),
-            customers: VisibleCustomers::fromIds(ids: array_map(callback: fn (int $id): CustomerId => CustomerId::fromInt(value: $id), array: $customerIds)),
+            customers: self::customers(customer: CustomerId::fromInt(value: $customerId), withSubAccounts: $withSubAccounts),
         );
+    }
+
+    private static function customers(CustomerId $customer, bool $withSubAccounts): VisibleCustomers
+    {
+        if ($withSubAccounts) {
+            return VisibleCustomers::customerWithSubAccounts(customer: $customer);
+        }
+
+        return VisibleCustomers::ownCustomer(customer: $customer);
     }
 }

@@ -6,7 +6,6 @@ namespace Logis\LogisContext\Application\Query\GlobalSearch;
 
 use Logis\LogisContext\Application\ModelView\Search\EntitySearchResultView;
 use Logis\LogisContext\Domain\Exception\User\UserNotFoundException;
-use Logis\LogisContext\Domain\Model\Customer\VisibleCustomersResolver;
 use Logis\LogisContext\Domain\Model\User\UserRepository;
 use Logis\LogisContext\Domain\ValueObject\Search\SearchableEntity;
 use Logis\LogisContext\Domain\ValueObject\Search\SearchLimit;
@@ -19,7 +18,6 @@ final class GlobalSearchHandler
 {
     public function __construct(
         private readonly UserRepository $users,
-        private readonly VisibleCustomersResolver $visibleCustomers,
         private readonly EntitySearchers $searchers,
     ) {
     }
@@ -35,7 +33,7 @@ final class GlobalSearchHandler
         $criteria = new SearchCriteria(
             term: SearchTerm::fromString(value: $query->term),
             limit: SearchLimit::fromInt(value: $query->limit),
-            customers: $this->visibleCustomers->for(user: $user),
+            customers: $user->visibleCustomers(),
         );
 
         $data = [];

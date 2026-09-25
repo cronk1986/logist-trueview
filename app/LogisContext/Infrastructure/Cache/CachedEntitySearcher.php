@@ -41,7 +41,8 @@ final class CachedEntitySearcher implements EntitySearcher
     private function key(SearchCriteria $criteria): string
     {
         $fingerprint = implode(separator: '|', array: [
-            implode(separator: ',', array: $criteria->customers->values()),
+            $criteria->customers->customer()?->value(),
+            (int) $criteria->customers->includesSubAccounts(),
             mb_strtolower(string: $criteria->term->value()),
             $criteria->limit->value(),
         ]);

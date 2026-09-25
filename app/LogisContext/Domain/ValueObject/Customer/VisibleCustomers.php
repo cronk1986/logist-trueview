@@ -6,42 +6,39 @@ namespace Logis\LogisContext\Domain\ValueObject\Customer;
 
 final readonly class VisibleCustomers
 {
-    /**
-     * @param list<int> $ids
-     */
-    private function __construct(private array $ids)
-    {
+    private function __construct(
+        private ?CustomerId $customer,
+        private bool $includesSubAccounts,
+    ) {
     }
 
     public static function none(): self
     {
-        return new self(ids: []);
+        return new self(customer: null, includesSubAccounts: false);
     }
 
-    /**
-     * @param list<CustomerId> $ids
-     */
-    public static function fromIds(array $ids): self
+    public static function ownCustomer(CustomerId $customer): self
     {
-        $values = array_values(array: array_unique(array: array_map(
-            callback: fn (CustomerId $id): int => $id->value(),
-            array: $ids,
-        )));
-        sort(array: $values);
+        return new self(customer: $customer, includesSubAccounts: false);
+    }
 
-        return new self(ids: $values);
+    public static function customerWithSubAccounts(CustomerId $customer): self
+    {
+        return new self(customer: $customer, includesSubAccounts: true);
     }
 
     public function isEmpty(): bool
     {
-        return $this->ids === [];
+        return $this->customer === null;
     }
 
-    /**
-     * @return list<int>
-     */
-    public function values(): array
+    public function customer(): ?CustomerId
     {
-        return $this->ids;
+        return $this->customer;
+    }
+
+    public function includesSubAccounts(): bool
+    {
+        return $this->includesSubAccounts;
     }
 }

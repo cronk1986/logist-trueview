@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Logis\LogisContext\Domain\ValueObject\Customer\VisibleCustomers;
 use Logis\LogisContext\Domain\ValueObject\Search\SearchTerm;
 use Logis\LogisContext\Infrastructure\Persistence\Customer\CustomerModel;
+use Logis\LogisContext\Infrastructure\Persistence\Customer\VisibleCustomerIds;
 use Logis\SharedContext\Infrastructure\Persistence\LikePattern;
 
 /**
@@ -50,7 +51,7 @@ final class LocationModel extends Model
     /** @param Builder<LocationModel> $query */
     public function scopeVisibleTo(Builder $query, VisibleCustomers $customers): void
     {
-        $query->whereIn('customer_id', $customers->values());
+        $query->whereIn('customer_id', VisibleCustomerIds::of(customers: $customers));
     }
 
     /** @param Builder<LocationModel> $query */

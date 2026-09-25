@@ -62,18 +62,18 @@ final class CachedEntitySearcherTest extends TestCase
         $this->assertCount(1, $this->tickets->calls());
     }
 
-    public function test_the_order_of_the_customers_does_not_change_the_entry(): void
+    public function test_including_the_sub_accounts_is_a_different_entry(): void
     {
-        $this->cachedTickets->search(criteria: $this->criteria(customerIds: [1, 2]));
-        $this->cachedTickets->search(criteria: $this->criteria(customerIds: [2, 1]));
+        $this->cachedTickets->search(criteria: $this->criteria());
+        $this->cachedTickets->search(criteria: $this->criteria(withSubAccounts: false));
 
-        $this->assertCount(1, $this->tickets->calls());
+        $this->assertCount(2, $this->tickets->calls());
     }
 
     public function test_other_customers_a_different_term_or_limit_miss_the_cache(): void
     {
         $this->cachedTickets->search(criteria: $this->criteria());
-        $this->cachedTickets->search(criteria: $this->criteria(customerIds: [3]));
+        $this->cachedTickets->search(criteria: $this->criteria(customerId: 3));
         $this->cachedTickets->search(criteria: $this->criteria(term: 'honeywell'));
         $this->cachedTickets->search(criteria: $this->criteria(limit: 10));
 
@@ -110,11 +110,8 @@ final class CachedEntitySearcherTest extends TestCase
         return new CachedEntitySearcher(searcher: $searcher, cache: $this->cache, ttlSeconds: self::TTL_SECONDS);
     }
 
-    /**
-     * @param list<int> $customerIds
-     */
-    private function criteria(string $term = 'zebra', int $limit = 5, array $customerIds = [1, 2]): SearchCriteria
+    private function criteria(string $term = 'zebra', int $limit = 5, int $customerId = 1, bool $withSubAccounts = true): SearchCriteria
     {
-        return SearchCriteriaMother::create(term: $term, limit: $limit, customerIds: $customerIds);
+        return SearchCriteriaMother::create(term: $term, limit: $limit, customerId: $customerId, withSubAccounts: $withSubAccounts);
     }
 }

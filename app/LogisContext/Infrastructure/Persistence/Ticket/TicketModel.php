@@ -15,6 +15,7 @@ use Logis\LogisContext\Domain\ValueObject\Customer\VisibleCustomers;
 use Logis\LogisContext\Domain\ValueObject\Search\SearchTerm;
 use Logis\LogisContext\Infrastructure\Persistence\Asset\AssetModel;
 use Logis\LogisContext\Infrastructure\Persistence\Customer\CustomerModel;
+use Logis\LogisContext\Infrastructure\Persistence\Customer\VisibleCustomerIds;
 use Logis\LogisContext\Infrastructure\Persistence\TicketStatus\TicketStatusModel;
 use Logis\LogisContext\Infrastructure\Persistence\User\UserModel;
 use Logis\SharedContext\Infrastructure\Persistence\LikePattern;
@@ -82,7 +83,7 @@ final class TicketModel extends Model
     /** @param Builder<TicketModel> $query */
     public function scopeVisibleTo(Builder $query, VisibleCustomers $customers): void
     {
-        $query->whereIn('customer_id', $customers->values());
+        $query->whereIn('customer_id', VisibleCustomerIds::of(customers: $customers));
     }
 
     /** @param Builder<TicketModel> $query */

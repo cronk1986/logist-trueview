@@ -24,18 +24,4 @@ final class EloquentCustomerRepository implements CustomerRepository
 
         return $this->mapper->toDomain(model: $model);
     }
-
-    /**
-     * @return list<Customer>
-     */
-    public function subAccountsOf(CustomerId $id): array
-    {
-        $models = CustomerModel::query()
-            ->with(relations: CustomerMapper::relations())
-            ->where(column: 'parent_customer_id', operator: $id->value())
-            ->orderBy('id')
-            ->get();
-
-        return array_values(array: $models->map(callback: fn (CustomerModel $model): Customer => $this->mapper->toDomain(model: $model))->all());
-    }
 }

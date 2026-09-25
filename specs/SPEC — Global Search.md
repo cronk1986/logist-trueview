@@ -98,13 +98,14 @@ Authorization: Bearer <token>
 This spec implements the rule left open in D10 of `SPEC — Core Domain Model.md`:
 
 - `users.can_view_sub_accounts`: a new boolean column, NOT NULL, default `false`. It replaces the legacy `subAccountPermission == 3`. The domain `User` gains `canViewSubAccounts(): bool`.
-- `VisibleCustomers` (value object, `Domain/ValueObject/Customer/`) is a list of unique `CustomerId`s, which can be empty. It exposes `isEmpty()` and `values(): list<int>`, sorted so that the cache key doesn't depend on order.
-- `VisibleCustomersResolver` (domain service, `Domain/Model/Customer/`) decides the list for a `User`:
-  - no customer → empty;
-  - a customer, without the permission → only that customer;
-  - a customer, with the permission → that customer plus its sub-accounts.
-- `CustomerRepository` gains `subAccountsOf(CustomerId $id): list<Customer>`, its first consumer. The hierarchy has one level (R6 of the core spec), so sub-accounts of sub-accounts don't exist.
-- The views spec reuses this resolver unchanged: executing a view filters by the customers of the user who runs it.
+- `VisibleCustomers` (value object, `Domain/ValueObject/Customer/`) describes the **rule**, not the list of ids: the user's customer, and whether its sub-accounts are included. It has three named constructors, `none()`, `ownCustomer(CustomerId)` and `customerWithSubAccounts(CustomerId)`, and exposes `isEmpty()`, `customer(): ?CustomerId` and `includesSubAccounts(): bool`.
+- `User::visibleCustomers(): VisibleCustomers` applies the rule:
+  - no customer → `none()`;
+  - a customer, without the permission → `ownCustomer()`;
+  - a customer, with the permission → `customerWithSubAccounts()`.
+- The rule is turned into SQL by `Persistence/Customer/VisibleCustomerIds::of(VisibleCustomers)`: a subquery on `customers` that the `visibleTo()` scopes use as `customer_id IN (SELECT id FROM customers WHERE id = :customer OR parent_customer_id = :customer)`. Without the permission, only `id = :customer`. For `none()`, a subquery that returns nothing.
+- **Why a subquery and not a list of ids (R9).** A customer can have thousands of sub-accounts. Loading them, hydrating one entity each and binding every id into an `IN (…)` list, in each of the eight search queries, costs more with every sub-account and fails beyond PDO's 65,535 placeholders. The subquery binds at most two values, needs no query to resolve the rule, and MySQL resolves it with the primary key and the `parent_customer_id` index. The hierarchy has one level (R6 of the core spec), so sub-accounts of sub-accounts don't exist.
+- The views spec reuses `User::visibleCustomers()` and `VisibleCustomerIds` unchanged: executing a view filters by the customers of the user who runs it.
 
 ### D2. Searchable entities: an enum plus one searcher per entity
 
@@ -132,7 +133,7 @@ What can be searched is an **entity**, which is part of the API vocabulary. Tabl
 
 ### D3. Search semantics
 
-- **Matching:** `LIKE '%term%'` on every searched column of the entity, joined with `OR`, inside `customer_id IN (<visible customers>)`. This is the legacy "contains" behaviour, which users expect when they type part of a serial number or repair id. The comparison is case-insensitive through the column collation (`utf8mb4_unicode_ci`).
+- **Matching:** `LIKE '%term%'` on every searched column of the entity, joined with `OR`, inside `customer_id IN (<visible customers subquery>)`. This is the legacy "contains" behaviour, which users expect when they type part of a serial number or repair id. The comparison is case-insensitive through the column collation (`utf8mb4_unicode_ci`).
 
   | Entity | Searched columns | Extra filter |
   |---|---|---|
@@ -153,7 +154,7 @@ The Eloquent models carry the reusable parts of the search as local scopes (`sco
 
 | Model | Scopes |
 |---|---|
-| `TicketModel`, `AssetModel`, `ContractModel`, `LocationModel` | `visibleTo(Builder $query, VisibleCustomers $customers)`: `whereIn('customer_id', …)` |
+| `TicketModel`, `AssetModel`, `ContractModel`, `LocationModel` | `visibleTo(Builder $query, VisibleCustomers $customers)`: `whereIn('customer_id', VisibleCustomerIds::of(…))` |
 | same | `matching(Builder $query, SearchTerm $term)`: the grouped `OR` of `LIKE` on that model's searched columns |
 | `ContractModel` | `active(Builder $query)`: `status = active` |
 
@@ -194,7 +195,7 @@ Rules: `q` → `required|string` and valid UTF-8 (invalid bytes would otherwise 
 | `SearchTerm` | `Domain/ValueObject/Search/` | trimmed, not empty (`InvalidSearchTermException`, 422) |
 | `SearchLimit` | `Domain/ValueObject/Search/` | 1 to 50 (`InvalidSearchLimitException`, 422); `DEFAULT = 5` |
 | `SearchableEntity` | `Domain/ValueObject/Search/` | backed enum |
-| `VisibleCustomers` | `Domain/ValueObject/Customer/` | unique ids, sorted |
+| `VisibleCustomers` | `Domain/ValueObject/Customer/` | no customer, or one customer with or without its sub-accounts |
 
 - `Search` is not an aggregate. `Domain/ValueObject/Search/` and `Domain/Exception/Search/` are an agreed exception to the "grouped by aggregate" rule. `AGENTS.md` records it in the same change.
 - `GlobalSearch` (query): `final readonly`, with `userId: int`, `term: string`, `limit: int` and `entities: list<string>`. It carries primitives, and the handler builds the value objects, as the existing handlers do.
@@ -205,7 +206,7 @@ Rules: `q` → `required|string` and valid UTF-8 (invalid bytes would otherwise 
 `GlobalSearchHandler::handle(GlobalSearch $query): QueryResponse` works in five steps:
 
 1. Load the user with `UserRepository` (`UserNotFoundException` if it's missing).
-2. Resolve `VisibleCustomers` with `VisibleCustomersResolver`.
+2. Take its `VisibleCustomers` from `User::visibleCustomers()`.
 3. Build `SearchCriteria` from the query.
 4. For each requested entity, in canonical order, ask its searcher. If the customers are empty, it uses an empty result instead.
 5. Return `QueryResponse::from(data: …, meta: Meta::from(values: ['query' => …, 'limit_per_entity' => …]))`.
@@ -221,8 +222,9 @@ Views (`final readonly`, a named constructor and `toArray()`):
 
 - `CachedEntitySearcher` (`Infrastructure/Cache/`) decorates each `EntitySearcher`. The provider wraps the four searchers with `$this->app->extend()`. The handler and the searchers know nothing about the cache.
 - TTL: `config/search.php` → `cache_ttl_seconds`, from `SEARCH_CACHE_TTL_SECONDS`, default `300` (5 minutes).
-- Key: `search:v1:{entity}:` followed by `sha256` of `{visible customer ids, sorted}|{lower-cased term}|{limit}`.
-  - The key contains the **visible customers**, not the user. Two users with the same visibility share entries, and a user never receives another customer's data.
+- Key: `search:v1:{entity}:` followed by `sha256` of `{customer id}|{sub-accounts included: 0 or 1}|{lower-cased term}|{limit}`.
+  - The key contains the **visibility rule**, not the user. Two users with the same customer and the same permission share entries, and a user never receives another customer's data.
+  - A sub-account created after an entry was cached shows up when the entry expires, within 5 minutes, like any other change.
   - The term is lower-cased because the collation already treats case as equal.
   - `v1` is the version of the stored shape. Changing a result view bumps it, so a deploy never serves entries of the old shape.
 - What is stored: the plain array form of `EntitySearchResult` (no objects).
@@ -235,8 +237,7 @@ Views (`final readonly`, a named constructor and `toArray()`):
 ```
 app/LogisContext/
 ├── Domain/
-│   ├── Model/Customer/            VisibleCustomersResolver; CustomerRepository::subAccountsOf()
-│   ├── Model/User/                User::canViewSubAccounts()
+│   ├── Model/User/                User::canViewSubAccounts(), User::visibleCustomers()
 │   ├── ValueObject/Customer/      VisibleCustomers
 │   ├── ValueObject/Search/        SearchableEntity, SearchTerm, SearchLimit
 │   └── Exception/Search/          InvalidSearchTermException, InvalidSearchLimitException
@@ -248,7 +249,7 @@ app/LogisContext/
     ├── Http/Controller/           SearchController::search()
     ├── Http/Request/Search/       SearchRequest
     ├── Persistence/<Aggregate>/   Eloquent<X>Searcher; scopes on <X>Model; UserModel/UserMapper gain the flag;
-    │                              EloquentCustomerRepository::subAccountsOf()
+    │                              Customer/VisibleCustomerIds
     ├── Search/                    NewestMatches: the count, order, limit and mapping shared by the searchers
     ├── Cache/                     CachedEntitySearcher
     └── Providers/                 LogisServiceProvider: tags, giveTagged, extend, resolver binding
@@ -341,11 +342,10 @@ make check     # qa + docs-lint + test, required before every commit
 
 **Unit** (`tests/Unit/LogisContext/…`, mirroring `app/`):
 
-- `SearchTerm` (trim, empty and whitespace-only rejected), `SearchLimit` (bounds 1 and 50, 0 and 51 rejected), `VisibleCustomers` (dedupe, sorting, empty).
-- `User::canViewSubAccounts()`.
-- `VisibleCustomersResolver`: no customer, without the permission, with the permission, and a customer without sub-accounts. It uses a new `InMemoryCustomerRepository` in `tests/Unit/LogisContext/Domain/Model/Customer/`.
+- `SearchTerm` (trim, empty and whitespace-only rejected), `SearchLimit` (bounds 1 and 50, 0 and 51 rejected), `VisibleCustomers` (the three named constructors).
+- `User::canViewSubAccounts()` and `User::visibleCustomers()`: no customer, without the permission, with the permission.
 - `EntitySearchers`: every `SearchableEntity` case resolves; a missing searcher and a duplicate searcher throw `EntitySearcherNotRegisteredException`.
-- `GlobalSearchHandler`, instantiated directly with `InMemoryUserRepository`, `InMemoryCustomerRepository` and `InMemoryEntitySearcher` (`tests/Unit/LogisContext/Application/Query/GlobalSearch/`):
+- `GlobalSearchHandler`, instantiated directly with `InMemoryUserRepository` and `InMemoryEntitySearcher` (`tests/Unit/LogisContext/Application/Query/GlobalSearch/`):
   - only the requested entities, in canonical order;
   - meta values;
   - `has_more`;
@@ -365,9 +365,9 @@ make check     # qa + docs-lint + test, required before every commit
   - a literal `%` or `_` in the term doesn't act as a wildcard.
 - `CachedEntitySearcher`:
   - a second identical search runs no queries;
-  - different visible customers, term, limit or entity give a different entry;
+  - a different customer, sub-account rule, term, limit or entity gives a different entry;
   - a term that differs only in case hits the same entry.
-- `EloquentCustomerRepository::subAccountsOf()`.
+- `VisibleCustomerIds`: none, own customer only, customer with its sub-accounts (never its parent or an unrelated customer), and at most two bound values whatever the number of sub-accounts.
 - Schema: every index in D5 exists (`SchemaTest`).
 
 **Feature** (`tests/Feature/LogisContext/Search/SearchEndpointTest.php`):
@@ -440,6 +440,7 @@ The existing tests keep passing.
 - **R6.** `Domain/ValueObject/Search/` and `Domain/Exception/Search/` are an agreed exception to the per-aggregate layout.
 - **R7.** `q` is only trimmed, with no length limit. `limit` is 1 to 50, default 5.
 - **R8.** `entities` is accepted as a comma-separated string and as an array, and is always handled as an array internally. An unknown value returns 422.
+- **R9.** Visibility is a rule turned into a subquery, not a list of ids, so its cost doesn't grow with the number of sub-accounts (D1). It replaces the first design, a `VisibleCustomersResolver` that loaded every sub-account.
 
 ## Open questions
 

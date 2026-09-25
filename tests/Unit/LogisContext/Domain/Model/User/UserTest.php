@@ -29,4 +29,28 @@ final class UserTest extends TestCase
     {
         $this->assertTrue(UserMother::create(canViewSubAccounts: true)->canViewSubAccounts());
     }
+
+    public function test_a_user_without_a_customer_sees_no_customer(): void
+    {
+        $visible = UserMother::create(customer: null, canViewSubAccounts: true)->visibleCustomers();
+
+        $this->assertTrue($visible->isEmpty());
+        $this->assertNull($visible->customer());
+    }
+
+    public function test_a_user_without_the_permission_sees_only_their_customer(): void
+    {
+        $visible = UserMother::create(customer: CustomerMother::create(id: 4))->visibleCustomers();
+
+        $this->assertSame(4, $visible->customer()?->value());
+        $this->assertFalse($visible->includesSubAccounts());
+    }
+
+    public function test_a_user_with_the_permission_also_sees_the_sub_accounts(): void
+    {
+        $visible = UserMother::create(customer: CustomerMother::create(id: 4), canViewSubAccounts: true)->visibleCustomers();
+
+        $this->assertSame(4, $visible->customer()?->value());
+        $this->assertTrue($visible->includesSubAccounts());
+    }
 }
