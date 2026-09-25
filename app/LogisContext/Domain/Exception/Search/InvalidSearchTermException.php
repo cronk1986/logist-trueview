@@ -12,4 +12,9 @@ final class InvalidSearchTermException extends InvalidValueException
     {
         return new self(message: 'The search term must not be empty.');
     }
+
+    public static function notUtf8(): self
+    {
+        return new self(message: 'The search term must be valid UTF-8 text.');
+    }
 }

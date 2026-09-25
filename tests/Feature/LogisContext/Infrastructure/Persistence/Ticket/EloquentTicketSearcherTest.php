@@ -111,6 +111,14 @@ final class EloquentTicketSearcherTest extends TestCase
         $this->assertSame([$percent->id], array_column(array: $this->searcher->search(criteria: $this->criteria(term: '%'))->results(), column_key: 'id'));
     }
 
+    public function test_a_backslash_in_the_term_is_matched_literally(): void
+    {
+        $withBackslash = $this->ticket(attributes: ['subject' => 'Log saved in C:\\temp']);
+        $this->ticket(attributes: ['subject' => 'Log saved in C:temp']);
+
+        $this->assertSame([$withBackslash->id], array_column(array: $this->searcher->search(criteria: $this->criteria(term: 'C:\\t'))->results(), column_key: 'id'));
+    }
+
     public function test_it_runs_one_query_when_nothing_matches(): void
     {
         $this->ticket(attributes: ['subject' => 'Honeywell scanner']);

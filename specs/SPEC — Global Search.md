@@ -179,10 +179,11 @@ The searched columns live in the model's `matching()` scope. The searcher only c
 `SearchRequest` (`Http/Request/Search/`) turns the input into its internal form in `prepareForValidation()`:
 
 - `entities` as a string → `explode` on `,`, trim each value, drop empty values;
-- `entities` as an array → kept as it is;
-- in both cases, duplicates are removed. An absent or empty `entities` is not set here, and `toQuery()` falls back to every entity.
+- `entities` as an array → trim string values and drop empty ones, so both forms behave the same;
+- duplicates are removed in `toQuery()`. An absent or empty `entities` falls back to every entity.
+- An empty `limit` falls back to the default, like an absent one.
 
-Rules: `q` → `required|string`; `limit` → `nullable|integer|between:1,50`; `entities` → `nullable|array`; `entities.*` → `string` and `Rule::enum(SearchableEntity::class)`. `q` is trimmed by Laravel's global `TrimStrings` middleware, and the `SearchTerm` value object trims again, so the invariant doesn't depend on HTTP.
+Rules: `q` → `required|string` and valid UTF-8 (invalid bytes would otherwise fail when the response is encoded, as a 500); `limit` → `nullable|integer|between:1,50`; `entities` → `nullable|array`; `entities.*` → `string` and `Rule::enum(SearchableEntity::class)`. `q` is trimmed by Laravel's global `TrimStrings` middleware, and the `SearchTerm` value object trims again, so the invariant doesn't depend on HTTP.
 
 `toQuery()` builds `GlobalSearch` with the user id from `CurrentAccessToken`, like `MeRequest`.
 
@@ -220,9 +221,10 @@ Views (`final readonly`, a named constructor and `toArray()`):
 
 - `CachedEntitySearcher` (`Infrastructure/Cache/`) decorates each `EntitySearcher`. The provider wraps the four searchers with `$this->app->extend()`. The handler and the searchers know nothing about the cache.
 - TTL: `config/search.php` → `cache_ttl_seconds`, from `SEARCH_CACHE_TTL_SECONDS`, default `300` (5 minutes).
-- Key: `search:{entity}:` followed by `sha256` of `{visible customer ids, sorted}|{lower-cased term}|{limit}`.
+- Key: `search:v1:{entity}:` followed by `sha256` of `{visible customer ids, sorted}|{lower-cased term}|{limit}`.
   - The key contains the **visible customers**, not the user. Two users with the same visibility share entries, and a user never receives another customer's data.
   - The term is lower-cased because the collation already treats case as equal.
+  - `v1` is the version of the stored shape. Changing a result view bumps it, so a deploy never serves entries of the old shape.
 - What is stored: the plain array form of `EntitySearchResult` (no objects).
 - Each entity is cached separately. `entities=tickets` and `entities=tickets,assets` reuse the tickets entry.
 - No invalidation: nothing in the API writes to these tables yet. Results can be up to 5 minutes stale, which is accepted.

@@ -64,6 +64,7 @@ final class SearchEndpointTest extends TestCase
         yield 'missing q' => [[], 'q'];
         yield 'blank q' => [['q' => '   '], 'q'];
         yield 'q as an array' => [['q' => ['zebra']], 'q'];
+        yield 'q not valid UTF-8' => [['q' => "zebra\xFF"], 'q'];
         yield 'limit zero' => [['q' => 'zebra', 'limit' => 0], 'limit'];
         yield 'limit above the maximum' => [['q' => 'zebra', 'limit' => 51], 'limit'];
         yield 'limit not a number' => [['q' => 'zebra', 'limit' => 'five'], 'limit'];
@@ -116,6 +117,24 @@ final class SearchEndpointTest extends TestCase
         $array = $this->search(token: $this->refreshedToken(response: $commaSeparated), query: ['q' => 'zebra', 'entities' => ['tickets', 'tickets']])->assertOk();
 
         $this->assertSame($commaSeparated->json(key: 'data'), $array->json(key: 'data'));
+        $this->assertSame(['tickets'], array_keys(array: $array->json(key: 'data')));
+    }
+
+    public function test_an_empty_limit_falls_back_to_the_default(): void
+    {
+        $this->search(token: $this->logInAs(customer: $this->parent), query: ['q' => 'zebra', 'limit' => ''])
+            ->assertOk()
+            ->assertJsonPath(path: 'meta.limit_per_entity', expect: 5);
+    }
+
+    public function test_empty_entities_are_ignored_in_both_formats(): void
+    {
+        $token = $this->logInAs(customer: $this->parent);
+
+        $commaSeparated = $this->search(token: $token, query: ['q' => 'zebra', 'entities' => 'tickets,,'])->assertOk();
+        $array = $this->search(token: $this->refreshedToken(response: $commaSeparated), query: ['q' => 'zebra', 'entities' => ['tickets', '', ' ']])->assertOk();
+
+        $this->assertSame(['tickets'], array_keys(array: $commaSeparated->json(key: 'data')));
         $this->assertSame(['tickets'], array_keys(array: $array->json(key: 'data')));
     }
 

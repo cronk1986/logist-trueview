@@ -325,7 +325,7 @@ Tasks 7 to 9 follow the same template. Each one:
 - [ ] `config/search.php` defines `cache_ttl_seconds`, read from `SEARCH_CACHE_TTL_SECONDS` with default `300`, and the variable is added to `.env.example`.
 - [ ] `Infrastructure/Cache/CachedEntitySearcher`:
   - wraps an `EntitySearcher` and delegates `entity()`;
-  - caches `EntitySearchResult::toArray()` under `search:{entity}:` followed by `sha256` of `{sorted customer ids}|{lower-cased term}|{limit}`.
+  - caches `EntitySearchResult::toArray()` under `search:v1:{entity}:` followed by `sha256` of `{sorted customer ids}|{lower-cased term}|{limit}`.
 - [ ] `LogisServiceProvider` wraps each of the four searchers with `extend()`, and the TTL is injected from the config.
 
 **Verification:**

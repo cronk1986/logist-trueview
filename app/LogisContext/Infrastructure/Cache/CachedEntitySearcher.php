@@ -12,7 +12,7 @@ use Logis\LogisContext\Domain\ValueObject\Search\SearchableEntity;
 
 final class CachedEntitySearcher implements EntitySearcher
 {
-    private const KEY_PREFIX = 'search';
+    private const KEY_PREFIX = 'search:v1';
 
     public function __construct(
         private readonly EntitySearcher $searcher,

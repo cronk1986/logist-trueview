@@ -14,6 +14,10 @@ final readonly class SearchTerm
 
     public static function fromString(string $value): self
     {
+        if (!mb_check_encoding(value: $value, encoding: 'UTF-8')) {
+            throw InvalidSearchTermException::notUtf8();
+        }
+
         $trimmed = trim(string: $value);
 
         if ($trimmed === '') {

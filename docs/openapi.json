@@ -196,7 +196,7 @@
             "name": "q",
             "in": "query",
             "required": true,
-            "description": "Search term. Leading and trailing spaces are removed, and it must not be empty.",
+            "description": "Search term, as valid UTF-8 text. Leading and trailing spaces are removed, and it must not be empty.",
             "schema": {
               "type": "string"
             },
@@ -206,7 +206,7 @@
             "name": "limit",
             "in": "query",
             "required": false,
-            "description": "Maximum number of results per entity.",
+            "description": "Maximum number of results per entity. Absent or empty means 5.",
             "schema": {
               "type": "integer",
               "minimum": 1,
@@ -218,7 +218,7 @@
             "name": "entities",
             "in": "query",
             "required": false,
-            "description": "Entities to search, comma-separated (`entities=tickets,assets`). The array form\n`entities[]=tickets&entities[]=assets` is accepted too. Duplicates are ignored.\nAll entities are searched when it is absent.\n",
+            "description": "Entities to search, comma-separated (`entities=tickets,assets`). The array form\n`entities[]=tickets&entities[]=assets` is accepted too. Duplicates and empty values are ignored.\nAll entities are searched when it is absent.\n",
             "style": "form",
             "explode": false,
             "schema": {

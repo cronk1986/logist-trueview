@@ -21,6 +21,14 @@ final class SearchTermTest extends TestCase
         $this->assertSame('50%_off', SearchTerm::fromString(value: '50%_off')->value());
     }
 
+    public function test_it_rejects_text_that_is_not_valid_utf8(): void
+    {
+        $this->expectException(InvalidSearchTermException::class);
+        $this->expectExceptionMessage('The search term must be valid UTF-8 text.');
+
+        SearchTerm::fromString(value: "zebra\xFF");
+    }
+
     #[DataProvider('emptyTerms')]
     public function test_it_rejects_an_empty_term(string $value): void
     {
