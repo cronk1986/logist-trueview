@@ -9,6 +9,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Logis\LogisContext\Infrastructure\Persistence\Asset\AssetModel;
 use Logis\LogisContext\Infrastructure\Persistence\Contract\ContractModel;
 use Logis\LogisContext\Infrastructure\Persistence\Customer\CustomerModel;
+use Logis\LogisContext\Infrastructure\Persistence\CustomView\CustomViewModel;
 use Logis\LogisContext\Infrastructure\Persistence\Location\LocationModel;
 use Logis\LogisContext\Infrastructure\Persistence\Ticket\TicketModel;
 use Logis\LogisContext\Infrastructure\Persistence\TicketStatus\TicketStatusModel;
@@ -130,5 +131,31 @@ final class SchemaTest extends TestCase
         $this->expectException(QueryException::class);
 
         TicketStatusModel::query()->whereKey(id: $ticket->status_id)->delete();
+    }
+
+    public function test_a_user_cannot_repeat_a_view_title(): void
+    {
+        $view = CustomViewModel::factory()->create(attributes: ['title' => 'Zebra scanners']);
+
+        $this->expectException(QueryException::class);
+
+        CustomViewModel::factory()->create(attributes: ['user_id' => $view->user_id, 'title' => 'Zebra scanners']);
+    }
+
+    public function test_different_users_can_use_the_same_view_title(): void
+    {
+        CustomViewModel::factory()->create(attributes: ['title' => 'Zebra scanners']);
+        CustomViewModel::factory()->create(attributes: ['title' => 'Zebra scanners']);
+
+        $this->assertSame(2, CustomViewModel::query()->where(column: 'title', operator: 'Zebra scanners')->count());
+    }
+
+    public function test_deleting_a_user_deletes_their_views(): void
+    {
+        $view = CustomViewModel::factory()->create();
+
+        UserModel::query()->whereKey(id: $view->user_id)->delete();
+
+        $this->assertFalse(CustomViewModel::query()->whereKey(id: $view->id)->exists());
     }
 }
