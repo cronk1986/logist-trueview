@@ -17,7 +17,7 @@ final class HandlerResolver
     {
         $handlerClass = $message::class . 'Handler';
 
-        if (! class_exists(class: $handlerClass) || ! method_exists(object_or_class: $handlerClass, method: 'handle')) {
+        if (!class_exists(class: $handlerClass) || !method_exists(object_or_class: $handlerClass, method: 'handle')) {
             throw HandlerNotFoundException::for(message: $message, handlerClass: $handlerClass);
         }
 

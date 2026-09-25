@@ -34,14 +34,14 @@ final class SemanticExceptionRule implements Rule
      */
     public function processNode(Node $node, Scope $scope): array
     {
-        if (! $node->expr instanceof New_ || preg_match(pattern: self::RESTRICTED_LAYERS, subject: $scope->getNamespace() ?? '') !== 1) {
+        if (!$node->expr instanceof New_ || preg_match(pattern: self::RESTRICTED_LAYERS, subject: $scope->getNamespace() ?? '') !== 1) {
             return [];
         }
 
         $errors = [];
 
         foreach ($scope->getType(node: $node->expr)->getObjectClassNames() as $className) {
-            if (! $this->reflectionProvider->hasClass(className: $className)) {
+            if (!$this->reflectionProvider->hasClass(className: $className)) {
                 continue;
             }
 

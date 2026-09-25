@@ -36,21 +36,21 @@ final class HandlerSignatureRule implements Rule
         $class = $node->getClassReflection();
         $handlerClass = $class->getName();
 
-        if (! str_ends_with(haystack: $handlerClass, needle: 'Handler') || $class->isInterface() || $class->isAbstract()) {
+        if (!str_ends_with(haystack: $handlerClass, needle: 'Handler') || $class->isInterface() || $class->isAbstract()) {
             return [];
         }
 
         $isCommand = str_starts_with(haystack: $handlerClass, needle: self::COMMAND_NAMESPACE);
         $isQuery = str_starts_with(haystack: $handlerClass, needle: self::QUERY_NAMESPACE);
 
-        if (! $isCommand && ! $isQuery) {
+        if (!$isCommand && !$isQuery) {
             return [];
         }
 
         $kind = $isCommand ? 'Command' : 'Query';
         $shortName = $class->getNativeReflection()->getShortName();
 
-        if (! $class->hasNativeMethod(methodName: 'handle') || ! $class->getNativeMethod(methodName: 'handle')->isPublic()) {
+        if (!$class->hasNativeMethod(methodName: 'handle') || !$class->getNativeMethod(methodName: 'handle')->isPublic()) {
             return [$this->error(message: "{$kind} handler {$shortName} must have a public handle() method.", identifier: 'missingHandle')];
         }
 
@@ -70,7 +70,7 @@ final class HandlerSignatureRule implements Rule
 
         $returnType = $variant->getNativeReturnType();
 
-        if ($isCommand && ! $returnType->isVoid()->yes()) {
+        if ($isCommand && !$returnType->isVoid()->yes()) {
             $errors[] = $this->error(
                 message: "Command handler {$shortName}::handle() must return void, {$this->describe(type: $returnType)} declared.",
                 identifier: 'invalidReturn',
@@ -78,7 +78,7 @@ final class HandlerSignatureRule implements Rule
             );
         }
 
-        if ($isQuery && ! (new ObjectType(className: QueryResponse::class))->isSuperTypeOf(type: $returnType)->yes()) {
+        if ($isQuery && !(new ObjectType(className: QueryResponse::class))->isSuperTypeOf(type: $returnType)->yes()) {
             $errors[] = $this->error(
                 message: "Query handler {$shortName}::handle() must return " . QueryResponse::class . ", {$this->describe(type: $returnType)} declared.",
                 identifier: 'invalidReturn',

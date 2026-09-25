@@ -23,13 +23,13 @@ final class ExecutionTimeMiddleware
 
         $response = $next($request);
 
-        if (! $response instanceof JsonResponse) {
+        if (!$response instanceof JsonResponse) {
             return $response;
         }
 
         $body = $response->getData();
 
-        if (! $body instanceof stdClass) {
+        if (!$body instanceof stdClass) {
             return $response;
         }
 

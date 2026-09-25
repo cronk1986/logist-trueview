@@ -118,6 +118,7 @@ app/
 
   The Larastan rule `tools/PHPStan/NamedArgumentsRule.php` enforces this in every file under the `Logis\`, `Tests\`, `Tools\` and `Database\` namespaces. It flags positional arguments where a name is allowed, and named arguments on magic methods. `config/` and `routes/` are declarative framework files and are not checked.
 - Readability comes before brevity. Prefer an explicit `if` guard over compact constructs such as `?? throw`, `?: throw`, nested ternaries or long chained expressions. Keep one intention per line.
+- Negation has no space after `!`: `if (!$user->isActive())`, never `if (! $user->isActive())`. Pint enforces it with `unary_operator_spaces` and `not_operator_with_successor_space: false` in `pint.json`.
 - Every file starts with `declare(strict_types=1)`. Classes are `final` by default.
 - No framework names in class names, even in Infrastructure: `DomainEventDispatcher`, not `LaravelDomainEventDispatcher`.
 - Exceptions are semantic and specific to the problem. For example, `UserNotFoundException::withId($id)` or `InvalidViewColumnException::for($column)`. Never throw `Exception`, `RuntimeException`, `InvalidArgumentException` or similar generic exceptions directly. Build them with named constructors. The Larastan rule `tools/PHPStan/SemanticExceptionRule.php` forbids `throw new` of built-in PHP exceptions in Domain and Application.
@@ -197,7 +198,7 @@ chore(qa): enforce named arguments with a Larastan rule
 
 | Step | Tool | Target |
 |---|---|---|
-| Lint / code style (read-only) | Pint, PSR-12 (`pint.json`) | `make pint` applies the fixes |
+| Lint / code style (read-only) | Pint, PSR-12 plus project rules (`pint.json`) | `make pint` applies the fixes |
 | Static analysis | Larastan level 8 over `app`, `config`, `database`, `routes`, `tests` and `tools`, with the custom rules in `tools/PHPStan/` (`phpstan.neon`) | `make stan` |
 | Layer dependencies | Deptrac (`deptrac.yaml`) | `make deptrac` |
 | API docs | Redocly lint of `docs/openapi/openapi.yaml` | `make docs-lint` (`make docs` also regenerates `docs/openapi.json`) |

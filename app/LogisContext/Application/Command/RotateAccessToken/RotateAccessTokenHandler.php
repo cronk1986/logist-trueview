@@ -34,7 +34,7 @@ final class RotateAccessTokenHandler
             graceSeconds: $this->graceSeconds,
         );
 
-        if (! $this->accessTokens->claimRotation(rotatedAccessToken: $currentAccessToken)) {
+        if (!$this->accessTokens->claimRotation(rotatedAccessToken: $currentAccessToken)) {
             throw AccessTokenAlreadyRotatedException::create();
         }
 

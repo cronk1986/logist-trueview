@@ -48,13 +48,13 @@ final class NamedArgumentsRule implements Rule
      */
     public function processNode(Node $node, Scope $scope): array
     {
-        if (! $this->isChecked(node: $node, scope: $scope)) {
+        if (!$this->isChecked(node: $node, scope: $scope)) {
             return [];
         }
 
         $callable = $this->resolveCallable(node: $node, scope: $scope);
 
-        if ($callable !== null && ! $this->acceptsNamedArguments(callable: $callable)) {
+        if ($callable !== null && !$this->acceptsNamedArguments(callable: $callable)) {
             return $this->namedArgumentErrors(node: $node, callable: $callable);
         }
 
@@ -96,7 +96,7 @@ final class NamedArgumentsRule implements Rule
             return false;
         }
 
-        if (! $callable instanceof ExtendedMethodReflection) {
+        if (!$callable instanceof ExtendedMethodReflection) {
             return true;
         }
 
@@ -109,12 +109,12 @@ final class NamedArgumentsRule implements Rule
             return false;
         }
 
-        if ($node instanceof FuncCall && ! $node->name instanceof Name) {
+        if ($node instanceof FuncCall && !$node->name instanceof Name) {
             return false;
         }
 
         if (($node instanceof MethodCall || $node instanceof NullsafeMethodCall || $node instanceof StaticCall)
-            && ! $node->name instanceof Identifier) {
+            && !$node->name instanceof Identifier) {
             return false;
         }
 
@@ -140,7 +140,7 @@ final class NamedArgumentsRule implements Rule
         $positional = [];
 
         foreach ($node->getArgs() as $position => $argument) {
-            if ($argument->name === null && ! $argument->unpack) {
+            if ($argument->name === null && !$argument->unpack) {
                 $positional[$position] = $argument;
             }
         }
@@ -161,7 +161,7 @@ final class NamedArgumentsRule implements Rule
 
     private function resolveFunction(FuncCall $node, Scope $scope): ?FunctionReflection
     {
-        if (! $node->name instanceof Name || ! $this->reflectionProvider->hasFunction(nameNode: $node->name, namespaceAnswerer: $scope)) {
+        if (!$node->name instanceof Name || !$this->reflectionProvider->hasFunction(nameNode: $node->name, namespaceAnswerer: $scope)) {
             return null;
         }
 
@@ -170,7 +170,7 @@ final class NamedArgumentsRule implements Rule
 
     private function resolveMethod(Expr $caller, Identifier|Expr $name, Scope $scope): ?ExtendedMethodReflection
     {
-        if (! $name instanceof Identifier) {
+        if (!$name instanceof Identifier) {
             return null;
         }
 
@@ -181,24 +181,24 @@ final class NamedArgumentsRule implements Rule
 
     private function resolveStaticMethod(StaticCall $node, Scope $scope): ?ExtendedMethodReflection
     {
-        if (! $node->name instanceof Identifier) {
+        if (!$node->name instanceof Identifier) {
             return null;
         }
 
-        if (! $node->class instanceof Name) {
+        if (!$node->class instanceof Name) {
             return $this->resolveMethod(caller: $node->class, name: $node->name, scope: $scope);
         }
 
         $className = $scope->resolveName(name: $node->class);
 
-        if (! $this->reflectionProvider->hasClass(className: $className)) {
+        if (!$this->reflectionProvider->hasClass(className: $className)) {
             return null;
         }
 
         $class = $this->reflectionProvider->getClass(className: $className);
         $methodName = $node->name->toString();
 
-        if (! $class->hasMethod(methodName: $methodName)) {
+        if (!$class->hasMethod(methodName: $methodName)) {
             return null;
         }
 
@@ -213,7 +213,7 @@ final class NamedArgumentsRule implements Rule
 
         $class = $classes[0] ?? null;
 
-        if ($class === null || ! $class->hasConstructor()) {
+        if ($class === null || !$class->hasConstructor()) {
             return null;
         }
 
@@ -227,7 +227,7 @@ final class NamedArgumentsRule implements Rule
     {
         $className = $scope->resolveName(name: $name);
 
-        if (! $this->reflectionProvider->hasClass(className: $className)) {
+        if (!$this->reflectionProvider->hasClass(className: $className)) {
             return [];
         }
 
@@ -241,7 +241,7 @@ final class NamedArgumentsRule implements Rule
     private function passesVariadicArguments(array $parameters, array $positionalArguments): bool
     {
         foreach ($parameters as $index => $parameter) {
-            if (! $parameter->isVariadic()) {
+            if (!$parameter->isVariadic()) {
                 continue;
             }
 

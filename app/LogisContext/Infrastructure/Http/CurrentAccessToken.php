@@ -26,13 +26,13 @@ final class CurrentAccessToken
     {
         $user = $request->user();
 
-        if (! $user instanceof UserModel) {
+        if (!$user instanceof UserModel) {
             return null;
         }
 
         $accessToken = $user->currentAccessToken();
 
-        if (! $accessToken instanceof AccessTokenModel) {
+        if (!$accessToken instanceof AccessTokenModel) {
             return null;
         }
 

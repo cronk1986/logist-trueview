@@ -48,7 +48,7 @@ final class LogInHandler
             throw InvalidCredentialsException::create();
         }
 
-        if (! $this->passwordHasher->verify(password: $password, hash: $user->passwordHash())) {
+        if (!$this->passwordHasher->verify(password: $password, hash: $user->passwordHash())) {
             throw InvalidCredentialsException::create();
         }
 

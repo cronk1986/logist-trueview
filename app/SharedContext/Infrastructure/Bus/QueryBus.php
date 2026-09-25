@@ -17,7 +17,7 @@ final class QueryBus implements QueryBusInterface
     {
         $response = ($this->handlers->resolve(message: $query))($query);
 
-        if (! $response instanceof QueryResponse) {
+        if (!$response instanceof QueryResponse) {
             throw new UnexpectedValueException(message: sprintf(
                 'Handler for %s must return %s, %s returned.',
                 $query::class,

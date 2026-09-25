@@ -27,7 +27,7 @@ final class ApiExceptionRenderer
 
     public function render(Throwable $exception, Request $request): ?JsonResponse
     {
-        if (! $request->is('api/*')) {
+        if (!$request->is('api/*')) {
             return null;
         }
 
