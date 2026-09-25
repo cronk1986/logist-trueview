@@ -10,6 +10,7 @@ use Logis\LogisContext\Infrastructure\Persistence\Asset\AssetModel;
 use Logis\LogisContext\Infrastructure\Persistence\Contract\ContractModel;
 use Logis\LogisContext\Infrastructure\Persistence\Customer\CustomerModel;
 use Logis\LogisContext\Infrastructure\Persistence\Location\LocationModel;
+use Logis\LogisContext\Infrastructure\Persistence\Ticket\TicketModel;
 use Logis\LogisContext\Infrastructure\Persistence\TicketStatus\TicketStatusModel;
 use Logis\LogisContext\Infrastructure\Persistence\User\UserModel;
 use Tests\TestCase;
@@ -93,5 +94,41 @@ final class SchemaTest extends TestCase
         $asset->refresh();
         $this->assertNull($asset->contract_id);
         $this->assertNull($asset->location_id);
+    }
+
+    public function test_the_repair_id_of_a_ticket_is_unique(): void
+    {
+        TicketModel::factory()->create(attributes: ['repair_id' => 'RMA-1']);
+
+        $this->expectException(QueryException::class);
+
+        TicketModel::factory()->create(attributes: ['repair_id' => 'RMA-1']);
+    }
+
+    public function test_the_incident_number_of_a_ticket_is_unique(): void
+    {
+        TicketModel::factory()->create(attributes: ['incident_number' => 'INC-1']);
+
+        $this->expectException(QueryException::class);
+
+        TicketModel::factory()->create(attributes: ['incident_number' => 'INC-1']);
+    }
+
+    public function test_deleting_an_asset_unlinks_its_tickets(): void
+    {
+        $ticket = TicketModel::factory()->withAsset()->create();
+
+        AssetModel::query()->whereKey(id: $ticket->asset_id)->forceDelete();
+
+        $this->assertNull($ticket->refresh()->asset_id);
+    }
+
+    public function test_a_ticket_status_in_use_cannot_be_deleted(): void
+    {
+        $ticket = TicketModel::factory()->create();
+
+        $this->expectException(QueryException::class);
+
+        TicketStatusModel::query()->whereKey(id: $ticket->status_id)->delete();
     }
 }

@@ -16,6 +16,7 @@ use Logis\LogisContext\Domain\Model\Contract\ContractRepository;
 use Logis\LogisContext\Domain\Model\Customer\CustomerRepository;
 use Logis\LogisContext\Domain\Model\Location\LocationRepository;
 use Logis\LogisContext\Domain\Model\TicketStatus\TicketStatusRepository;
+use Logis\LogisContext\Domain\Model\Ticket\TicketRepository;
 use Logis\LogisContext\Domain\Model\User\PasswordHasher;
 use Logis\LogisContext\Domain\Model\User\UserRepository;
 use Logis\LogisContext\Infrastructure\Http\PlainTextTokenGenerator;
@@ -26,6 +27,7 @@ use Logis\LogisContext\Infrastructure\Persistence\Contract\EloquentContractRepos
 use Logis\LogisContext\Infrastructure\Persistence\Customer\EloquentCustomerRepository;
 use Logis\LogisContext\Infrastructure\Persistence\Location\EloquentLocationRepository;
 use Logis\LogisContext\Infrastructure\Persistence\TicketStatus\EloquentTicketStatusRepository;
+use Logis\LogisContext\Infrastructure\Persistence\Ticket\EloquentTicketRepository;
 use Logis\LogisContext\Infrastructure\Persistence\User\BcryptPasswordHasher;
 use Logis\LogisContext\Infrastructure\Persistence\User\EloquentUserRepository;
 use Logis\LogisContext\Infrastructure\Persistence\User\UserModel;
@@ -37,6 +39,7 @@ final class LogisServiceProvider extends ServiceProvider
         UserRepository::class => EloquentUserRepository::class,
         AccessTokenRepository::class => EloquentAccessTokenRepository::class,
         PasswordHasher::class => BcryptPasswordHasher::class,
+        TicketRepository::class => EloquentTicketRepository::class,
         AssetRepository::class => EloquentAssetRepository::class,
         LocationRepository::class => EloquentLocationRepository::class,
         ContractRepository::class => EloquentContractRepository::class,
