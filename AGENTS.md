@@ -194,6 +194,34 @@ build(docker): add a scheduler service for token pruning
 chore(qa): enforce named arguments with a Larastan rule
 ```
 
+## Branches
+
+Every branch follows [Conventional Branch](https://conventional-branch.github.io):
+
+```
+<type>/<description>
+```
+
+| Type | Use |
+|---|---|
+| `feature/` (or `feat/`) | New functionality |
+| `bugfix/` (or `fix/`) | Bug fix |
+| `hotfix/` | Urgent fix for production |
+| `release/` | Release preparation |
+| `chore/` | Maintenance that adds no functionality |
+
+- Lowercase letters, digits and hyphens only: no spaces, underscores or special characters.
+- The description is short kebab-case, in English.
+- A ticket number may prefix the description: `feat/123-global-search`.
+
+Examples:
+
+```
+feat/global-search
+fix/revoke-rotated-tokens
+chore/upgrade-larastan
+```
+
 ## Specs and plans
 
 - Every new spec is created with `agent-skills:spec` and saved in `specs/` as `SPEC — <spec name>.md`.
