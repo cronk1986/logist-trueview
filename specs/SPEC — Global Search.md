@@ -247,6 +247,7 @@ app/LogisContext/
     ├── Http/Request/Search/       SearchRequest
     ├── Persistence/<Aggregate>/   Eloquent<X>Searcher; scopes on <X>Model; UserModel/UserMapper gain the flag;
     │                              EloquentCustomerRepository::subAccountsOf()
+    ├── Search/                    NewestMatches: the count, order, limit and mapping shared by the searchers
     ├── Cache/                     CachedEntitySearcher
     └── Providers/                 LogisServiceProvider: tags, giveTagged, extend, resolver binding
 app/SharedContext/Infrastructure/Persistence/LikePattern.php

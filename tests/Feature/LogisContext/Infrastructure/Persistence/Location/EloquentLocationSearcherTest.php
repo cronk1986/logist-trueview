@@ -6,15 +6,12 @@ namespace Tests\Feature\LogisContext\Infrastructure\Persistence\Location;
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Logis\LogisContext\Application\Query\GlobalSearch\SearchCriteria;
-use Logis\LogisContext\Domain\ValueObject\Customer\CustomerId;
-use Logis\LogisContext\Domain\ValueObject\Customer\VisibleCustomers;
-use Logis\LogisContext\Domain\ValueObject\Search\SearchLimit;
-use Logis\LogisContext\Domain\ValueObject\Search\SearchTerm;
 use Logis\LogisContext\Infrastructure\Persistence\Customer\CustomerModel;
 use Logis\LogisContext\Infrastructure\Persistence\Location\EloquentLocationSearcher;
 use Logis\LogisContext\Infrastructure\Persistence\Location\LocationModel;
 use Tests\Feature\CountsQueries;
 use Tests\TestCase;
+use Tests\Unit\LogisContext\Application\Query\GlobalSearch\SearchCriteriaMother;
 
 final class EloquentLocationSearcherTest extends TestCase
 {
@@ -126,10 +123,6 @@ final class EloquentLocationSearcherTest extends TestCase
 
     private function criteria(string $term, int $limit = 5): SearchCriteria
     {
-        return new SearchCriteria(
-            term: SearchTerm::fromString(value: $term),
-            limit: SearchLimit::fromInt(value: $limit),
-            customers: VisibleCustomers::fromIds(ids: [CustomerId::fromInt(value: $this->customer->id)]),
-        );
+        return SearchCriteriaMother::create(term: $term, limit: $limit, customerIds: [$this->customer->id]);
     }
 }

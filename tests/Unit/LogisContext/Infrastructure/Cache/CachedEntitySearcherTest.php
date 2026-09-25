@@ -9,14 +9,11 @@ use Illuminate\Cache\ArrayStore;
 use Illuminate\Cache\Repository;
 use Logis\LogisContext\Application\Query\GlobalSearch\EntitySearchResult;
 use Logis\LogisContext\Application\Query\GlobalSearch\SearchCriteria;
-use Logis\LogisContext\Domain\ValueObject\Customer\CustomerId;
-use Logis\LogisContext\Domain\ValueObject\Customer\VisibleCustomers;
 use Logis\LogisContext\Domain\ValueObject\Search\SearchableEntity;
-use Logis\LogisContext\Domain\ValueObject\Search\SearchLimit;
-use Logis\LogisContext\Domain\ValueObject\Search\SearchTerm;
 use Logis\LogisContext\Infrastructure\Cache\CachedEntitySearcher;
 use PHPUnit\Framework\TestCase;
 use Tests\Unit\LogisContext\Application\Query\GlobalSearch\InMemoryEntitySearcher;
+use Tests\Unit\LogisContext\Application\Query\GlobalSearch\SearchCriteriaMother;
 
 final class CachedEntitySearcherTest extends TestCase
 {
@@ -118,10 +115,6 @@ final class CachedEntitySearcherTest extends TestCase
      */
     private function criteria(string $term = 'zebra', int $limit = 5, array $customerIds = [1, 2]): SearchCriteria
     {
-        return new SearchCriteria(
-            term: SearchTerm::fromString(value: $term),
-            limit: SearchLimit::fromInt(value: $limit),
-            customers: VisibleCustomers::fromIds(ids: array_map(callback: fn (int $id): CustomerId => CustomerId::fromInt(value: $id), array: $customerIds)),
-        );
+        return SearchCriteriaMother::create(term: $term, limit: $limit, customerIds: $customerIds);
     }
 }

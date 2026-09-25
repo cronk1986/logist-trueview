@@ -9,6 +9,7 @@ use Logis\LogisContext\Application\Query\GlobalSearch\EntitySearcher;
 use Logis\LogisContext\Application\Query\GlobalSearch\EntitySearchResult;
 use Logis\LogisContext\Application\Query\GlobalSearch\SearchCriteria;
 use Logis\LogisContext\Domain\ValueObject\Search\SearchableEntity;
+use Logis\LogisContext\Infrastructure\Search\NewestMatches;
 
 final class EloquentAssetSearcher implements EntitySearcher
 {
@@ -23,20 +24,10 @@ final class EloquentAssetSearcher implements EntitySearcher
             ->visibleTo($criteria->customers)
             ->matching($criteria->term);
 
-        $total = $query->clone()->count();
-
-        if ($total === 0) {
-            return EntitySearchResult::empty();
-        }
-
-        $assets = $query
-            ->orderByDesc('id')
-            ->limit($criteria->limit->value())
-            ->get();
-
-        return EntitySearchResult::from(
-            results: array_values(array: $assets->map(callback: fn (AssetModel $asset): array => $this->row(asset: $asset))->all()),
-            total: $total,
+        return NewestMatches::of(
+            query: $query,
+            limit: $criteria->limit,
+            toRow: fn (AssetModel $asset): array => $this->row(asset: $asset),
         );
     }
 
