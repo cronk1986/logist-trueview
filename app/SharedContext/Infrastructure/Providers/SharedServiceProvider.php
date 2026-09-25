@@ -7,6 +7,7 @@ namespace Logis\SharedContext\Infrastructure\Providers;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Contracts\Container\Container;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\RateLimiter;
@@ -40,6 +41,7 @@ final class SharedServiceProvider extends ServiceProvider
     {
         $this->bootDomainEventPublisher();
         $this->bootApiRateLimiter();
+        Model::preventLazyLoading(value: !$this->app->isProduction());
 
         Queue::before(callback: fn () => $this->bootDomainEventPublisher());
     }

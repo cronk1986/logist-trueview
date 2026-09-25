@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Tests\Feature\LogisContext\Infrastructure\Persistence\Customer;
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Logis\LogisContext\Domain\Exception\Customer\CustomerHierarchyTooDeepException;
 use Logis\LogisContext\Domain\ValueObject\Customer\CustomerId;
+use Logis\LogisContext\Infrastructure\Persistence\Customer\CorruptedCustomerHierarchyException;
 use Logis\LogisContext\Infrastructure\Persistence\Customer\CustomerModel;
 use Logis\LogisContext\Infrastructure\Persistence\Customer\EloquentCustomerRepository;
 use Tests\Feature\CountsQueries;
@@ -55,13 +55,22 @@ final class EloquentCustomerRepositoryTest extends TestCase
         $this->assertNull($this->repository->findById(id: CustomerId::fromInt(value: 999)));
     }
 
-    public function test_a_hierarchy_deeper_than_one_level_is_rejected(): void
+    public function test_a_stored_hierarchy_deeper_than_one_level_is_reported_as_corrupted_data(): void
     {
-        $root = CustomerModel::factory()->create();
-        $subAccount = CustomerModel::factory()->subAccountOf(parent: $root)->create();
-        $model = CustomerModel::factory()->subAccountOf(parent: $subAccount)->create();
+        $subAccount = CustomerModel::factory()->subAccountOf(parent: CustomerModel::factory()->create())->create();
+        $model = CustomerModel::factory()->create(attributes: ['parent_customer_id' => $subAccount->id]);
 
-        $this->expectException(CustomerHierarchyTooDeepException::class);
+        $this->expectException(CorruptedCustomerHierarchyException::class);
+
+        $this->repository->findById(id: CustomerId::fromInt(value: $model->id));
+    }
+
+    public function test_a_stored_customer_that_is_its_own_parent_is_reported_as_corrupted_data(): void
+    {
+        $model = CustomerModel::factory()->create();
+        $model->update(attributes: ['parent_customer_id' => $model->id]);
+
+        $this->expectException(CorruptedCustomerHierarchyException::class);
 
         $this->repository->findById(id: CustomerId::fromInt(value: $model->id));
     }

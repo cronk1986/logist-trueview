@@ -60,7 +60,7 @@ final class TicketModel extends Model
     /** @return BelongsTo<AssetModel, $this> */
     public function asset(): BelongsTo
     {
-        return $this->belongsTo(related: AssetModel::class, foreignKey: 'asset_id');
+        return $this->belongsTo(related: AssetModel::class, foreignKey: 'asset_id')->withTrashed();
     }
 
     /** @return BelongsTo<TicketStatusModel, $this> */

@@ -30,8 +30,12 @@ final class EloquentTicketRepositoryTest extends TestCase
 
     public function test_it_maps_a_ticket_with_its_whole_graph(): void
     {
+        $this->freezeTime();
         $status = TicketStatusModel::factory()->create(attributes: ['name' => 'In Progress']);
-        $model = TicketModel::factory()->withAsset()->create(attributes: [
+        $asset = AssetModel::factory()->withContract()->withLocation()->create();
+        $model = TicketModel::factory()->create(attributes: [
+            'customer_id' => $asset->customer_id,
+            'asset_id' => $asset->id,
             'repair_id' => 'RMA-000001',
             'incident_number' => 'INC-000001',
             'subject' => 'Scanner does not turn on',
@@ -44,7 +48,9 @@ final class EloquentTicketRepositoryTest extends TestCase
         $this->assertNotNull($ticket);
         $this->assertSame($model->id, $ticket->id()->value());
         $this->assertSame($model->customer_id, $ticket->customer()->id()->value());
-        $this->assertSame($model->asset_id, $ticket->asset()?->id()->value());
+        $this->assertSame($asset->id, $ticket->asset()?->id()->value());
+        $this->assertSame($asset->contract_id, $ticket->asset()->contract()?->id()->value());
+        $this->assertSame($asset->location_id, $ticket->asset()->location()?->id()->value());
         $this->assertSame('RMA-000001', $ticket->repairId()->value());
         $this->assertSame('INC-000001', $ticket->incidentNumber()->value());
         $this->assertSame('Scanner does not turn on', $ticket->subject());
@@ -52,6 +58,17 @@ final class EloquentTicketRepositoryTest extends TestCase
         $this->assertSame('The device stays off.', $ticket->issueDescription());
         $this->assertSame($model->created_by, $ticket->createdBy()->id()->value());
         $this->assertSame($model->customer_id, $ticket->createdBy()->customer()?->id()->value());
+        $this->assertSame(now()->utc()->format(format: 'Y-m-d H:i:s'), $ticket->createdAt()->format(format: 'Y-m-d H:i:s'));
+    }
+
+    public function test_a_ticket_keeps_its_soft_deleted_asset(): void
+    {
+        $model = TicketModel::factory()->withAsset()->create();
+        AssetModel::query()->whereKey(id: $model->asset_id)->firstOrFail()->delete();
+
+        $ticket = $this->repository->findById(id: TicketId::fromInt(value: $model->id));
+
+        $this->assertSame($model->asset_id, $ticket?->asset()?->id()->value());
     }
 
     public function test_it_maps_a_ticket_without_an_asset(): void

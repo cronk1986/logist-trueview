@@ -20,13 +20,14 @@ final class SchemaTest extends TestCase
 {
     use RefreshDatabase;
 
+    private const DUPLICATE_ENTRY = 1062;
+    private const ROW_IS_REFERENCED = 1451;
+
     public function test_the_erp_id_of_a_customer_is_unique(): void
     {
         CustomerModel::factory()->create(attributes: ['erp_id' => 'C-1000']);
 
-        $this->expectException(QueryException::class);
-
-        CustomerModel::factory()->create(attributes: ['erp_id' => 'C-1000']);
+        $this->assertRejectedWith(errorCode: self::DUPLICATE_ENTRY, statement: fn () => CustomerModel::factory()->create(attributes: ['erp_id' => 'C-1000']));
     }
 
     public function test_a_customer_with_sub_accounts_cannot_be_deleted(): void
@@ -34,9 +35,7 @@ final class SchemaTest extends TestCase
         $parent = CustomerModel::factory()->create();
         CustomerModel::factory()->subAccountOf(parent: $parent)->create();
 
-        $this->expectException(QueryException::class);
-
-        $parent->delete();
+        $this->assertRejectedWith(errorCode: self::ROW_IS_REFERENCED, statement: fn () => $parent->delete());
     }
 
     public function test_a_customer_with_users_cannot_be_deleted(): void
@@ -44,45 +43,35 @@ final class SchemaTest extends TestCase
         $customer = CustomerModel::factory()->create();
         UserModel::factory()->create(attributes: ['customer_id' => $customer->id]);
 
-        $this->expectException(QueryException::class);
-
-        $customer->delete();
+        $this->assertRejectedWith(errorCode: self::ROW_IS_REFERENCED, statement: fn () => $customer->delete());
     }
 
     public function test_the_name_of_a_ticket_status_is_unique(): void
     {
         TicketStatusModel::factory()->create(attributes: ['name' => 'Open']);
 
-        $this->expectException(QueryException::class);
-
-        TicketStatusModel::factory()->create(attributes: ['name' => 'Open']);
+        $this->assertRejectedWith(errorCode: self::DUPLICATE_ENTRY, statement: fn () => TicketStatusModel::factory()->create(attributes: ['name' => 'Open']));
     }
 
     public function test_a_customer_with_contracts_cannot_be_deleted(): void
     {
         $contract = ContractModel::factory()->create();
 
-        $this->expectException(QueryException::class);
-
-        CustomerModel::query()->whereKey(id: $contract->customer_id)->delete();
+        $this->assertRejectedWith(errorCode: self::ROW_IS_REFERENCED, statement: fn () => CustomerModel::query()->whereKey(id: $contract->customer_id)->delete());
     }
 
     public function test_a_customer_with_locations_cannot_be_deleted(): void
     {
         $location = LocationModel::factory()->create();
 
-        $this->expectException(QueryException::class);
-
-        CustomerModel::query()->whereKey(id: $location->customer_id)->delete();
+        $this->assertRejectedWith(errorCode: self::ROW_IS_REFERENCED, statement: fn () => CustomerModel::query()->whereKey(id: $location->customer_id)->delete());
     }
 
     public function test_the_serial_number_of_an_asset_is_unique_even_after_a_soft_delete(): void
     {
         AssetModel::factory()->create(attributes: ['serial_number' => 'SN-1'])->delete();
 
-        $this->expectException(QueryException::class);
-
-        AssetModel::factory()->create(attributes: ['serial_number' => 'SN-1']);
+        $this->assertRejectedWith(errorCode: self::DUPLICATE_ENTRY, statement: fn () => AssetModel::factory()->create(attributes: ['serial_number' => 'SN-1']));
     }
 
     public function test_deleting_a_contract_or_a_location_unlinks_its_assets(): void
@@ -101,18 +90,14 @@ final class SchemaTest extends TestCase
     {
         TicketModel::factory()->create(attributes: ['repair_id' => 'RMA-1']);
 
-        $this->expectException(QueryException::class);
-
-        TicketModel::factory()->create(attributes: ['repair_id' => 'RMA-1']);
+        $this->assertRejectedWith(errorCode: self::DUPLICATE_ENTRY, statement: fn () => TicketModel::factory()->create(attributes: ['repair_id' => 'RMA-1']));
     }
 
     public function test_the_incident_number_of_a_ticket_is_unique(): void
     {
         TicketModel::factory()->create(attributes: ['incident_number' => 'INC-1']);
 
-        $this->expectException(QueryException::class);
-
-        TicketModel::factory()->create(attributes: ['incident_number' => 'INC-1']);
+        $this->assertRejectedWith(errorCode: self::DUPLICATE_ENTRY, statement: fn () => TicketModel::factory()->create(attributes: ['incident_number' => 'INC-1']));
     }
 
     public function test_deleting_an_asset_unlinks_its_tickets(): void
@@ -128,18 +113,14 @@ final class SchemaTest extends TestCase
     {
         $ticket = TicketModel::factory()->create();
 
-        $this->expectException(QueryException::class);
-
-        TicketStatusModel::query()->whereKey(id: $ticket->status_id)->delete();
+        $this->assertRejectedWith(errorCode: self::ROW_IS_REFERENCED, statement: fn () => TicketStatusModel::query()->whereKey(id: $ticket->status_id)->delete());
     }
 
     public function test_a_user_cannot_repeat_a_view_title(): void
     {
         $view = CustomViewModel::factory()->create(attributes: ['title' => 'Zebra scanners']);
 
-        $this->expectException(QueryException::class);
-
-        CustomViewModel::factory()->create(attributes: ['user_id' => $view->user_id, 'title' => 'Zebra scanners']);
+        $this->assertRejectedWith(errorCode: self::DUPLICATE_ENTRY, statement: fn () => CustomViewModel::factory()->create(attributes: ['user_id' => $view->user_id, 'title' => 'Zebra scanners']));
     }
 
     public function test_different_users_can_use_the_same_view_title(): void
@@ -157,5 +138,40 @@ final class SchemaTest extends TestCase
         UserModel::query()->whereKey(id: $view->user_id)->delete();
 
         $this->assertFalse(CustomViewModel::query()->whereKey(id: $view->id)->exists());
+    }
+
+    public function test_a_customer_with_assets_cannot_be_deleted(): void
+    {
+        $asset = AssetModel::factory()->create();
+
+        $this->assertRejectedWith(errorCode: self::ROW_IS_REFERENCED, statement: fn () => CustomerModel::query()->whereKey(id: $asset->customer_id)->delete());
+    }
+
+    public function test_a_customer_with_tickets_cannot_be_deleted(): void
+    {
+        $ticket = TicketModel::factory()->create();
+        UserModel::query()->whereKey(id: $ticket->created_by)->update(values: ['customer_id' => null]);
+
+        $this->assertRejectedWith(errorCode: self::ROW_IS_REFERENCED, statement: fn () => CustomerModel::query()->whereKey(id: $ticket->customer_id)->delete());
+    }
+
+    public function test_the_creator_of_a_ticket_cannot_be_deleted(): void
+    {
+        $ticket = TicketModel::factory()->create();
+
+        $this->assertRejectedWith(errorCode: self::ROW_IS_REFERENCED, statement: fn () => UserModel::query()->whereKey(id: $ticket->created_by)->delete());
+    }
+
+    private function assertRejectedWith(int $errorCode, callable $statement): void
+    {
+        try {
+            $statement();
+        } catch (QueryException $exception) {
+            $this->assertSame($errorCode, $exception->errorInfo[1] ?? null);
+
+            return;
+        }
+
+        $this->fail('The database was expected to reject the statement.');
     }
 }
