@@ -4,12 +4,19 @@ declare(strict_types=1);
 
 namespace Tests\Feature\LogisContext\CustomView;
 
+use Illuminate\Database\ConnectionInterface;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Exceptions;
 use Illuminate\Testing\TestResponse;
+use Logis\LogisContext\Application\Exception\CustomView\ViewExecutionTimedOutException;
+use Logis\LogisContext\Application\ModelView\CustomView\ViewPage;
+use Logis\LogisContext\Application\Services\CustomView\ViewBuilder;
 use Logis\LogisContext\Application\Services\CustomView\ViewBuilders;
+use Logis\LogisContext\Application\Services\CustomView\ViewExecutionCriteria;
 use Logis\LogisContext\Domain\ValueObject\CustomView\ViewType;
+use Logis\LogisContext\Infrastructure\CustomView\StatementTimeout;
 use Logis\LogisContext\Infrastructure\Persistence\Asset\AssetModel;
 use Logis\LogisContext\Infrastructure\Persistence\Contract\ContractModel;
 use Logis\LogisContext\Infrastructure\Persistence\Customer\CustomerModel;
@@ -21,6 +28,7 @@ use PHPUnit\Framework\Attributes\DataProvider;
 use Symfony\Component\HttpFoundation\Response;
 use Tests\Feature\CountsQueries;
 use Tests\TestCase;
+use Tests\Unit\LogisContext\Application\Services\CustomView\InMemoryViewBuilder;
 
 final class ExecuteCustomViewEndpointTest extends TestCase
 {
@@ -188,6 +196,42 @@ final class ExecuteCustomViewEndpointTest extends TestCase
 
         $this->assertSame(1, $this->assetQueriesOf(view: $view));
         $this->assertSame(0, $this->assetQueriesOf(view: $view));
+    }
+
+    public function test_an_execution_that_times_out_answers_504_and_is_reported(): void
+    {
+        Exceptions::fake();
+        $timeout = new StatementTimeout(connection: $this->app->make(abstract: ConnectionInterface::class), milliseconds: 1);
+        $slowAssets = new class (timeout: $timeout) implements ViewBuilder {
+            public function __construct(private readonly StatementTimeout $timeout)
+            {
+            }
+
+            public function type(): ViewType
+            {
+                return ViewType::MyAssets;
+            }
+
+            public function execute(ViewExecutionCriteria $criteria): ViewPage
+            {
+                $this->timeout->run(callback: fn () => DB::select(query: 'SELECT COUNT(*) FROM information_schema.columns a, information_schema.columns b, information_schema.columns c'));
+
+                return ViewPage::empty();
+            }
+        };
+        $others = array_map(
+            callback: fn (ViewType $type): ViewBuilder => new InMemoryViewBuilder(type: $type, page: ViewPage::empty()),
+            array: [ViewType::MyTickets, ViewType::MyContracts, ViewType::MyLocations],
+        );
+        $this->app->instance(abstract: ViewBuilders::class, instance: new ViewBuilders(builders: [$slowAssets, ...$others]));
+        $view = $this->customView(owner: $this->owner, type: ViewType::MyAssets, filters: []);
+
+        $this->execute(user: $this->owner, view: $view)
+            ->assertStatus(status: 504)
+            ->assertJsonPath(path: 'success', expect: false)
+            ->assertJsonPath(path: 'message', expect: 'The view took longer than 1 ms to run. Add filters to narrow it down.');
+
+        Exceptions::assertReported(ViewExecutionTimedOutException::class);
     }
 
     public function test_the_number_of_queries_does_not_grow_with_the_rows(): void

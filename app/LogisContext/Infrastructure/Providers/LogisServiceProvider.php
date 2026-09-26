@@ -27,6 +27,7 @@ use Logis\LogisContext\Domain\Model\User\PasswordHasher;
 use Logis\LogisContext\Domain\Model\User\UserRepository;
 use Logis\LogisContext\Infrastructure\Cache\CachedEntitySearcher;
 use Logis\LogisContext\Infrastructure\Cache\CachedViewBuilder;
+use Logis\LogisContext\Infrastructure\CustomView\StatementTimeout;
 use Logis\LogisContext\Infrastructure\Http\PlainTextTokenGenerator;
 use Logis\LogisContext\Infrastructure\Persistence\AccessToken\AccessTokenModel;
 use Logis\LogisContext\Infrastructure\Persistence\AccessToken\EloquentAccessTokenRepository;
@@ -111,6 +112,10 @@ final class LogisServiceProvider extends ServiceProvider
 
     private function registerViewBuilders(): void
     {
+        $this->app->when(concrete: StatementTimeout::class)
+            ->needs(abstract: '$milliseconds')
+            ->giveConfig(key: 'views.execution_timeout_ms');
+
         foreach (self::VIEW_BUILDERS as $builder) {
             $this->app->extend(abstract: $builder, closure: fn (ViewBuilder $builder, Application $app): ViewBuilder => new CachedViewBuilder(
                 builder: $builder,

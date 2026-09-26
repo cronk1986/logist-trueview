@@ -25,6 +25,7 @@ final class EloquentTicketViewBuilderTest extends TestCase
 {
     use CountsQueries;
     use RefreshDatabase;
+    private const TIMEOUT_STATEMENTS = 3;
 
     private EloquentTicketViewBuilder $builder;
     private CustomerModel $customer;
@@ -111,7 +112,7 @@ final class EloquentTicketViewBuilderTest extends TestCase
 
         TicketModel::factory()->count(count: 15)->withAsset()->create(attributes: ['customer_id' => $this->customer->id]);
 
-        $this->assertSame(4, $withOne);
+        $this->assertSame(self::TIMEOUT_STATEMENTS + 4, $withOne);
         $this->assertSame($withOne, $this->countQueries(callback: fn () => $this->execute(columns: $columns)));
     }
 

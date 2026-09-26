@@ -28,6 +28,7 @@ final class EloquentAssetViewBuilderTest extends TestCase
 {
     use CountsQueries;
     use RefreshDatabase;
+    private const TIMEOUT_STATEMENTS = 3;
 
     private EloquentAssetViewBuilder $builder;
     private CustomerModel $customer;
@@ -149,7 +150,7 @@ final class EloquentAssetViewBuilderTest extends TestCase
 
         DB::enableQueryLog();
         $this->execute(columns: ['serial_number', 'location']);
-        $query = DB::getQueryLog()[0]['query'] ?? '';
+        $query = array_values(array: array_filter(array: array_column(array: DB::getQueryLog(), column_key: 'query'), callback: fn (string $query): bool => str_contains(haystack: $query, needle: 'from `assets`')))[0] ?? '';
         DB::disableQueryLog();
 
         $this->assertStringStartsWith('select `id`, `serial_number`, `location_id` from `assets`', $query);
@@ -164,7 +165,7 @@ final class EloquentAssetViewBuilderTest extends TestCase
         AssetModel::factory()->count(count: 20)->withLocation()->withContract()->create(attributes: ['customer_id' => $this->customer->id]);
         $withMany = $this->countQueries(callback: fn () => $this->execute(columns: $columns));
 
-        $this->assertSame(4, $withOne);
+        $this->assertSame(self::TIMEOUT_STATEMENTS + 4, $withOne);
         $this->assertSame($withOne, $withMany);
     }
 

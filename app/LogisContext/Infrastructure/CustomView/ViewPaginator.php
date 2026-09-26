@@ -21,8 +21,10 @@ final class ViewPaginator
 {
     private const ID = 'id';
 
-    public function __construct(private readonly ViewFilterApplier $filters)
-    {
+    public function __construct(
+        private readonly ViewFilterApplier $filters,
+        private readonly StatementTimeout $timeout,
+    ) {
     }
 
     /**
@@ -46,11 +48,8 @@ final class ViewPaginator
             $query->orderBy($column, $criteria->sort->direction()->value);
         }
 
-        $page = $query->cursorPaginate(
-            perPage: $criteria->pageSize->value(),
-            columns: $this->selectedColumns(fields: $fields, definition: $definition, sortColumn: $sortColumn),
-            cursor: $cursor,
-        );
+        $columns = $this->selectedColumns(fields: $fields, definition: $definition, sortColumn: $sortColumn);
+        $page = $this->timeout->run(callback: fn () => $query->cursorPaginate(perPage: $criteria->pageSize->value(), columns: $columns, cursor: $cursor));
 
         $rows = [];
 

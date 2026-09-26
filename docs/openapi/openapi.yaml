@@ -385,7 +385,7 @@ paths:
 
         Pages are cursor-based: pass `meta.next_cursor` of a page as `cursor` to get the next one, with the same
         sort. `next_cursor` is `null` on the last page. A cursor of another sort order is rejected with 422.
-        Results are cached for 5 minutes.
+        Results are cached for 5 minutes. An execution that runs longer than 5 seconds is stopped and answers 504.
 
         Only these fields can be sorted: `id`, `created_at`, `updated_at` and the text or choice fields of the
         entity's own table (not relations nor the nullable address fields of locations).
@@ -413,6 +413,8 @@ paths:
           $ref: "#/components/responses/ValidationFailed"
         "429":
           $ref: "#/components/responses/TooManyRequests"
+        "504":
+          $ref: "#/components/responses/GatewayTimeout"
   /views/{id}/set-default:
     parameters:
       - $ref: "#/components/parameters/ViewId"
@@ -1074,3 +1076,17 @@ components:
               timestamp: "2026-09-25T10:00:00Z"
               version: "1.0"
               execution_time_ms: 4
+    GatewayTimeout:
+      description: The query took longer than the execution timeout (5 seconds) and was stopped
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          example:
+            success: false
+            data: {}
+            message: The view took longer than 5000 ms to run. Add filters to narrow it down.
+            meta:
+              timestamp: "2026-09-25T10:00:00Z"
+              version: "1.0"
+              execution_time_ms: 5003

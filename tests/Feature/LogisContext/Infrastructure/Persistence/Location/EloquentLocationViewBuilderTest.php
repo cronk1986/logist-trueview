@@ -23,6 +23,7 @@ final class EloquentLocationViewBuilderTest extends TestCase
 {
     use CountsQueries;
     use RefreshDatabase;
+    private const TIMEOUT_STATEMENTS = 3;
 
     private EloquentLocationViewBuilder $builder;
     private CustomerModel $customer;
@@ -86,7 +87,7 @@ final class EloquentLocationViewBuilderTest extends TestCase
 
         LocationModel::factory()->count(count: 10)->create(attributes: ['customer_id' => $this->customer->id]);
 
-        $this->assertSame(2, $withOne);
+        $this->assertSame(self::TIMEOUT_STATEMENTS + 2, $withOne);
         $this->assertSame($withOne, $this->countQueries(callback: fn () => $this->execute(columns: ['title', 'customer'])));
     }
 
