@@ -5,9 +5,11 @@ declare(strict_types=1);
 namespace Logis\LogisContext\Domain\Model\CustomView;
 
 use Logis\LogisContext\Domain\Event\CustomView\CustomViewCreated;
+use Logis\LogisContext\Domain\Event\CustomView\CustomViewUpdated;
 use Logis\LogisContext\Domain\Exception\CustomView\CustomViewAccessDeniedException;
 use Logis\LogisContext\Domain\Exception\CustomView\CustomViewLinkedToAnotherCustomerException;
 use Logis\LogisContext\Domain\Exception\CustomView\CustomViewNotSavedException;
+use Logis\LogisContext\Domain\Exception\CustomView\CustomViewTypeCannotChangeException;
 use Logis\LogisContext\Domain\Model\Customer\Customer;
 use Logis\LogisContext\Domain\Model\User\User;
 use Logis\LogisContext\Domain\ValueObject\CustomView\CustomViewId;
@@ -69,6 +71,28 @@ final class CustomView
         DomainEventPublisher::publish(event: new CustomViewCreated(ownerId: $owner->id(), title: $title));
 
         return $view;
+    }
+
+    public function update(
+        CustomViewTitle $title,
+        ?string $description,
+        ViewColumns $columns,
+        ViewFilters $filters,
+        bool $isPublic,
+    ): void {
+        $this->definition = ViewDefinition::from(type: $this->type(), columns: $columns, filters: $filters);
+        $this->title = $title;
+        $this->description = $description;
+        $this->isPublic = $isPublic;
+
+        DomainEventPublisher::publish(event: new CustomViewUpdated(viewId: $this->savedId()));
+    }
+
+    public function ensureTypeIs(ViewType $type): void
+    {
+        if ($type !== $this->type()) {
+            throw CustomViewTypeCannotChangeException::from(currentType: $this->type()->value);
+        }
     }
 
     public function id(): ?CustomViewId

@@ -299,6 +299,47 @@ paths:
           $ref: "#/components/responses/NotFound"
         "429":
           $ref: "#/components/responses/TooManyRequests"
+    put:
+      tags: [Views]
+      summary: Replace a view
+      operationId: updateView
+      description: |
+        Replaces the title, description, columns, filters and `is_public` of a view. Only the owner can do it.
+        `view_type` can't change: it may be sent, but only with the current value. The same catalog rules as
+        creation apply, and an absent `is_public` means `false`.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: "#/components/schemas/CustomViewInput"
+                - type: object
+                  properties:
+                    view_type:
+                      $ref: "#/components/schemas/ViewType"
+      responses:
+        "200":
+          description: The updated view
+          headers:
+            X-Refreshed-Token:
+              $ref: "#/components/headers/XRefreshedToken"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CustomViewDetailsResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "422":
+          $ref: "#/components/responses/ValidationFailed"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
 components:
   securitySchemes:
     sanctum:

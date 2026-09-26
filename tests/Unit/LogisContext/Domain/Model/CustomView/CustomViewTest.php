@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Tests\Unit\LogisContext\Domain\Model\CustomView;
 
 use Logis\LogisContext\Domain\Event\CustomView\CustomViewCreated;
+use Logis\LogisContext\Domain\Event\CustomView\CustomViewUpdated;
+use Logis\LogisContext\Domain\Exception\CustomView\CustomViewTypeCannotChangeException;
 use Logis\LogisContext\Domain\Exception\CustomView\CustomViewAccessDeniedException;
 use Logis\LogisContext\Domain\Exception\CustomView\CustomViewLinkedToAnotherCustomerException;
 use Logis\LogisContext\Domain\Exception\CustomView\CustomViewNotSavedException;
@@ -98,6 +100,62 @@ final class CustomViewTest extends TestCase
         $this->expectException(CustomViewLinkedToAnotherCustomerException::class);
 
         CustomViewMother::create(user: UserMother::create(customer: null));
+    }
+
+    public function test_it_replaces_its_editable_fields(): void
+    {
+        $view = CustomViewMother::create(id: 4, isDefault: true);
+
+        $view->update(
+            title: CustomViewTitle::fromString(value: 'Retired'),
+            description: null,
+            columns: ViewColumns::fromList(columns: ['serial_number', 'status']),
+            filters: ViewFilters::fromList(filters: [['column' => 'status', 'operator' => 'eq', 'value' => 'retired']]),
+            isPublic: true,
+        );
+
+        $this->assertSame('Retired', $view->title()->value());
+        $this->assertNull($view->description());
+        $this->assertSame(['serial_number', 'status'], $view->columns()->toArray());
+        $this->assertSame([['column' => 'status', 'operator' => 'eq', 'value' => 'retired']], $view->filters()->toArray());
+        $this->assertTrue($view->isPublic());
+        $this->assertTrue($view->isDefault());
+        $this->assertSame(ViewType::MyAssets, $view->type());
+
+        $event = DomainEventPublisher::lastEventOfType(domainEventType: CustomViewUpdated::class);
+        $this->assertInstanceOf(CustomViewUpdated::class, $event);
+        $this->assertSame(4, $event->viewId()->value());
+    }
+
+    public function test_an_update_must_fit_the_catalog_of_its_type(): void
+    {
+        $view = CustomViewMother::create();
+
+        try {
+            $view->update(
+                title: CustomViewTitle::fromString(value: 'Contracts'),
+                description: null,
+                columns: ViewColumns::fromList(columns: ['name']),
+                filters: ViewFilters::fromList(filters: []),
+                isPublic: false,
+            );
+            $this->fail('The update should have been rejected.');
+        } catch (InvalidViewColumnsException) {
+            $this->assertSame('Zebra scanners', $view->title()->value());
+            $this->assertSame(['serial_number', 'model'], $view->columns()->toArray());
+        }
+    }
+
+    public function test_its_type_cannot_change(): void
+    {
+        $view = CustomViewMother::create();
+
+        $view->ensureTypeIs(type: ViewType::MyAssets);
+
+        $this->expectException(CustomViewTypeCannotChangeException::class);
+        $this->expectExceptionMessage('The type of a view cannot change. This view stays my_assets.');
+
+        $view->ensureTypeIs(type: ViewType::MyTickets);
     }
 
     public function test_it_knows_its_owner(): void

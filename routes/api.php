@@ -26,6 +26,7 @@ Route::prefix('v1')->group(function (): void {
             Route::get('', 'index');
             Route::post('', 'store');
             Route::get('{id}', 'show')->whereNumber('id');
+            Route::put('{id}', 'update')->whereNumber('id');
         });
     });
 });

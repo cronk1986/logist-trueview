@@ -193,6 +193,31 @@ final class EloquentCustomViewRepositoryTest extends TestCase
         $this->assertFalse($view->isDefault());
     }
 
+    public function test_it_updates_an_existing_view(): void
+    {
+        $model = CustomViewModel::factory()->ofType(type: ViewType::MyAssets)->create();
+        $view = $this->repository->findById(id: CustomViewId::fromInt(value: $model->id));
+        $this->assertNotNull($view);
+
+        $view->update(
+            title: CustomViewTitle::fromString(value: 'Renamed'),
+            description: 'New description',
+            columns: ViewColumns::fromList(columns: ['model']),
+            filters: ViewFilters::fromList(filters: []),
+            isPublic: true,
+        );
+        $this->repository->save(view: $view);
+
+        $stored = $model->fresh();
+        $this->assertNotNull($stored);
+        $this->assertSame('Renamed', $stored->title);
+        $this->assertSame('New description', $stored->description);
+        $this->assertSame(['model'], $stored->columns);
+        $this->assertSame([], $stored->filters);
+        $this->assertTrue($stored->is_public);
+        $this->assertSame(1, CustomViewModel::query()->count());
+    }
+
     public function test_a_duplicate_title_of_the_same_owner_is_a_conflict(): void
     {
         $model = CustomViewModel::factory()->create(attributes: ['title' => 'Zebra scanners']);
