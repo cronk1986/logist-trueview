@@ -218,6 +218,17 @@ final class EloquentCustomViewRepositoryTest extends TestCase
         $this->assertSame(1, CustomViewModel::query()->count());
     }
 
+    public function test_it_deletes_a_view(): void
+    {
+        $model = CustomViewModel::factory()->create();
+        $kept = CustomViewModel::factory()->create();
+
+        $this->repository->delete(id: CustomViewId::fromInt(value: $model->id));
+
+        $this->assertNull($model->fresh());
+        $this->assertNotNull($kept->fresh());
+    }
+
     public function test_a_duplicate_title_of_the_same_owner_is_a_conflict(): void
     {
         $model = CustomViewModel::factory()->create(attributes: ['title' => 'Zebra scanners']);

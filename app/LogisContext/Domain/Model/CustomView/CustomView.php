@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Logis\LogisContext\Domain\Model\CustomView;
 
 use Logis\LogisContext\Domain\Event\CustomView\CustomViewCreated;
+use Logis\LogisContext\Domain\Event\CustomView\CustomViewDeleted;
 use Logis\LogisContext\Domain\Event\CustomView\CustomViewUpdated;
 use Logis\LogisContext\Domain\Exception\CustomView\CustomViewAccessDeniedException;
 use Logis\LogisContext\Domain\Exception\CustomView\CustomViewLinkedToAnotherCustomerException;
@@ -86,6 +87,11 @@ final class CustomView
         $this->isPublic = $isPublic;
 
         DomainEventPublisher::publish(event: new CustomViewUpdated(viewId: $this->savedId()));
+    }
+
+    public function delete(): void
+    {
+        DomainEventPublisher::publish(event: new CustomViewDeleted(viewId: $this->savedId()));
     }
 
     public function ensureTypeIs(ViewType $type): void

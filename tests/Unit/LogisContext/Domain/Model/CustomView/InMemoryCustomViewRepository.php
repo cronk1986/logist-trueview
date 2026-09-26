@@ -57,6 +57,11 @@ final class InMemoryCustomViewRepository implements CustomViewRepository
         $this->add(view: $this->withId(view: $view));
     }
 
+    public function delete(CustomViewId $id): void
+    {
+        unset($this->views[$id->value()]);
+    }
+
     private function withId(CustomView $view): CustomView
     {
         if ($view->id() !== null) {

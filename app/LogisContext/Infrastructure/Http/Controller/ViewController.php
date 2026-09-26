@@ -6,6 +6,7 @@ namespace Logis\LogisContext\Infrastructure\Http\Controller;
 
 use Illuminate\Http\JsonResponse;
 use Logis\LogisContext\Infrastructure\Http\Request\CustomView\CreateCustomViewRequest;
+use Logis\LogisContext\Infrastructure\Http\Request\CustomView\DeleteCustomViewRequest;
 use Logis\LogisContext\Infrastructure\Http\Request\CustomView\ListCustomViewsRequest;
 use Logis\LogisContext\Infrastructure\Http\Request\CustomView\ShowCustomViewRequest;
 use Logis\LogisContext\Infrastructure\Http\Request\CustomView\UpdateCustomViewRequest;
@@ -43,5 +44,12 @@ final class ViewController extends AbstractController
         $response = $this->queryBus->ask(query: $request->toQuery(id: $id));
 
         return ApiResponse::fromQueryResponse(response: $response, message: 'View updated');
+    }
+
+    public function destroy(DeleteCustomViewRequest $request, int $id): JsonResponse
+    {
+        $this->commandBus->dispatch(command: $request->toCommand(id: $id));
+
+        return ApiResponse::success(message: 'View deleted');
     }
 }

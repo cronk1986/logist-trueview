@@ -90,6 +90,11 @@ final class EloquentCustomViewRepository implements CustomViewRepository
         }
     }
 
+    public function delete(CustomViewId $id): void
+    {
+        CustomViewModel::query()->whereKey(id: $id->value())->delete();
+    }
+
     private function modelOf(CustomView $view): CustomViewModel
     {
         $id = $view->id();

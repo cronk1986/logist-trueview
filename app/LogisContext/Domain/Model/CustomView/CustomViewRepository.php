@@ -22,4 +22,6 @@ interface CustomViewRepository
     public function findOwnedByOrPublicIn(UserId $owner, CustomerId $customer, ?ViewType $type): array;
 
     public function save(CustomView $view): void;
+
+    public function delete(CustomViewId $id): void;
 }

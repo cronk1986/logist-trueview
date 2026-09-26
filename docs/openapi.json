@@ -477,6 +477,53 @@
             "$ref": "#/components/responses/TooManyRequests"
           }
         }
+      },
+      "delete": {
+        "tags": [
+          "Views"
+        ],
+        "summary": "Delete a view",
+        "operationId": "deleteView",
+        "description": "Deletes a view. Only the owner can do it. Deleting the default view leaves its type without a default.",
+        "responses": {
+          "200": {
+            "description": "The view was deleted",
+            "headers": {
+              "X-Refreshed-Token": {
+                "$ref": "#/components/headers/XRefreshedToken"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EmptyResponse"
+                },
+                "example": {
+                  "success": true,
+                  "data": {},
+                  "message": "View deleted",
+                  "meta": {
+                    "timestamp": "2026-09-25T10:00:00Z",
+                    "version": "1.0",
+                    "execution_time_ms": 7
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          }
+        }
       }
     }
   },
