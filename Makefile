@@ -8,7 +8,7 @@ export HOST_UID := $(shell id -u)
 export HOST_GID := $(shell id -g)
 
 .DEFAULT_GOAL := help
-.PHONY: help up down stop restart worker-restart build ps logs shell artisan composer install migrate fresh test-db test pint stan deptrac qa check docs docs-lint destroy
+.PHONY: help up down stop restart worker-restart build ps logs shell artisan composer install migrate fresh test-db test test-unit pint stan deptrac qa check docs docs-lint destroy
 
 help: ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-14s\033[0m %s\n", $$1, $$2}'
@@ -73,6 +73,9 @@ test-db: ## Create the logis_testing database if it does not exist
 
 test: test-db ## Run the tests (against the logis_testing database)
 	$(APP) php artisan test
+
+test-unit: ## Run only the unit tests (no database needed)
+	$(APP) php artisan test --testsuite=Unit
 
 pint: ## Format the code with Laravel Pint (PSR-12)
 	$(APP) ./vendor/bin/pint
