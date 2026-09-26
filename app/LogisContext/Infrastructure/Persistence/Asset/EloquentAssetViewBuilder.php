@@ -26,6 +26,10 @@ final class EloquentAssetViewBuilder implements ViewBuilder
     {
         $query = AssetModel::query()->visibleTo($criteria->customers);
 
+        if ($criteria->term !== null) {
+            $query->matching($criteria->term);
+        }
+
         return $this->paginator->paginate(query: $query, fields: self::fields(), criteria: $criteria);
     }
 

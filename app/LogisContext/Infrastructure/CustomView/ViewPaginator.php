@@ -37,15 +37,19 @@ final class ViewPaginator
         $this->applyFilters(query: $query, fields: $fields, definition: $definition);
 
         $sortColumn = $this->mapping(fields: $fields, definition: $definition, field: $criteria->sort->field())->column();
-        $direction = $criteria->sort->direction()->value;
+        $orderColumns = array_values(array: array_unique(array: [$sortColumn, self::ID]));
+        $cursor = ViewCursor::decode(encoded: $criteria->cursor, orderColumns: $orderColumns);
 
-        $query->with(relations: $this->relations(fields: $fields, definition: $definition))
-            ->orderBy($sortColumn, $direction)
-            ->orderBy(self::ID, $direction);
+        $query->with(relations: $this->relations(fields: $fields, definition: $definition));
+
+        foreach ($orderColumns as $column) {
+            $query->orderBy($column, $criteria->sort->direction()->value);
+        }
 
         $page = $query->cursorPaginate(
             perPage: $criteria->pageSize->value(),
             columns: $this->selectedColumns(fields: $fields, definition: $definition, sortColumn: $sortColumn),
+            cursor: $cursor,
         );
 
         $rows = [];
