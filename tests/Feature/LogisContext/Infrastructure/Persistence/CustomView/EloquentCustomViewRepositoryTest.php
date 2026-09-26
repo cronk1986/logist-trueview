@@ -7,9 +7,14 @@ namespace Tests\Feature\LogisContext\Infrastructure\Persistence\CustomView;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Logis\LogisContext\Domain\Model\CustomView\CustomView;
 use Logis\LogisContext\Domain\Model\CustomView\ViewPolicy;
+use Logis\LogisContext\Domain\Model\User\User;
 use Logis\LogisContext\Domain\Model\User\UserRepository;
 use Logis\LogisContext\Domain\ValueObject\Customer\CustomerId;
+use Logis\LogisContext\Domain\Exception\CustomView\CustomViewTitleAlreadyUsedException;
 use Logis\LogisContext\Domain\ValueObject\CustomView\CustomViewId;
+use Logis\LogisContext\Domain\ValueObject\CustomView\CustomViewTitle;
+use Logis\LogisContext\Domain\ValueObject\CustomView\ViewColumns;
+use Logis\LogisContext\Domain\ValueObject\CustomView\ViewFilters;
 use Logis\LogisContext\Domain\ValueObject\User\UserId;
 use Logis\LogisContext\Domain\ValueObject\CustomView\ViewType;
 use Logis\LogisContext\Infrastructure\Persistence\Customer\CustomerModel;
@@ -158,5 +163,70 @@ final class EloquentCustomViewRepositoryTest extends TestCase
         $withEleven = $this->countQueries(callback: $list);
 
         $this->assertSame($withOne, $withEleven);
+    }
+
+    public function test_it_inserts_a_new_view(): void
+    {
+        $owner = $this->domainUser(model: UserModel::factory()->create());
+        $filters = [['column' => 'created_at', 'operator' => 'between', 'value' => ['2024-01-01', '2024-01-31']]];
+
+        $this->repository->save(view: CustomView::create(
+            owner: $owner,
+            title: CustomViewTitle::fromString(value: 'January'),
+            description: 'Created in January',
+            type: ViewType::MyLocations,
+            columns: ViewColumns::fromList(columns: ['title', 'city']),
+            filters: ViewFilters::fromList(filters: $filters),
+            isPublic: true,
+        ));
+
+        $view = $this->repository->findByOwnerAndTitle(owner: $owner->id(), title: CustomViewTitle::fromString(value: 'January'));
+
+        $this->assertNotNull($view);
+        $this->assertNotNull($view->id());
+        $this->assertSame($owner->customer()?->id()->value(), $view->customer()->id()->value());
+        $this->assertSame('Created in January', $view->description());
+        $this->assertSame(ViewType::MyLocations, $view->type());
+        $this->assertSame(['title', 'city'], $view->columns()->toArray());
+        $this->assertSame($filters, $view->filters()->toArray());
+        $this->assertTrue($view->isPublic());
+        $this->assertFalse($view->isDefault());
+    }
+
+    public function test_a_duplicate_title_of_the_same_owner_is_a_conflict(): void
+    {
+        $model = CustomViewModel::factory()->create(attributes: ['title' => 'Zebra scanners']);
+        $owner = $this->domainUser(model: $model->user);
+
+        $this->expectException(CustomViewTitleAlreadyUsedException::class);
+
+        $this->repository->save(view: CustomView::create(
+            owner: $owner,
+            title: CustomViewTitle::fromString(value: 'Zebra scanners'),
+            description: null,
+            type: ViewType::MyAssets,
+            columns: ViewColumns::fromList(columns: ['serial_number']),
+            filters: ViewFilters::fromList(filters: []),
+            isPublic: false,
+        ));
+    }
+
+    public function test_it_finds_a_view_by_owner_and_title(): void
+    {
+        $model = CustomViewModel::factory()->create(attributes: ['title' => 'Zebra scanners']);
+        CustomViewModel::factory()->create(attributes: ['title' => 'Zebra scanners']);
+
+        $view = $this->repository->findByOwnerAndTitle(owner: UserId::fromInt(value: $model->user_id), title: CustomViewTitle::fromString(value: 'Zebra scanners'));
+
+        $this->assertSame($model->id, $view?->id()?->value());
+        $this->assertNull($this->repository->findByOwnerAndTitle(owner: UserId::fromInt(value: $model->user_id), title: CustomViewTitle::fromString(value: 'Other')));
+    }
+
+    private function domainUser(UserModel $model): User
+    {
+        $user = $this->app->make(abstract: UserRepository::class)->findById(id: UserId::fromInt(value: $model->id));
+        $this->assertNotNull($user);
+
+        return $user;
     }
 }

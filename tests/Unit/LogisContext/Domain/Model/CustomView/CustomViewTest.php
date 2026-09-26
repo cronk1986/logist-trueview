@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Tests\Unit\LogisContext\Domain\Model\CustomView;
 
+use Logis\LogisContext\Domain\Event\CustomView\CustomViewCreated;
+use Logis\LogisContext\Domain\Exception\CustomView\CustomViewAccessDeniedException;
 use Logis\LogisContext\Domain\Exception\CustomView\CustomViewLinkedToAnotherCustomerException;
 use Logis\LogisContext\Domain\Exception\CustomView\CustomViewNotSavedException;
 use Logis\LogisContext\Domain\Exception\CustomView\InvalidViewColumnsException;
@@ -14,12 +16,58 @@ use Logis\LogisContext\Domain\ValueObject\CustomView\CustomViewTitle;
 use Logis\LogisContext\Domain\ValueObject\CustomView\ViewColumns;
 use Logis\LogisContext\Domain\ValueObject\CustomView\ViewFilters;
 use Logis\LogisContext\Domain\ValueObject\CustomView\ViewType;
+use Logis\SharedContext\Domain\Event\DomainEventPublisher;
 use PHPUnit\Framework\TestCase;
 use Tests\Unit\LogisContext\Domain\Model\Customer\CustomerMother;
 use Tests\Unit\LogisContext\Domain\Model\User\UserMother;
 
 final class CustomViewTest extends TestCase
 {
+    protected function setUp(): void
+    {
+        DomainEventPublisher::reset();
+    }
+
+    public function test_a_new_view_belongs_to_the_customer_of_its_owner_and_is_not_default(): void
+    {
+        $owner = UserMother::create(id: 5, customer: CustomerMother::create(id: 3));
+
+        $view = CustomView::create(
+            owner: $owner,
+            title: CustomViewTitle::fromString(value: 'Zebra scanners'),
+            description: null,
+            type: ViewType::MyAssets,
+            columns: ViewColumns::fromList(columns: ['serial_number']),
+            filters: ViewFilters::fromList(filters: []),
+            isPublic: true,
+        );
+
+        $this->assertNull($view->id());
+        $this->assertSame(3, $view->customer()->id()->value());
+        $this->assertFalse($view->isDefault());
+        $this->assertTrue($view->isPublic());
+
+        $event = DomainEventPublisher::lastEventOfType(domainEventType: CustomViewCreated::class);
+        $this->assertInstanceOf(CustomViewCreated::class, $event);
+        $this->assertSame(5, $event->ownerId()->value());
+        $this->assertSame('Zebra scanners', $event->title()->value());
+    }
+
+    public function test_an_owner_without_a_customer_cannot_create_a_view(): void
+    {
+        $this->expectException(CustomViewAccessDeniedException::class);
+
+        CustomView::create(
+            owner: UserMother::create(customer: null),
+            title: CustomViewTitle::fromString(value: 'Zebra scanners'),
+            description: null,
+            type: ViewType::MyAssets,
+            columns: ViewColumns::fromList(columns: ['serial_number']),
+            filters: ViewFilters::fromList(filters: []),
+            isPublic: false,
+        );
+    }
+
     public function test_it_holds_its_owner_customer_and_configuration(): void
     {
         $owner = UserMother::create(id: 5, customer: CustomerMother::create(id: 1));

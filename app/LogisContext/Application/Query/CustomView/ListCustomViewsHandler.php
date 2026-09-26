@@ -6,7 +6,6 @@ namespace Logis\LogisContext\Application\Query\CustomView;
 
 use Logis\LogisContext\Application\ModelView\CustomView\CustomViewListItemView;
 use Logis\LogisContext\Application\Services\CustomView\CustomViewAccess;
-use Logis\LogisContext\Domain\Exception\CustomView\InvalidViewTypeException;
 use Logis\LogisContext\Domain\Model\CustomView\CustomView;
 use Logis\LogisContext\Domain\Model\CustomView\CustomViewRepository;
 use Logis\LogisContext\Domain\Model\User\User;
@@ -55,12 +54,6 @@ final class ListCustomViewsHandler
             return null;
         }
 
-        $type = ViewType::tryFrom(value: $query->viewType);
-
-        if ($type === null) {
-            throw InvalidViewTypeException::unknown(type: $query->viewType);
-        }
-
-        return $type;
+        return ViewType::fromName(name: $query->viewType);
     }
 }
