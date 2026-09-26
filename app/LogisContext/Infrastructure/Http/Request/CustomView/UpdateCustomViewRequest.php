@@ -27,7 +27,7 @@ final class UpdateCustomViewRequest extends FormRequest
     public function toCommand(int $id): UpdateCustomView
     {
         return new UpdateCustomView(
-            userId: $this->userId(),
+            userId: CurrentAccessToken::userId(request: $this),
             viewId: $id,
             title: $this->title(),
             description: $this->description(),
@@ -40,7 +40,7 @@ final class UpdateCustomViewRequest extends FormRequest
 
     public function toQuery(int $id): GetCustomView
     {
-        return new GetCustomView(userId: $this->userId(), viewId: $id);
+        return new GetCustomView(userId: CurrentAccessToken::userId(request: $this), viewId: $id);
     }
 
     private function viewType(): ?string
@@ -50,10 +50,5 @@ final class UpdateCustomViewRequest extends FormRequest
         }
 
         return $this->string(key: 'view_type')->toString();
-    }
-
-    private function userId(): int
-    {
-        return CurrentAccessToken::of(request: $this)->tokenable_id;
     }
 }

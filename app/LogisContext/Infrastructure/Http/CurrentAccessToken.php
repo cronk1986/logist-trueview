@@ -22,6 +22,11 @@ final class CurrentAccessToken
         return $accessToken;
     }
 
+    public static function userId(Request $request): int
+    {
+        return self::of(request: $request)->tokenable_id;
+    }
+
     public static function find(Request $request): ?AccessTokenModel
     {
         $user = $request->user();

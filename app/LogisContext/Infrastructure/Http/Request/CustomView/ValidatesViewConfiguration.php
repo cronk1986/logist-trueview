@@ -5,19 +5,19 @@ declare(strict_types=1);
 namespace Logis\LogisContext\Infrastructure\Http\Request\CustomView;
 
 use Illuminate\Validation\Rule;
+use Logis\LogisContext\Domain\ValueObject\CustomView\CustomViewTitle;
 use Logis\LogisContext\Domain\ValueObject\CustomView\FilterOperator;
 use Logis\LogisContext\Domain\ValueObject\CustomView\ViewFilters;
 
 trait ValidatesViewConfiguration
 {
-    private const MAX_TITLE_LENGTH = 255;
     private const MAX_DESCRIPTION_LENGTH = 1000;
 
     /** @return array<string, list<mixed>> */
     private function configurationRules(): array
     {
         return [
-            'title' => ['required', 'string', 'max:' . self::MAX_TITLE_LENGTH],
+            'title' => ['required', 'string', 'max:' . CustomViewTitle::MAX_LENGTH],
             'description' => ['nullable', 'string', 'max:' . self::MAX_DESCRIPTION_LENGTH],
             'columns' => ['required', 'array', 'list', 'min:1'],
             'columns.*' => ['required', 'string', 'distinct'],

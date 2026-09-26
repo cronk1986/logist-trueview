@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Logis\LogisContext\Application\Command\CustomView;
 
 use Logis\LogisContext\Application\Services\CustomView\CustomViewAccess;
-use Logis\LogisContext\Domain\Model\CustomView\CustomView;
 use Logis\LogisContext\Domain\Model\CustomView\CustomViewRepository;
 
 final class SetDefaultCustomViewHandler
@@ -26,19 +25,12 @@ final class SetDefaultCustomViewHandler
             return;
         }
 
-        $this->unmark(view: $currentDefault);
-
-        $view->markAsDefault();
-        $this->views->save(view: $view);
-    }
-
-    private function unmark(?CustomView $view): void
-    {
-        if ($view === null) {
-            return;
+        if ($currentDefault !== null) {
+            $currentDefault->unmarkAsDefault();
+            $this->views->save(view: $currentDefault);
         }
 
-        $view->unmarkAsDefault();
+        $view->markAsDefault();
         $this->views->save(view: $view);
     }
 }

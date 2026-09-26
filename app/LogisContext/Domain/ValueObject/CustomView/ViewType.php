@@ -13,12 +13,12 @@ enum ViewType: string
     case MyContracts = 'my_contracts';
     case MyLocations = 'my_locations';
 
-    public static function fromName(string $name): self
+    public static function fromValue(string $value): self
     {
-        $type = self::tryFrom(value: $name);
+        $type = self::tryFrom(value: $value);
 
         if ($type === null) {
-            throw InvalidViewTypeException::unknown(type: $name);
+            throw InvalidViewTypeException::unknown(type: $value);
         }
 
         return $type;

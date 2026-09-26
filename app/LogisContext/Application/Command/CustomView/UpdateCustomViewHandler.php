@@ -28,7 +28,7 @@ final class UpdateCustomViewHandler
         $title = CustomViewTitle::fromString(value: $command->title);
 
         if ($command->viewType !== null) {
-            $view->ensureTypeIs(type: ViewType::fromName(name: $command->viewType));
+            $view->ensureTypeIs(type: ViewType::fromValue(value: $command->viewType));
         }
 
         $this->ensureTitleIsFree(view: $view, title: $title);

@@ -8,7 +8,7 @@ use Logis\LogisContext\Domain\Exception\CustomView\InvalidCustomViewTitleExcepti
 
 final readonly class CustomViewTitle
 {
-    private const MAX_LENGTH = 255;
+    public const MAX_LENGTH = 255;
 
     private function __construct(private string $value)
     {

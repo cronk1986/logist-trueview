@@ -12,6 +12,6 @@ final class ShowCustomViewRequest extends FormRequest
 {
     public function toQuery(int $id): GetCustomView
     {
-        return new GetCustomView(userId: CurrentAccessToken::of(request: $this)->tokenable_id, viewId: $id);
+        return new GetCustomView(userId: CurrentAccessToken::userId(request: $this), viewId: $id);
     }
 }

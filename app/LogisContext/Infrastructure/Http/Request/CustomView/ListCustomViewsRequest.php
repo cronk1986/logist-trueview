@@ -23,7 +23,7 @@ final class ListCustomViewsRequest extends FormRequest
     public function toQuery(): ListCustomViews
     {
         return new ListCustomViews(
-            userId: CurrentAccessToken::of(request: $this)->tokenable_id,
+            userId: CurrentAccessToken::userId(request: $this),
             viewType: $this->viewType(),
         );
     }

@@ -12,6 +12,6 @@ final class DeleteCustomViewRequest extends FormRequest
 {
     public function toCommand(int $id): DeleteCustomView
     {
-        return new DeleteCustomView(userId: CurrentAccessToken::of(request: $this)->tokenable_id, viewId: $id);
+        return new DeleteCustomView(userId: CurrentAccessToken::userId(request: $this), viewId: $id);
     }
 }

@@ -27,7 +27,7 @@ final class CreateCustomViewRequest extends FormRequest
     public function toCommand(): CreateCustomView
     {
         return new CreateCustomView(
-            userId: $this->userId(),
+            userId: CurrentAccessToken::userId(request: $this),
             title: $this->title(),
             description: $this->description(),
             viewType: $this->string(key: 'view_type')->toString(),
@@ -39,11 +39,6 @@ final class CreateCustomViewRequest extends FormRequest
 
     public function toQuery(): GetCustomViewByTitle
     {
-        return new GetCustomViewByTitle(userId: $this->userId(), title: $this->title());
-    }
-
-    private function userId(): int
-    {
-        return CurrentAccessToken::of(request: $this)->tokenable_id;
+        return new GetCustomViewByTitle(userId: CurrentAccessToken::userId(request: $this), title: $this->title());
     }
 }

@@ -54,6 +54,6 @@ final class ListCustomViewsHandler
             return null;
         }
 
-        return ViewType::fromName(name: $query->viewType);
+        return ViewType::fromValue(value: $query->viewType);
     }
 }

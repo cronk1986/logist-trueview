@@ -35,7 +35,7 @@ final class CreateCustomViewHandler
             owner: $owner,
             title: $title,
             description: $command->description,
-            type: ViewType::fromName(name: $command->viewType),
+            type: ViewType::fromValue(value: $command->viewType),
             columns: ViewColumns::fromList(columns: $command->columns),
             filters: ViewFilters::fromList(filters: $command->filters),
             isPublic: $command->isPublic,

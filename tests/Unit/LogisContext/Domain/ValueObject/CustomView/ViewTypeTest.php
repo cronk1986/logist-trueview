@@ -10,16 +10,16 @@ use PHPUnit\Framework\TestCase;
 
 final class ViewTypeTest extends TestCase
 {
-    public function test_it_is_built_from_its_name(): void
+    public function test_it_is_built_from_its_value(): void
     {
-        $this->assertSame(ViewType::MyTickets, ViewType::fromName(name: 'my_tickets'));
+        $this->assertSame(ViewType::MyTickets, ViewType::fromValue(value: 'my_tickets'));
     }
 
-    public function test_an_unknown_name_is_rejected(): void
+    public function test_an_unknown_value_is_rejected(): void
     {
         $this->expectException(InvalidViewTypeException::class);
         $this->expectExceptionMessage('"my_invoices" is not a view type.');
 
-        ViewType::fromName(name: 'my_invoices');
+        ViewType::fromValue(value: 'my_invoices');
     }
 }

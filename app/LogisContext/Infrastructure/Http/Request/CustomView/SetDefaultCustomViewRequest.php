@@ -13,16 +13,11 @@ final class SetDefaultCustomViewRequest extends FormRequest
 {
     public function toCommand(int $id): SetDefaultCustomView
     {
-        return new SetDefaultCustomView(userId: $this->userId(), viewId: $id);
+        return new SetDefaultCustomView(userId: CurrentAccessToken::userId(request: $this), viewId: $id);
     }
 
     public function toQuery(int $id): GetCustomView
     {
-        return new GetCustomView(userId: $this->userId(), viewId: $id);
-    }
-
-    private function userId(): int
-    {
-        return CurrentAccessToken::of(request: $this)->tokenable_id;
+        return new GetCustomView(userId: CurrentAccessToken::userId(request: $this), viewId: $id);
     }
 }
