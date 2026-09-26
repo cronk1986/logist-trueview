@@ -8,10 +8,14 @@ use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Schema;
 use Logis\LogisContext\Infrastructure\Persistence\Asset\AssetModel;
+use Logis\LogisContext\Infrastructure\Persistence\Asset\EloquentAssetViewBuilder;
 use Logis\LogisContext\Infrastructure\Persistence\Contract\ContractModel;
+use Logis\LogisContext\Infrastructure\Persistence\Contract\EloquentContractViewBuilder;
 use Logis\LogisContext\Infrastructure\Persistence\Customer\CustomerModel;
 use Logis\LogisContext\Infrastructure\Persistence\CustomView\CustomViewModel;
+use Logis\LogisContext\Infrastructure\Persistence\Location\EloquentLocationViewBuilder;
 use Logis\LogisContext\Infrastructure\Persistence\Location\LocationModel;
+use Logis\LogisContext\Infrastructure\Persistence\Ticket\EloquentTicketViewBuilder;
 use Logis\LogisContext\Infrastructure\Persistence\Ticket\TicketModel;
 use Logis\LogisContext\Infrastructure\Persistence\TicketStatus\TicketStatusModel;
 use Logis\LogisContext\Infrastructure\Persistence\User\UserModel;
@@ -200,6 +204,33 @@ final class SchemaTest extends TestCase
         foreach ($columns as $table => $tableColumns) {
             foreach ($tableColumns as $column) {
                 yield $table . '.' . $column => [$table, $column];
+            }
+        }
+    }
+
+    #[DataProvider('viewColumns')]
+    public function test_every_column_a_view_filters_or_sorts_on_leads_an_index(string $table, string $column): void
+    {
+        $leadingColumns = array_map(callback: fn (array $index): string => $index['columns'][0], array: Schema::getIndexes($table));
+
+        $this->assertContains($column, $leadingColumns);
+    }
+
+    /**
+     * @return iterable<string, array{string, string}>
+     */
+    public static function viewColumns(): iterable
+    {
+        $builders = [
+            'assets' => EloquentAssetViewBuilder::fields(),
+            'tickets' => EloquentTicketViewBuilder::fields(),
+            'contracts' => EloquentContractViewBuilder::fields(),
+            'locations' => EloquentLocationViewBuilder::fields(),
+        ];
+
+        foreach ($builders as $table => $fields) {
+            foreach ($fields as $mapping) {
+                yield $table . '.' . $mapping->column() => [$table, $mapping->column()];
             }
         }
     }
