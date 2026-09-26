@@ -1,6 +1,6 @@
 # SPEC — Application Layout
 
-Status: approved
+Status: done
 
 ## Objective
 

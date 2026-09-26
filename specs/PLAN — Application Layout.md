@@ -1,6 +1,6 @@
 # PLAN — Application Layout
 
-Spec: `specs/SPEC — Application Layout.md` (Status: approved)
+Spec: `specs/SPEC — Application Layout.md` (Status: done)
 Status: approved
 
 ## Overview
@@ -47,8 +47,8 @@ The buses need no change. `HandlerResolver` builds the handler name as `$message
 #### Task 0: Commit the spec and the plan
 
 **Acceptance criteria:**
-- [ ] `docs(specs): specify the application layout by aggregate` commits `specs/SPEC — Application Layout.md` and this plan.
-- [ ] The `AGENTS.md` change stays uncommitted until T3.
+- [x] `docs(specs): specify the application layout by aggregate` commits `specs/SPEC — Application Layout.md` and this plan.
+- [x] The `AGENTS.md` change stays uncommitted until T3.
 
 **Verification:** `git show --stat HEAD` lists only the two spec files.
 
@@ -61,14 +61,14 @@ The buses need no change. `HandlerResolver` builds the handler name as `$message
 **Description:** Move the three commands to `Command/AccessToken/`, `GetUser` to `Query/User/` and `GetAccessTokenByToken` to `Query/AccessToken/`, with their tests. No class is renamed.
 
 **Acceptance criteria:**
-- [ ] `app/LogisContext/Application/`:
+- [x] `app/LogisContext/Application/`:
   - `Command/AccessToken/` holds `LogIn`, `LogOut` and `RotateAccessToken` with their handlers;
   - `Query/User/` holds `GetUser` and `GetUserHandler`;
   - `Query/AccessToken/` holds `GetAccessTokenByToken` and its handler;
   - the folders `Command/LogIn/`, `Command/LogOut/`, `Command/RotateAccessToken/`, `Query/GetUser/` and `Query/GetAccessTokenByToken/` no longer exist.
-- [ ] The five handler tests mirror the new paths under `tests/Unit/LogisContext/Application/`.
-- [ ] Every importer is updated: `AuthController`, `RotateAccessTokenMiddleware`, the four auth FormRequests, and `LogisServiceProvider` (its `when()` for `LogInHandler` and `RotateAccessTokenHandler`).
-- [ ] `SPEC — Authentication.md` and `PLAN — Authentication.md` point to the new paths.
+- [x] The five handler tests mirror the new paths under `tests/Unit/LogisContext/Application/`.
+- [x] Every importer is updated: `AuthController`, `RotateAccessTokenMiddleware`, the four auth FormRequests, and `LogisServiceProvider` (its `when()` for `LogInHandler` and `RotateAccessTokenHandler`).
+- [x] `SPEC — Authentication.md` and `PLAN — Authentication.md` point to the new paths.
 
 **Verification:**
 - `make check` is green with 363 tests.
@@ -82,8 +82,8 @@ The buses need no change. `HandlerResolver` builds the handler name as `$message
 **Scope:** M (mechanical) · **Commit:** `refactor(auth): group auth commands and queries by aggregate`
 
 ### Checkpoint: Auth
-- [ ] `make check` is green with 363 tests.
-- [ ] A manual login and `GET /auth/me` in Swagger still work.
+- [x] `make check` is green with 363 tests.
+- [x] A manual login and `GET /auth/me` in Swagger still work.
 
 ### Phase 2 — Search
 
@@ -92,21 +92,21 @@ The buses need no change. `HandlerResolver` builds the handler name as `$message
 **Description:** Rename the search query and its handler, move them to `Query/Search/`, and move their collaborators out of `Query/` to `Services/Search/`, `Exception/Search/` and `ModelView/Search/`, with their tests.
 
 **Acceptance criteria:**
-- [ ] `app/LogisContext/Application/`:
+- [x] `app/LogisContext/Application/`:
   - `Query/Search/` holds only `SearchService` (formerly `GlobalSearch`) and `SearchServiceHandler` (formerly `GlobalSearchHandler`);
   - `Services/Search/` holds `EntitySearcher`, `EntitySearchers` and `SearchCriteria`;
   - `Exception/Search/` holds `EntitySearcherNotRegisteredException`;
   - `ModelView/Search/` holds `EntitySearchResult` next to `EntitySearchResultView`;
   - `Query/GlobalSearch/` no longer exists.
-- [ ] Tests mirror the new paths:
+- [x] Tests mirror the new paths:
   - `Query/Search/SearchServiceHandlerTest`;
   - `Services/Search/{EntitySearchersTest, InMemoryEntitySearcher, SearchCriteriaMother}`;
   - `ModelView/Search/EntitySearchResultTest`.
-- [ ] Every importer is updated:
+- [x] Every importer is updated:
   - `SearchRequest`, whose `toQuery()` now returns `SearchService`;
   - `LogisServiceProvider`, `CachedEntitySearcher`, `NewestMatches` and the four `Eloquent<X>Searcher`s;
   - `EntitySearchResultView` and the tests that use these classes.
-- [ ] `SPEC — Global Search.md` and `PLAN — Global Search.md` use the new names and paths.
+- [x] `SPEC — Global Search.md` and `PLAN — Global Search.md` use the new names and paths.
 
 **Verification:**
 - `make check` is green with 363 tests.
@@ -122,8 +122,8 @@ The buses need no change. `HandlerResolver` builds the handler name as `$message
 **Scope:** M (mechanical) · **Commit:** `refactor(search): regroup the search application layer`
 
 ### Checkpoint: Search
-- [ ] `make check` is green with 363 tests.
-- [ ] A manual `GET /api/v1/search?q=zebra` with `demo@logis.test` returns the same data as before.
+- [x] `make check` is green with 363 tests.
+- [x] A manual `GET /api/v1/search?q=zebra` with `demo@logis.test` returns the same data as before.
 
 ### Phase 3 — Convention
 
@@ -132,23 +132,23 @@ The buses need no change. `HandlerResolver` builds the handler name as `$message
 **Description:** The `AGENTS.md` change is already written in the working tree. This task checks that it describes the code as it now stands, and commits it.
 
 **Acceptance criteria:**
-- [ ] The architecture tree shows `Command/<Aggregate>/`, `Query/<Aggregate>/`, `Services/<Aggregate>/`, `Exception/<Aggregate>/` and `ModelView/<Aggregate>/`.
-- [ ] The rules are there:
+- [x] The architecture tree shows `Command/<Aggregate>/`, `Query/<Aggregate>/`, `Services/<Aggregate>/`, `Exception/<Aggregate>/` and `ModelView/<Aggregate>/`.
+- [x] The rules are there:
   - a command belongs to the aggregate it changes, and a query to the one it returns;
   - `Command/` and `Query/` hold only messages and handlers;
   - the `Search` exception applies to Application too;
   - the `LogicException` rule for programming errors.
-- [ ] The test example is `Command/User/CreateUserHandler.php` → `Command/User/CreateUserHandlerTest.php`.
-- [ ] Every example path in `AGENTS.md` exists in the code or is clearly hypothetical, like `CreateUser`.
+- [x] The test example is `Command/User/CreateUserHandler.php` → `Command/User/CreateUserHandlerTest.php`.
+- [x] Every example path in `AGENTS.md` exists in the code or is clearly hypothetical, like `CreateUser`.
 
 **Verification:** `make check`. Compare `find app/LogisContext/Application -type d` with the tree.
 
 **Dependencies:** T1, T2 · **Scope:** XS · **Commit:** `docs(agents): group the application layer by aggregate`
 
 ### Checkpoint: Complete
-- [ ] Every success criterion of the spec is met.
-- [ ] `make check` is green with 363 tests, the same count as before T1.
-- [ ] Post-implementation flow from `AGENTS.md`:
+- [x] Every success criterion of the spec is met.
+- [x] `make check` is green with 363 tests, the same count as before T1.
+- [x] Post-implementation flow from `AGENTS.md`:
   - `make qa`;
   - `code-simplify` (a pure move: expected to find nothing);
   - `make test`;
