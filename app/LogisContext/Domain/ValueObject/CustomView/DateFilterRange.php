@@ -9,6 +9,8 @@ use Logis\LogisContext\Domain\Exception\CustomView\InvalidViewFilterException;
 
 final readonly class DateFilterRange
 {
+    public const MAX_DAYS = 365;
+
     private function __construct(private ?CarbonImmutable $from, private ?CarbonImmutable $until)
     {
     }
@@ -44,18 +46,22 @@ final readonly class DateFilterRange
             throw InvalidViewFilterException::expectsRange(column: $filter->column());
         }
 
-        return new self(
-            from: self::day(filter: $filter, value: $bounds[0])->start(),
-            until: self::day(filter: $filter, value: $bounds[1])->startOfNextDay(),
-        );
+        $first = self::day(filter: $filter, value: $bounds[0]);
+        $last = self::day(filter: $filter, value: $bounds[1]);
+
+        if ($first->isAfter(other: $last)) {
+            throw InvalidViewFilterException::rangeOutOfOrder(column: $filter->column());
+        }
+
+        return new self(from: $first->start(), until: $last->startOfNextDay());
     }
 
     private static function inLastDays(ViewFilter $filter): self
     {
         $days = $filter->value();
 
-        if (!is_int(value: $days)) {
-            throw InvalidViewFilterException::expectsDays(column: $filter->column(), max: ViewField::MAX_DAYS);
+        if (!is_int(value: $days) || $days < 0 || $days > self::MAX_DAYS) {
+            throw InvalidViewFilterException::expectsDays(column: $filter->column(), max: self::MAX_DAYS);
         }
 
         return new self(from: CalendarDay::today()->daysBefore(days: $days)->start(), until: null);

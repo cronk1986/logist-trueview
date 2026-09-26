@@ -92,6 +92,15 @@ final class ViewDefinitionTest extends TestCase
             'range out of order' => [['column' => 'created_at', 'operator' => 'between', 'value' => ['2024-01-02', '2024-01-01']], 'The first date of the filter on "created_at" cannot be after the second.'],
             'negative days' => [['column' => 'created_at', 'operator' => 'in_last_days', 'value' => -1], 'The filter on "created_at" needs a number of days between 0 and 365.'],
             'too many days' => [['column' => 'created_at', 'operator' => 'in_last_days', 'value' => 366], 'The filter on "created_at" needs a number of days between 0 and 365.'],
+            'blank text' => [['column' => 'model', 'operator' => 'eq', 'value' => '   '], 'The filter on "model" needs text of 1 to 255 characters.'],
+            'boolean for text' => [['column' => 'model', 'operator' => 'eq', 'value' => true], 'The filter on "model" needs text of 1 to 255 characters.'],
+            'number for a choice' => [['column' => 'status', 'operator' => 'eq', 'value' => 1], 'The filter on "status" accepts only: active, inactive, retired.'],
+            'float identifier' => [['column' => 'id', 'operator' => 'eq', 'value' => 1.0], 'The filter on "id" needs positive integer ids.'],
+            'fractional identifier' => [['column' => 'id', 'operator' => 'eq', 'value' => 1.5], 'The filter on "id" needs positive integer ids.'],
+            'range of three dates' => [['column' => 'created_at', 'operator' => 'between', 'value' => ['2024-01-01', '2024-01-02', '2024-01-03']], 'The filter on "created_at" needs a list of two dates.'],
+            'range with a non-date' => [['column' => 'created_at', 'operator' => 'between', 'value' => ['x', '2024-01-01']], 'The filter on "created_at" needs dates in the Y-m-d format.'],
+            'days as a float' => [['column' => 'created_at', 'operator' => 'in_last_days', 'value' => 30.0], 'The filter on "created_at" needs a number of days between 0 and 365.'],
+            'days as a boolean' => [['column' => 'created_at', 'operator' => 'in_last_days', 'value' => true], 'The filter on "created_at" needs a number of days between 0 and 365.'],
             'days as text' => [['column' => 'created_at', 'operator' => 'in_last_days', 'value' => '30'], 'The filter on "created_at" needs a number of days between 0 and 365.'],
         ];
     }

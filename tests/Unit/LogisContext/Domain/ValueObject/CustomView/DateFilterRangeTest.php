@@ -40,6 +40,7 @@ final class DateFilterRangeTest extends TestCase
             'lt ends before that day' => ['lt', '2024-01-01', null, '2024-01-01 00:00:00'],
             'lte ends after that day' => ['lte', '2024-01-01', null, '2024-01-02 00:00:00'],
             'between includes both days' => ['between', ['2024-01-01', '2024-01-31'], '2024-01-01 00:00:00', '2024-02-01 00:00:00'],
+            'between one single day' => ['between', ['2024-01-01', '2024-01-01'], '2024-01-01 00:00:00', '2024-01-02 00:00:00'],
             'end of month' => ['lte', '2024-02-29', null, '2024-03-01 00:00:00'],
         ];
     }
@@ -61,6 +62,27 @@ final class DateFilterRangeTest extends TestCase
         $range = DateFilterRange::of(filter: ViewFilter::fromArray(filter: ['column' => 'created_at', 'operator' => 'gte', 'value' => '2024-01-01']));
 
         $this->assertSame('UTC', $range->from()?->getTimezone()->getName());
+    }
+
+    #[DataProvider('invalidDateFilters')]
+    public function test_it_rejects_invalid_date_filters(string $operator, mixed $value): void
+    {
+        $this->expectException(InvalidViewFilterException::class);
+
+        DateFilterRange::of(filter: ViewFilter::fromArray(filter: ['column' => 'created_at', 'operator' => $operator, 'value' => $value]));
+    }
+
+    /**
+     * @return array<string, array{string, mixed}>
+     */
+    public static function invalidDateFilters(): array
+    {
+        return [
+            'range out of order' => ['between', ['2024-01-02', '2024-01-01']],
+            'negative days' => ['in_last_days', -5],
+            'too many days' => ['in_last_days', 366],
+            'not a date' => ['gt', 'yesterday'],
+        ];
     }
 
     public function test_a_non_date_operator_has_no_range(): void

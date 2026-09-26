@@ -19,7 +19,7 @@ enum ViewFieldType: string
     /**
      * @return list<FilterOperator>
      */
-    public function operators(): array
+    private function operators(): array
     {
         return match ($this) {
             self::Text => [FilterOperator::Equals, FilterOperator::NotEquals, FilterOperator::In, FilterOperator::NotIn, FilterOperator::Contains],

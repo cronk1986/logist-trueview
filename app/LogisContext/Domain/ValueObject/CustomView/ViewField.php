@@ -9,7 +9,6 @@ use Logis\LogisContext\Domain\Exception\CustomView\InvalidViewFilterException;
 final readonly class ViewField
 {
     public const MAX_LIST_SIZE = 100;
-    public const MAX_DAYS = 365;
     private const MAX_TEXT_LENGTH = 255;
 
     /**
@@ -69,27 +68,16 @@ final readonly class ViewField
         return $this->sortable;
     }
 
-    public function allows(FilterOperator $operator): bool
-    {
-        return $this->type->allows(operator: $operator);
-    }
-
     public function ensureAccepts(ViewFilter $filter): void
     {
         $operator = $filter->operator();
 
-        if (!$this->allows(operator: $operator)) {
+        if (!$this->type->allows(operator: $operator)) {
             throw InvalidViewFilterException::operatorNotAllowed(column: $this->name, operator: $operator->value);
         }
 
-        if ($operator->expectsDays()) {
-            $this->ensureDays(value: $filter->value());
-
-            return;
-        }
-
-        if ($operator->expectsRange()) {
-            $this->ensureRange(value: $filter->value());
+        if ($this->type === ViewFieldType::Date) {
+            DateFilterRange::of(filter: $filter);
 
             return;
         }
@@ -101,27 +89,6 @@ final readonly class ViewField
         }
 
         $this->ensureSingleValue(value: $filter->value());
-    }
-
-    private function ensureDays(mixed $value): void
-    {
-        if (!is_int(value: $value) || $value < 0 || $value > self::MAX_DAYS) {
-            throw InvalidViewFilterException::expectsDays(column: $this->name, max: self::MAX_DAYS);
-        }
-    }
-
-    private function ensureRange(mixed $value): void
-    {
-        if (!is_array(value: $value) || count(value: $value) !== 2) {
-            throw InvalidViewFilterException::expectsRange(column: $this->name);
-        }
-
-        $first = $this->calendarDay(value: $value[0]);
-        $last = $this->calendarDay(value: $value[1]);
-
-        if ($first->isAfter(other: $last)) {
-            throw InvalidViewFilterException::rangeOutOfOrder(column: $this->name);
-        }
     }
 
     private function ensureList(mixed $value): void
@@ -146,17 +113,24 @@ final readonly class ViewField
 
     private function ensureValidValue(mixed $value): void
     {
-        match ($this->type) {
-            ViewFieldType::Text => $this->ensureText(value: $value),
-            ViewFieldType::Choice => $this->ensureChoice(value: $value),
-            ViewFieldType::Identifier => $this->ensureIdentifier(value: $value),
-            ViewFieldType::Date => $this->calendarDay(value: $value),
-        };
+        if ($this->type === ViewFieldType::Choice) {
+            $this->ensureChoice(value: $value);
+
+            return;
+        }
+
+        if ($this->type === ViewFieldType::Identifier) {
+            $this->ensureIdentifier(value: $value);
+
+            return;
+        }
+
+        $this->ensureText(value: $value);
     }
 
     private function ensureText(mixed $value): void
     {
-        if (!is_string(value: $value) || $value === '' || mb_strlen(string: $value) > self::MAX_TEXT_LENGTH) {
+        if (!is_string(value: $value) || trim(string: $value) === '' || mb_strlen(string: $value) > self::MAX_TEXT_LENGTH) {
             throw InvalidViewFilterException::invalidText(column: $this->name, maxLength: self::MAX_TEXT_LENGTH);
         }
     }
@@ -173,16 +147,5 @@ final readonly class ViewField
         if (!is_int(value: $value) || $value < 1) {
             throw InvalidViewFilterException::invalidIdentifier(column: $this->name);
         }
-    }
-
-    private function calendarDay(mixed $value): CalendarDay
-    {
-        $day = CalendarDay::tryFrom(value: $value);
-
-        if ($day === null) {
-            throw InvalidViewFilterException::invalidDate(column: $this->name);
-        }
-
-        return $day;
     }
 }
