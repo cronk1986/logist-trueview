@@ -38,7 +38,7 @@ final class DemoDataSeeder extends Seeder
             'email' => 'demo@logis.test',
             'password' => 'password',
         ]);
-        UserModel::factory()->create(attributes: [
+        $limitedUser = UserModel::factory()->create(attributes: [
             'customer_id' => $parent->id,
             'name' => 'Limited',
             'email' => 'limited@logis.test',
@@ -50,6 +50,7 @@ final class DemoDataSeeder extends Seeder
         }
 
         $this->seedViews(owner: $demoUser);
+        $this->seedSharedViews(colleague: $limitedUser, stranger: UserModel::factory()->create(attributes: ['customer_id' => $unrelated->id]));
     }
 
     private function creatorFor(CustomerModel $customer, UserModel $demoUser): UserModel
@@ -113,7 +114,31 @@ final class DemoDataSeeder extends Seeder
             'title' => 'Open tickets',
             'description' => 'Tickets that are still open, shared with the whole customer',
             'columns' => ['repair_id', 'subject', 'status'],
-            'filters' => [['column' => 'status', 'operator' => 'eq', 'value' => 'Open']],
+            'filters' => [['column' => 'status', 'operator' => 'eq', 'value' => $this->ticketStatusId(name: 'Open')]],
         ]);
+    }
+
+    private function seedSharedViews(UserModel $colleague, UserModel $stranger): void
+    {
+        CustomViewModel::factory()->ofType(type: ViewType::MyAssets)->public()->create(attributes: [
+            'user_id' => $colleague->id,
+            'customer_id' => $colleague->customer_id,
+            'title' => 'Retired devices',
+            'description' => 'Assets retired from service, shared with the whole customer',
+            'columns' => ['serial_number', 'model', 'status', 'updated_at'],
+            'filters' => [['column' => 'status', 'operator' => 'eq', 'value' => 'retired']],
+        ]);
+
+        CustomViewModel::factory()->ofType(type: ViewType::MyContracts)->public()->create(attributes: [
+            'user_id' => $stranger->id,
+            'customer_id' => $stranger->customer_id,
+            'title' => 'Active contracts',
+            'description' => 'Visible only inside Other Company',
+        ]);
+    }
+
+    private function ticketStatusId(string $name): int
+    {
+        return (int) TicketStatusModel::query()->where(column: 'name', operator: $name)->valueOrFail(column: 'id');
     }
 }

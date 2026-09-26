@@ -32,8 +32,8 @@ final class EloquentCustomViewRepositoryTest extends TestCase
     public function test_it_maps_a_view_and_its_json_configuration(): void
     {
         $filters = [
-            ['column' => 'manufacturer', 'operator' => 'eq', 'value' => 'Zebra'],
-            ['column' => 'status', 'operator' => 'in', 'value' => ['active', 'inactive']],
+            ['column' => 'subject', 'operator' => 'contains', 'value' => 'printer'],
+            ['column' => 'status', 'operator' => 'in', 'value' => [1, 2]],
         ];
         $model = CustomViewModel::factory()->ofType(type: ViewType::MyTickets)->asDefault()->public()->create(attributes: [
             'title' => 'Open tickets',
@@ -45,7 +45,7 @@ final class EloquentCustomViewRepositoryTest extends TestCase
         $view = $this->repository->findById(id: CustomViewId::fromInt(value: $model->id));
 
         $this->assertNotNull($view);
-        $this->assertSame($model->id, $view->id()->value());
+        $this->assertSame($model->id, $view->id()?->value());
         $this->assertSame($model->user_id, $view->user()->id()->value());
         $this->assertSame($model->customer_id, $view->customer()->id()->value());
         $this->assertSame('Open tickets', $view->title()->value());
@@ -76,6 +76,15 @@ final class EloquentCustomViewRepositoryTest extends TestCase
     public function test_a_stored_view_of_another_customer_than_its_owner_is_reported_as_corrupted(): void
     {
         $model = CustomViewModel::factory()->create(attributes: ['customer_id' => CustomerModel::factory()->create()->id]);
+
+        $this->expectException(CorruptedRecordException::class);
+
+        $this->repository->findById(id: CustomViewId::fromInt(value: $model->id));
+    }
+
+    public function test_a_stored_view_outside_the_catalog_is_reported_as_corrupted(): void
+    {
+        $model = CustomViewModel::factory()->ofType(type: ViewType::MyAssets)->create(attributes: ['columns' => ['serial_number', 'customer_id']]);
 
         $this->expectException(CorruptedRecordException::class);
 

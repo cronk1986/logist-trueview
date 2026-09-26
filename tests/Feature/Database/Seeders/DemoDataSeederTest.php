@@ -13,6 +13,7 @@ use Logis\LogisContext\Infrastructure\Persistence\Customer\CustomerModel;
 use Logis\LogisContext\Infrastructure\Persistence\CustomView\CustomViewModel;
 use Logis\LogisContext\Infrastructure\Persistence\Location\LocationModel;
 use Logis\LogisContext\Infrastructure\Persistence\Ticket\TicketModel;
+use Logis\LogisContext\Infrastructure\Persistence\TicketStatus\TicketStatusModel;
 use Logis\LogisContext\Infrastructure\Persistence\User\UserModel;
 use Tests\TestCase;
 
@@ -45,6 +46,23 @@ final class DemoDataSeederTest extends TestCase
         $this->assertSame('C-1000', $demoUser->customer?->erp_id);
         $this->assertSame(1, CustomViewModel::query()->where(column: 'user_id', operator: $demoUser->id)->where(column: 'is_default', operator: true)->count());
         $this->assertSame(1, CustomViewModel::query()->where(column: 'user_id', operator: $demoUser->id)->where(column: 'is_public', operator: true)->count());
+    }
+
+    public function test_it_seeds_a_public_view_of_a_colleague_and_one_of_an_unrelated_customer(): void
+    {
+        $limitedUser = UserModel::query()->where(column: 'email', operator: 'limited@logis.test')->firstOrFail();
+        $unrelated = CustomerModel::query()->where(column: 'erp_id', operator: 'C-2000')->firstOrFail();
+
+        $this->assertTrue(CustomViewModel::query()->where(column: 'user_id', operator: $limitedUser->id)->where(column: 'is_public', operator: true)->exists());
+        $this->assertTrue(CustomViewModel::query()->where(column: 'customer_id', operator: $unrelated->id)->where(column: 'is_public', operator: true)->exists());
+    }
+
+    public function test_the_ticket_view_filters_the_open_status_by_id(): void
+    {
+        $openStatusId = TicketStatusModel::query()->where(column: 'name', operator: 'Open')->value(column: 'id');
+        $view = CustomViewModel::query()->where(column: 'title', operator: 'Open tickets')->firstOrFail();
+
+        $this->assertEquals([['column' => 'status', 'operator' => 'eq', 'value' => $openStatusId]], $view->filters);
     }
 
     public function test_only_the_demo_user_can_view_the_sub_accounts_of_the_parent_customer(): void

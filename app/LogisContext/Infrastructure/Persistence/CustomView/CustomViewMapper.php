@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Logis\LogisContext\Infrastructure\Persistence\CustomView;
 
-use Logis\LogisContext\Domain\Exception\CustomView\CustomViewLinkedToAnotherCustomerException;
 use Logis\LogisContext\Domain\Model\CustomView\CustomView;
 use Logis\LogisContext\Domain\ValueObject\CustomView\CustomViewId;
 use Logis\LogisContext\Domain\ValueObject\CustomView\CustomViewTitle;
@@ -13,6 +12,7 @@ use Logis\LogisContext\Domain\ValueObject\CustomView\ViewFilters;
 use Logis\LogisContext\Infrastructure\Persistence\Customer\CustomerMapper;
 use Logis\LogisContext\Infrastructure\Persistence\User\UserMapper;
 use Logis\SharedContext\Infrastructure\Persistence\CorruptedRecordException;
+use Logis\SharedContext\Domain\Exception\InvalidValueException;
 use Logis\SharedContext\Infrastructure\Persistence\EagerLoad;
 
 final class CustomViewMapper
@@ -38,7 +38,7 @@ final class CustomViewMapper
     {
         try {
             return $this->build(model: $model);
-        } catch (CustomViewLinkedToAnotherCustomerException $exception) {
+        } catch (InvalidValueException $exception) {
             throw CorruptedRecordException::in(table: $model->getTable(), id: $model->id, reason: $exception);
         }
     }

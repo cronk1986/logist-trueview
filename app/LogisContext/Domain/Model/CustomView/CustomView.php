@@ -10,27 +10,31 @@ use Logis\LogisContext\Domain\Model\User\User;
 use Logis\LogisContext\Domain\ValueObject\CustomView\CustomViewId;
 use Logis\LogisContext\Domain\ValueObject\CustomView\CustomViewTitle;
 use Logis\LogisContext\Domain\ValueObject\CustomView\ViewColumns;
+use Logis\LogisContext\Domain\ValueObject\CustomView\ViewDefinition;
 use Logis\LogisContext\Domain\ValueObject\CustomView\ViewFilters;
 use Logis\LogisContext\Domain\ValueObject\CustomView\ViewType;
 
 final class CustomView
 {
+    private ViewDefinition $definition;
+
     public function __construct(
-        private readonly CustomViewId $id,
+        private readonly ?CustomViewId $id,
         private readonly User $user,
         private readonly Customer $customer,
-        private readonly CustomViewTitle $title,
-        private readonly ?string $description,
-        private readonly ViewType $type,
-        private readonly ViewColumns $columns,
-        private readonly ViewFilters $filters,
-        private readonly bool $isDefault,
-        private readonly bool $isPublic,
+        private CustomViewTitle $title,
+        private ?string $description,
+        ViewType $type,
+        ViewColumns $columns,
+        ViewFilters $filters,
+        private bool $isDefault,
+        private bool $isPublic,
     ) {
         $this->ensureTheViewBelongsToTheCustomerOfItsOwner();
+        $this->definition = ViewDefinition::from(type: $type, columns: $columns, filters: $filters);
     }
 
-    public function id(): CustomViewId
+    public function id(): ?CustomViewId
     {
         return $this->id;
     }
@@ -57,17 +61,22 @@ final class CustomView
 
     public function type(): ViewType
     {
-        return $this->type;
+        return $this->definition->type();
+    }
+
+    public function definition(): ViewDefinition
+    {
+        return $this->definition;
     }
 
     public function columns(): ViewColumns
     {
-        return $this->columns;
+        return $this->definition->columns();
     }
 
     public function filters(): ViewFilters
     {
-        return $this->filters;
+        return $this->definition->filters();
     }
 
     public function isDefault(): bool
@@ -85,7 +94,7 @@ final class CustomView
         $ownerCustomer = $this->user->customer();
 
         if ($ownerCustomer === null || !$ownerCustomer->isSameAs(other: $this->customer)) {
-            throw CustomViewLinkedToAnotherCustomerException::owner(viewId: $this->id->value(), userId: $this->user->id()->value());
+            throw CustomViewLinkedToAnotherCustomerException::owner(userId: $this->user->id()->value());
         }
     }
 }

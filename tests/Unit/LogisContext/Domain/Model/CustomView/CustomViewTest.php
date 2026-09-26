@@ -5,6 +5,13 @@ declare(strict_types=1);
 namespace Tests\Unit\LogisContext\Domain\Model\CustomView;
 
 use Logis\LogisContext\Domain\Exception\CustomView\CustomViewLinkedToAnotherCustomerException;
+use Logis\LogisContext\Domain\Exception\CustomView\InvalidViewColumnsException;
+use Logis\LogisContext\Domain\Exception\CustomView\InvalidViewFilterException;
+use Logis\LogisContext\Domain\Model\CustomView\CustomView;
+use Logis\LogisContext\Domain\ValueObject\CustomView\CustomViewId;
+use Logis\LogisContext\Domain\ValueObject\CustomView\CustomViewTitle;
+use Logis\LogisContext\Domain\ValueObject\CustomView\ViewColumns;
+use Logis\LogisContext\Domain\ValueObject\CustomView\ViewFilters;
 use Logis\LogisContext\Domain\ValueObject\CustomView\ViewType;
 use PHPUnit\Framework\TestCase;
 use Tests\Unit\LogisContext\Domain\Model\Customer\CustomerMother;
@@ -18,7 +25,7 @@ final class CustomViewTest extends TestCase
 
         $view = CustomViewMother::create(id: 2, user: $owner, isDefault: true, isPublic: true);
 
-        $this->assertSame(2, $view->id()->value());
+        $this->assertSame(2, $view->id()?->value());
         $this->assertSame($owner, $view->user());
         $this->assertSame(1, $view->customer()->id()->value());
         $this->assertSame('Zebra scanners', $view->title()->value());
@@ -42,5 +49,51 @@ final class CustomViewTest extends TestCase
         $this->expectException(CustomViewLinkedToAnotherCustomerException::class);
 
         CustomViewMother::create(user: UserMother::create(customer: null));
+    }
+
+    public function test_its_columns_must_belong_to_the_catalog_of_its_type(): void
+    {
+        $this->expectException(InvalidViewColumnsException::class);
+
+        $this->viewOfType(type: ViewType::MyContracts, columns: ['serial_number'], filters: []);
+    }
+
+    public function test_its_filters_must_fit_the_catalog_of_its_type(): void
+    {
+        $this->expectException(InvalidViewFilterException::class);
+
+        $this->viewOfType(type: ViewType::MyTickets, columns: ['subject'], filters: [['column' => 'manufacturer', 'operator' => 'eq', 'value' => 'Zebra']]);
+    }
+
+    public function test_it_exposes_its_definition(): void
+    {
+        $view = $this->viewOfType(type: ViewType::MyLocations, columns: ['title', 'city'], filters: []);
+
+        $this->assertSame(ViewType::MyLocations, $view->definition()->type());
+        $this->assertSame(['title', 'city'], $view->columns()->toArray());
+    }
+
+    /**
+     * @param list<string> $columns
+     * @param list<array<string, mixed>> $filters
+     */
+    private function viewOfType(ViewType $type, array $columns, array $filters): CustomView
+    {
+        $owner = UserMother::create(customer: CustomerMother::create());
+        $customer = $owner->customer();
+        $this->assertNotNull($customer);
+
+        return new CustomView(
+            id: CustomViewId::fromInt(value: 1),
+            user: $owner,
+            customer: $customer,
+            title: CustomViewTitle::fromString(value: 'A view'),
+            description: null,
+            type: $type,
+            columns: ViewColumns::fromList(columns: $columns),
+            filters: ViewFilters::fromList(filters: $filters),
+            isDefault: false,
+            isPublic: false,
+        );
     }
 }

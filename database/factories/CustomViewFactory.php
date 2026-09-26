@@ -37,7 +37,32 @@ final class CustomViewFactory extends Factory
 
     public function ofType(ViewType $type): self
     {
-        return $this->state(state: ['view_type' => $type]);
+        return $this->state(state: ['view_type' => $type, ...self::configurationOf(type: $type)]);
+    }
+
+    /**
+     * @return array{columns: list<string>, filters: list<array{column: string, operator: string, value: mixed}>}
+     */
+    private static function configurationOf(ViewType $type): array
+    {
+        return match ($type) {
+            ViewType::MyAssets => [
+                'columns' => ['serial_number', 'manufacturer', 'model', 'location'],
+                'filters' => [['column' => 'manufacturer', 'operator' => 'eq', 'value' => 'Zebra']],
+            ],
+            ViewType::MyTickets => [
+                'columns' => ['repair_id', 'subject', 'status'],
+                'filters' => [['column' => 'subject', 'operator' => 'contains', 'value' => 'printer']],
+            ],
+            ViewType::MyContracts => [
+                'columns' => ['name', 'status'],
+                'filters' => [['column' => 'status', 'operator' => 'eq', 'value' => 'active']],
+            ],
+            ViewType::MyLocations => [
+                'columns' => ['title', 'city', 'state'],
+                'filters' => [['column' => 'created_at', 'operator' => 'in_last_days', 'value' => 365]],
+            ],
+        };
     }
 
     public function asDefault(): self
