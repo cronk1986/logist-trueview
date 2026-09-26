@@ -155,8 +155,22 @@ final class ViewPaginatorTest extends TestCase
             'not json' => [base64_encode(string: 'garbage')],
             'json scalar' => [base64_encode(string: '1')],
             'no direction' => [base64_encode(string: '{"id":3}')],
+            'previous page cursor' => [base64_encode(string: '{"id":3,"_pointsToNextItems":false,"_sort":"id:desc"}')],
             'nested value' => [base64_encode(string: '{"id":[3],"_pointsToNextItems":true}')],
         ];
+    }
+
+    public function test_a_long_multibyte_sort_value_still_fits_in_the_cursor(): void
+    {
+        foreach (['a', 'b'] as $suffix) {
+            AssetModel::factory()->create(attributes: ['customer_id' => $this->customer->id, 'model' => str_repeat(string: 'ñ', times: 254) . $suffix]);
+        }
+
+        $cursor = $this->execute(sortField: 'model', sortDirection: 'desc', pageSize: 1)->nextCursor();
+
+        $this->assertNotNull($cursor);
+        $this->assertLessThanOrEqual(4096, strlen(string: $cursor));
+        $this->assertCount(1, $this->execute(sortField: 'model', sortDirection: 'desc', pageSize: 1, cursor: $cursor)->rows());
     }
 
     public function test_a_tampered_cursor_only_moves_the_start_within_the_visible_rows(): void

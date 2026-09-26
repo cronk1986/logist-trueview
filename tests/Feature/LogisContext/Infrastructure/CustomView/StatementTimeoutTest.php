@@ -12,7 +12,7 @@ use Tests\TestCase;
 
 final class StatementTimeoutTest extends TestCase
 {
-    private const HEAVY_QUERY = 'SELECT COUNT(*) AS total FROM information_schema.columns a, information_schema.columns b, information_schema.columns c';
+    private const HEAVY_QUERY = 'SELECT COUNT(*) AS total FROM information_schema.columns a, information_schema.columns b';
 
     private ConnectionInterface $connection;
 
@@ -36,14 +36,14 @@ final class StatementTimeoutTest extends TestCase
 
     public function test_a_query_over_the_limit_times_out_and_the_previous_limit_is_restored(): void
     {
-        $timeout = new StatementTimeout(connection: $this->connection, milliseconds: 1);
+        $timeout = new StatementTimeout(connection: $this->connection, milliseconds: 50);
         $previous = $timeout->currentLimit();
 
         try {
             $timeout->run(callback: fn () => $this->connection->select(query: self::HEAVY_QUERY));
             $this->fail('The query was expected to time out.');
         } catch (ViewExecutionTimedOutException $exception) {
-            $this->assertSame('The view took longer than 1 ms to run. Add filters to narrow it down.', $exception->getMessage());
+            $this->assertSame('The view took longer than 50 ms to run. Add filters to narrow it down.', $exception->getMessage());
         }
 
         $this->assertSame($previous, $timeout->currentLimit());

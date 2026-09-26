@@ -15,7 +15,7 @@ use Logis\LogisContext\Infrastructure\Http\Rule\ValidUtf8;
 
 final class ExecuteCustomViewRequest extends FormRequest
 {
-    private const MAX_CURSOR_LENGTH = 1024;
+    private const MAX_CURSOR_LENGTH = 4096;
 
     /** @return array<string, list<mixed>> */
     public function rules(): array

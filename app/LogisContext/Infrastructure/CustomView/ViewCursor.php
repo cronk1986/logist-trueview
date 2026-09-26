@@ -35,7 +35,7 @@ final class ViewCursor
         }
 
         $values = self::values(encoded: $encoded);
-        $pointsToNextItems = $values[self::DIRECTION_KEY] === true;
+        $pointsToNextItems = $values[self::DIRECTION_KEY];
         $signature = $values[self::SORT_KEY] ?? null;
         unset($values[self::DIRECTION_KEY], $values[self::SORT_KEY]);
 
@@ -43,7 +43,7 @@ final class ViewCursor
             throw InvalidViewCursorException::forAnotherSort();
         }
 
-        return new Cursor(parameters: $values, pointsToNextItems: $pointsToNextItems);
+        return new Cursor(parameters: $values, pointsToNextItems: $pointsToNextItems === true);
     }
 
     /**
@@ -59,7 +59,7 @@ final class ViewCursor
 
         $decoded = json_decode(json: $json, associative: true);
 
-        if (!is_array(value: $decoded) || !is_bool(value: $decoded[self::DIRECTION_KEY] ?? null)) {
+        if (!is_array(value: $decoded) || ($decoded[self::DIRECTION_KEY] ?? null) !== true) {
             throw InvalidViewCursorException::malformed();
         }
 

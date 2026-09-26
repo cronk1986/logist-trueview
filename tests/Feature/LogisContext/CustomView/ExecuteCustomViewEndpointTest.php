@@ -176,7 +176,7 @@ final class ExecuteCustomViewEndpointTest extends TestCase
             'sort without field' => [['sort' => ['direction' => 'asc']], 'sort.field', null],
             'unknown sort field' => [['sort' => ['field' => 'customer_id']], null, 'my_assets views cannot be sorted by "customer_id".'],
             'relation sort field' => [['sort' => ['field' => 'location']], null, 'my_assets views cannot be sorted by "location".'],
-            'cursor too long' => [['cursor' => str_repeat(string: 'a', times: 1025)], 'cursor', null],
+            'cursor too long' => [['cursor' => str_repeat(string: 'a', times: 4097)], 'cursor', null],
             'q too long' => [['q' => str_repeat(string: 'a', times: 256)], 'q', null],
             'garbage cursor' => [['cursor' => 'garbage'], null, 'The cursor is not valid. Use the next_cursor of the previous page.'],
         ];
@@ -203,7 +203,7 @@ final class ExecuteCustomViewEndpointTest extends TestCase
     public function test_an_execution_that_times_out_answers_504_and_is_reported(): void
     {
         Exceptions::fake();
-        $timeout = new StatementTimeout(connection: $this->app->make(abstract: ConnectionInterface::class), milliseconds: 1);
+        $timeout = new StatementTimeout(connection: $this->app->make(abstract: ConnectionInterface::class), milliseconds: 50);
         $slowAssets = new class (timeout: $timeout) implements ViewBuilder {
             public function __construct(private readonly StatementTimeout $timeout)
             {
@@ -216,7 +216,7 @@ final class ExecuteCustomViewEndpointTest extends TestCase
 
             public function execute(ViewExecutionCriteria $criteria): ViewPage
             {
-                $this->timeout->run(callback: fn () => DB::select(query: 'SELECT COUNT(*) FROM information_schema.columns a, information_schema.columns b, information_schema.columns c'));
+                $this->timeout->run(callback: fn () => DB::select(query: 'SELECT COUNT(*) FROM information_schema.columns a, information_schema.columns b'));
 
                 return ViewPage::empty();
             }
@@ -231,7 +231,7 @@ final class ExecuteCustomViewEndpointTest extends TestCase
         $this->execute(user: $this->owner, view: $view)
             ->assertStatus(status: 504)
             ->assertJsonPath(path: 'success', expect: false)
-            ->assertJsonPath(path: 'message', expect: 'The view took longer than 1 ms to run. Add filters to narrow it down.');
+            ->assertJsonPath(path: 'message', expect: 'The view took longer than 50 ms to run. Add filters to narrow it down.');
 
         Exceptions::assertReported(ViewExecutionTimedOutException::class);
     }
