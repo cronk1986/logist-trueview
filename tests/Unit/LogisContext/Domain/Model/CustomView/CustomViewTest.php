@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Tests\Unit\LogisContext\Domain\Model\CustomView;
 
 use Logis\LogisContext\Domain\Event\CustomView\CustomViewCreated;
+use Logis\LogisContext\Domain\Event\CustomView\CustomViewDeleted;
+use Logis\LogisContext\Domain\Event\CustomView\CustomViewSetAsDefault;
 use Logis\LogisContext\Domain\Event\CustomView\CustomViewUpdated;
 use Logis\LogisContext\Domain\Exception\CustomView\CustomViewTypeCannotChangeException;
 use Logis\LogisContext\Domain\Exception\CustomView\CustomViewAccessDeniedException;
@@ -156,6 +158,27 @@ final class CustomViewTest extends TestCase
         $this->expectExceptionMessage('The type of a view cannot change. This view stays my_assets.');
 
         $view->ensureTypeIs(type: ViewType::MyTickets);
+    }
+
+    public function test_it_can_be_marked_and_unmarked_as_default(): void
+    {
+        $view = CustomViewMother::create(id: 6);
+
+        $view->markAsDefault();
+        $this->assertTrue($view->isDefault());
+        $this->assertInstanceOf(CustomViewSetAsDefault::class, DomainEventPublisher::lastEventOfType(domainEventType: CustomViewSetAsDefault::class));
+
+        $view->unmarkAsDefault();
+        $this->assertFalse($view->isDefault());
+    }
+
+    public function test_deleting_it_raises_an_event(): void
+    {
+        CustomViewMother::create(id: 6)->delete();
+
+        $event = DomainEventPublisher::lastEventOfType(domainEventType: CustomViewDeleted::class);
+        $this->assertInstanceOf(CustomViewDeleted::class, $event);
+        $this->assertSame(6, $event->viewId()->value());
     }
 
     public function test_it_knows_its_owner(): void

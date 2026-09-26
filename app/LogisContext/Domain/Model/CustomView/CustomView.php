@@ -6,6 +6,7 @@ namespace Logis\LogisContext\Domain\Model\CustomView;
 
 use Logis\LogisContext\Domain\Event\CustomView\CustomViewCreated;
 use Logis\LogisContext\Domain\Event\CustomView\CustomViewDeleted;
+use Logis\LogisContext\Domain\Event\CustomView\CustomViewSetAsDefault;
 use Logis\LogisContext\Domain\Event\CustomView\CustomViewUpdated;
 use Logis\LogisContext\Domain\Exception\CustomView\CustomViewAccessDeniedException;
 use Logis\LogisContext\Domain\Exception\CustomView\CustomViewLinkedToAnotherCustomerException;
@@ -87,6 +88,18 @@ final class CustomView
         $this->isPublic = $isPublic;
 
         DomainEventPublisher::publish(event: new CustomViewUpdated(viewId: $this->savedId()));
+    }
+
+    public function markAsDefault(): void
+    {
+        $this->isDefault = true;
+
+        DomainEventPublisher::publish(event: new CustomViewSetAsDefault(viewId: $this->savedId(), ownerId: $this->user->id(), type: $this->type()));
+    }
+
+    public function unmarkAsDefault(): void
+    {
+        $this->isDefault = false;
     }
 
     public function delete(): void

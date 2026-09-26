@@ -525,6 +525,50 @@
           }
         }
       }
+    },
+    "/views/{id}/set-default": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/ViewId"
+        }
+      ],
+      "post": {
+        "tags": [
+          "Views"
+        ],
+        "summary": "Set a view as the default of its type",
+        "operationId": "setDefaultView",
+        "description": "Makes the view the owner's default for its type. The previous default of that owner and type stops being\nthe default in the same transaction. Setting the current default again changes nothing. Only the owner can\ndo it.\n",
+        "responses": {
+          "200": {
+            "description": "The view, now the default of its type",
+            "headers": {
+              "X-Refreshed-Token": {
+                "$ref": "#/components/headers/XRefreshedToken"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CustomViewDetailsResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          }
+        }
+      }
     }
   },
   "components": {

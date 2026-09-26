@@ -16,6 +16,8 @@ interface CustomViewRepository
 
     public function findByOwnerAndTitle(UserId $owner, CustomViewTitle $title): ?CustomView;
 
+    public function findDefaultOf(UserId $owner, ViewType $type): ?CustomView;
+
     /**
      * @return list<CustomView>
      */

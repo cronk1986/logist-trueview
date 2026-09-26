@@ -47,6 +47,23 @@ final class EloquentCustomViewRepository implements CustomViewRepository
         return $this->mapper->toDomain(model: $model);
     }
 
+    public function findDefaultOf(UserId $owner, ViewType $type): ?CustomView
+    {
+        $model = CustomViewModel::query()
+            ->with(relations: CustomViewMapper::relations())
+            ->where(column: 'user_id', operator: $owner->value())
+            ->where(column: 'view_type', operator: $type->value)
+            ->where(column: 'is_default', operator: true)
+            ->lockForUpdate()
+            ->first();
+
+        if ($model === null) {
+            return null;
+        }
+
+        return $this->mapper->toDomain(model: $model);
+    }
+
     public function findOwnedByOrPublicIn(UserId $owner, CustomerId $customer, ?ViewType $type): array
     {
         $query = CustomViewModel::query()

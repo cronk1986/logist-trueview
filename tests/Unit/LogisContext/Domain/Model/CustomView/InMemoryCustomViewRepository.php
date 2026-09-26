@@ -38,6 +38,17 @@ final class InMemoryCustomViewRepository implements CustomViewRepository
         return null;
     }
 
+    public function findDefaultOf(UserId $owner, ViewType $type): ?CustomView
+    {
+        foreach ($this->views as $view) {
+            if ($view->user()->id()->equals(other: $owner) && $view->type() === $type && $view->isDefault()) {
+                return $view;
+            }
+        }
+
+        return null;
+    }
+
     public function findOwnedByOrPublicIn(UserId $owner, CustomerId $customer, ?ViewType $type): array
     {
         $views = array_filter(

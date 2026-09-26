@@ -10,6 +10,7 @@ use Logis\LogisContext\Domain\Model\CustomView\ViewPolicy;
 use Logis\LogisContext\Domain\Model\User\User;
 use Logis\LogisContext\Domain\Model\User\UserRepository;
 use Logis\LogisContext\Domain\ValueObject\Customer\CustomerId;
+use Illuminate\Support\Facades\DB;
 use Logis\LogisContext\Domain\Exception\CustomView\CustomViewTitleAlreadyUsedException;
 use Logis\LogisContext\Domain\ValueObject\CustomView\CustomViewId;
 use Logis\LogisContext\Domain\ValueObject\CustomView\CustomViewTitle;
@@ -216,6 +217,24 @@ final class EloquentCustomViewRepositoryTest extends TestCase
         $this->assertSame([], $stored->filters);
         $this->assertTrue($stored->is_public);
         $this->assertSame(1, CustomViewModel::query()->count());
+    }
+
+    public function test_it_finds_the_default_of_an_owner_and_type_under_a_lock(): void
+    {
+        $user = UserModel::factory()->create();
+        $default = CustomViewModel::factory()->ofType(type: ViewType::MyAssets)->asDefault()->create(attributes: ['user_id' => $user->id]);
+        CustomViewModel::factory()->ofType(type: ViewType::MyAssets)->create(attributes: ['user_id' => $user->id]);
+        CustomViewModel::factory()->ofType(type: ViewType::MyTickets)->asDefault()->create(attributes: ['user_id' => $user->id]);
+        CustomViewModel::factory()->ofType(type: ViewType::MyAssets)->asDefault()->create();
+
+        DB::enableQueryLog();
+        $view = $this->repository->findDefaultOf(owner: UserId::fromInt(value: $user->id), type: ViewType::MyAssets);
+        $firstQuery = DB::getQueryLog()[0]['query'] ?? '';
+        DB::disableQueryLog();
+
+        $this->assertSame($default->id, $view?->id()?->value());
+        $this->assertStringEndsWith('for update', $firstQuery);
+        $this->assertNull($this->repository->findDefaultOf(owner: UserId::fromInt(value: $user->id), type: ViewType::MyContracts));
     }
 
     public function test_it_deletes_a_view(): void
