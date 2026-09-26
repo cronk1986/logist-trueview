@@ -176,6 +176,8 @@ final class ExecuteCustomViewEndpointTest extends TestCase
             'sort without field' => [['sort' => ['direction' => 'asc']], 'sort.field', null],
             'unknown sort field' => [['sort' => ['field' => 'customer_id']], null, 'my_assets views cannot be sorted by "customer_id".'],
             'relation sort field' => [['sort' => ['field' => 'location']], null, 'my_assets views cannot be sorted by "location".'],
+            'cursor too long' => [['cursor' => str_repeat(string: 'a', times: 1025)], 'cursor', null],
+            'q too long' => [['q' => str_repeat(string: 'a', times: 256)], 'q', null],
             'garbage cursor' => [['cursor' => 'garbage'], null, 'The cursor is not valid. Use the next_cursor of the previous page.'],
         ];
     }

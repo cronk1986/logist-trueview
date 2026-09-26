@@ -8,6 +8,7 @@ use Carbon\CarbonImmutable;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Logis\LogisContext\Application\ModelView\CustomView\ViewPage;
 use Logis\LogisContext\Domain\ValueObject\Asset\AssetStatus;
+use Logis\LogisContext\Domain\ValueObject\Contract\ContractStatus;
 use Logis\LogisContext\Domain\ValueObject\Customer\CustomerId;
 use Logis\LogisContext\Domain\ValueObject\Customer\VisibleCustomers;
 use Logis\LogisContext\Domain\ValueObject\CustomView\ViewType;
@@ -83,7 +84,8 @@ final class ViewPaginatorTest extends TestCase
             'id ascending' => ['id', 'asc'],
             'manufacturer with ties ascending' => ['manufacturer', 'asc'],
             'manufacturer with ties descending' => ['manufacturer', 'desc'],
-            'status' => ['status', 'asc'],
+            'status ascending' => ['status', 'asc'],
+            'status descending' => ['status', 'desc'],
             'created at with ties descending' => ['created_at', 'desc'],
         ];
     }
@@ -102,6 +104,36 @@ final class ViewPaginatorTest extends TestCase
         $this->expectExceptionMessage('The cursor belongs to another sort order. Start again from the first page.');
 
         $this->execute(sortField: 'created_at', sortDirection: 'asc', pageSize: 3, cursor: $cursor);
+    }
+
+    public function test_a_cursor_of_the_same_field_in_the_other_direction_is_rejected(): void
+    {
+        $cursor = $this->execute(sortField: 'manufacturer', sortDirection: 'asc', pageSize: 3)->nextCursor();
+
+        $this->expectException(InvalidViewCursorException::class);
+
+        $this->execute(sortField: 'manufacturer', sortDirection: 'desc', pageSize: 3, cursor: $cursor);
+    }
+
+    public function test_a_cursor_without_its_sort_is_rejected(): void
+    {
+        $cursor = base64_encode(string: '{"id":3,"_pointsToNextItems":true}');
+
+        $this->expectException(InvalidViewCursorException::class);
+        $this->expectExceptionMessage('The cursor belongs to another sort order. Start again from the first page.');
+
+        $this->execute(pageSize: 3, cursor: $cursor);
+    }
+
+    public function test_enum_values_are_declared_in_alphabetical_order_so_sorting_and_cursors_agree(): void
+    {
+        foreach ([AssetStatus::cases(), ContractStatus::cases()] as $cases) {
+            $values = array_map(callback: fn (AssetStatus|ContractStatus $case): string => $case->value, array: $cases);
+            $sorted = $values;
+            sort(array: $sorted);
+
+            $this->assertSame($sorted, $values);
+        }
     }
 
     #[DataProvider('malformedCursors')]
@@ -130,7 +162,7 @@ final class ViewPaginatorTest extends TestCase
     public function test_a_tampered_cursor_only_moves_the_start_within_the_visible_rows(): void
     {
         $foreign = AssetModel::factory()->create();
-        $cursor = rtrim(string: strtr(string: base64_encode(string: (string) json_encode(value: ['id' => $foreign->id + 1, '_pointsToNextItems' => true])), from: '+/', to: '-_'), characters: '=');
+        $cursor = rtrim(string: strtr(string: base64_encode(string: (string) json_encode(value: ['id' => $foreign->id + 1, '_pointsToNextItems' => true, '_sort' => 'id:desc'])), from: '+/', to: '-_'), characters: '=');
 
         $ids = array_column(array: $this->execute(pageSize: 50, cursor: $cursor)->rows(), column_key: 'id');
 

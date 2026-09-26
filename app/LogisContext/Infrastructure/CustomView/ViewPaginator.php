@@ -40,7 +40,8 @@ final class ViewPaginator
 
         $sortColumn = $this->mapping(fields: $fields, definition: $definition, field: $criteria->sort->field())->column();
         $orderColumns = array_values(array: array_unique(array: [$sortColumn, self::ID]));
-        $cursor = ViewCursor::decode(encoded: $criteria->cursor, orderColumns: $orderColumns);
+        $sort = $sortColumn . ':' . $criteria->sort->direction()->value;
+        $cursor = ViewCursor::decode(encoded: $criteria->cursor, orderColumns: $orderColumns, sort: $sort);
 
         $query->with(relations: $this->relations(fields: $fields, definition: $definition));
 
@@ -57,7 +58,7 @@ final class ViewPaginator
             $rows[] = $this->row(model: $model, fields: $fields, definition: $definition);
         }
 
-        return ViewPage::from(rows: $rows, nextCursor: $page->nextCursor()?->encode());
+        return ViewPage::from(rows: $rows, nextCursor: ViewCursor::encode(cursor: $page->nextCursor(), sort: $sort));
     }
 
     /**

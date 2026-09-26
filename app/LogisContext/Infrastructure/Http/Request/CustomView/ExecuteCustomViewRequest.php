@@ -8,22 +8,25 @@ use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 use Logis\LogisContext\Application\Query\CustomView\ExecuteCustomView;
 use Logis\LogisContext\Domain\ValueObject\CustomView\SortDirection;
+use Logis\LogisContext\Domain\ValueObject\CustomView\ViewField;
 use Logis\LogisContext\Domain\ValueObject\CustomView\ViewPageSize;
 use Logis\LogisContext\Infrastructure\Http\CurrentAccessToken;
 use Logis\LogisContext\Infrastructure\Http\Rule\ValidUtf8;
 
 final class ExecuteCustomViewRequest extends FormRequest
 {
+    private const MAX_CURSOR_LENGTH = 1024;
+
     /** @return array<string, list<mixed>> */
     public function rules(): array
     {
         return [
             'limit' => ['nullable', 'integer', 'between:' . ViewPageSize::MIN . ',' . ViewPageSize::MAX],
-            'cursor' => ['nullable', 'string'],
+            'cursor' => ['nullable', 'string', 'max:' . self::MAX_CURSOR_LENGTH],
             'sort' => ['nullable', 'array:field,direction'],
             'sort.field' => ['required_with:sort', 'string'],
             'sort.direction' => ['nullable', 'string', Rule::enum(type: SortDirection::class)],
-            'q' => ['nullable', 'string', new ValidUtf8()],
+            'q' => ['nullable', 'string', 'max:' . ViewField::MAX_TEXT_LENGTH, new ValidUtf8()],
         ];
     }
 
