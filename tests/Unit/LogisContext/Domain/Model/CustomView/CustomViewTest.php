@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Unit\LogisContext\Domain\Model\CustomView;
 
 use Logis\LogisContext\Domain\Exception\CustomView\CustomViewLinkedToAnotherCustomerException;
+use Logis\LogisContext\Domain\Exception\CustomView\CustomViewNotSavedException;
 use Logis\LogisContext\Domain\Exception\CustomView\InvalidViewColumnsException;
 use Logis\LogisContext\Domain\Exception\CustomView\InvalidViewFilterException;
 use Logis\LogisContext\Domain\Model\CustomView\CustomView;
@@ -49,6 +50,26 @@ final class CustomViewTest extends TestCase
         $this->expectException(CustomViewLinkedToAnotherCustomerException::class);
 
         CustomViewMother::create(user: UserMother::create(customer: null));
+    }
+
+    public function test_it_knows_its_owner(): void
+    {
+        $owner = UserMother::create(id: 5, customer: CustomerMother::create());
+        $view = CustomViewMother::create(user: $owner);
+
+        $this->assertTrue($view->isOwnedBy(user: $owner));
+        $this->assertFalse($view->isOwnedBy(user: UserMother::create(id: 6, customer: $owner->customer())));
+    }
+
+    public function test_a_view_has_no_id_until_it_is_saved(): void
+    {
+        $view = CustomViewMother::create(id: null);
+
+        $this->assertNull($view->id());
+
+        $this->expectException(CustomViewNotSavedException::class);
+
+        $view->savedId();
     }
 
     public function test_its_columns_must_belong_to_the_catalog_of_its_type(): void

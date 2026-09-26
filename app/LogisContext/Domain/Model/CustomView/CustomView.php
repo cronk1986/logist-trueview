@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Logis\LogisContext\Domain\Model\CustomView;
 
 use Logis\LogisContext\Domain\Exception\CustomView\CustomViewLinkedToAnotherCustomerException;
+use Logis\LogisContext\Domain\Exception\CustomView\CustomViewNotSavedException;
 use Logis\LogisContext\Domain\Model\Customer\Customer;
 use Logis\LogisContext\Domain\Model\User\User;
 use Logis\LogisContext\Domain\ValueObject\CustomView\CustomViewId;
@@ -39,9 +40,23 @@ final class CustomView
         return $this->id;
     }
 
+    public function savedId(): CustomViewId
+    {
+        if ($this->id === null) {
+            throw CustomViewNotSavedException::create();
+        }
+
+        return $this->id;
+    }
+
     public function user(): User
     {
         return $this->user;
+    }
+
+    public function isOwnedBy(User $user): bool
+    {
+        return $this->user->id()->equals(other: $user->id());
     }
 
     public function customer(): Customer

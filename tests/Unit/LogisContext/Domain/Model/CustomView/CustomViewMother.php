@@ -17,20 +17,33 @@ use Tests\Unit\LogisContext\Domain\Model\User\UserMother;
 
 final class CustomViewMother
 {
-    public static function create(int $id = 1, ?User $user = null, ?Customer $customer = null, bool $isDefault = false, bool $isPublic = false): CustomView
-    {
+    /**
+     * @param list<string> $columns
+     * @param list<array<string, mixed>> $filters
+     */
+    public static function create(
+        ?int $id = 1,
+        ?User $user = null,
+        ?Customer $customer = null,
+        string $title = 'Zebra scanners',
+        ViewType $type = ViewType::MyAssets,
+        array $columns = ['serial_number', 'model'],
+        array $filters = [['column' => 'manufacturer', 'operator' => 'eq', 'value' => 'Zebra']],
+        bool $isDefault = false,
+        bool $isPublic = false,
+    ): CustomView {
         $user ??= UserMother::create(customer: CustomerMother::create());
         $customer ??= $user->customer() ?? CustomerMother::create();
 
         return new CustomView(
-            id: CustomViewId::fromInt(value: $id),
+            id: $id === null ? null : CustomViewId::fromInt(value: $id),
             user: $user,
             customer: $customer,
-            title: CustomViewTitle::fromString(value: 'Zebra scanners'),
+            title: CustomViewTitle::fromString(value: $title),
             description: 'Every Zebra device',
-            type: ViewType::MyAssets,
-            columns: ViewColumns::fromList(columns: ['serial_number', 'model']),
-            filters: ViewFilters::fromList(filters: [['column' => 'manufacturer', 'operator' => 'eq', 'value' => 'Zebra']]),
+            type: $type,
+            columns: ViewColumns::fromList(columns: $columns),
+            filters: ViewFilters::fromList(filters: $filters),
             isDefault: $isDefault,
             isPublic: $isPublic,
         );
