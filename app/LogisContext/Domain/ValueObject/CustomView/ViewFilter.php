@@ -17,7 +17,7 @@ final readonly class ViewFilter
      */
     private function __construct(
         private string $column,
-        private string $operator,
+        private FilterOperator $operator,
         private string|int|float|bool|array|null $value,
     ) {
     }
@@ -28,7 +28,7 @@ final readonly class ViewFilter
     public static function fromArray(array $filter): self
     {
         $column = self::requiredText(filter: $filter, key: self::COLUMN);
-        $operator = self::requiredText(filter: $filter, key: self::OPERATOR);
+        $operator = self::operatorOf(filter: $filter, column: $column);
 
         if (!array_key_exists(key: self::VALUE, array: $filter)) {
             throw InvalidViewFilterException::missing(key: self::VALUE);
@@ -49,7 +49,7 @@ final readonly class ViewFilter
         return $this->column;
     }
 
-    public function operator(): string
+    public function operator(): FilterOperator
     {
         return $this->operator;
     }
@@ -67,7 +67,22 @@ final readonly class ViewFilter
      */
     public function toArray(): array
     {
-        return [self::COLUMN => $this->column, self::OPERATOR => $this->operator, self::VALUE => $this->value];
+        return [self::COLUMN => $this->column, self::OPERATOR => $this->operator->value, self::VALUE => $this->value];
+    }
+
+    /**
+     * @param array<mixed> $filter
+     */
+    private static function operatorOf(array $filter, string $column): FilterOperator
+    {
+        $name = self::requiredText(filter: $filter, key: self::OPERATOR);
+        $operator = FilterOperator::tryFrom(value: $name);
+
+        if ($operator === null) {
+            throw InvalidViewFilterException::unknownOperator(column: $column, operator: $name);
+        }
+
+        return $operator;
     }
 
     /**

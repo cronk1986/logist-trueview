@@ -22,4 +22,9 @@ final class InvalidViewFilterException extends InvalidValueException
     {
         return new self(message: sprintf('The value of the filter on "%s" must be a scalar, null or a list of scalars.', $column));
     }
+
+    public static function unknownOperator(string $column, string $operator): self
+    {
+        return new self(message: sprintf('The filter on "%s" uses the unknown operator "%s".', $column, $operator));
+    }
 }
