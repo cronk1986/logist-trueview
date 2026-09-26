@@ -17,6 +17,9 @@ final class InMemoryCustomViewRepository implements CustomViewRepository
     /** @var array<int, CustomView> */
     private array $views = [];
 
+    /** @var list<int> */
+    private array $lockedOwners = [];
+
     public function add(CustomView $view): void
     {
         $this->views[$view->savedId()->value()] = $view;
@@ -61,6 +64,19 @@ final class InMemoryCustomViewRepository implements CustomViewRepository
         usort(array: $views, callback: fn (CustomView $a, CustomView $b): int => [$a->title()->value(), $a->savedId()->value()] <=> [$b->title()->value(), $b->savedId()->value()]);
 
         return $views;
+    }
+
+    public function lockViewsOf(UserId $owner): void
+    {
+        $this->lockedOwners[] = $owner->value();
+    }
+
+    /**
+     * @return list<int>
+     */
+    public function lockedOwners(): array
+    {
+        return $this->lockedOwners;
     }
 
     public function save(CustomView $view): void

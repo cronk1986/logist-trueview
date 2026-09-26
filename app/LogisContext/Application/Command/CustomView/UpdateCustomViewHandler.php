@@ -24,7 +24,7 @@ final class UpdateCustomViewHandler
     public function handle(UpdateCustomView $command): void
     {
         $owner = $this->access->user(userId: $command->userId);
-        $view = $this->access->viewManagedBy(user: $owner, viewId: $command->viewId);
+        $view = $this->access->viewToChange(user: $owner, viewId: $command->viewId);
         $title = CustomViewTitle::fromString(value: $command->title);
 
         if ($command->viewType !== null) {

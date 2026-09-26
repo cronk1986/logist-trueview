@@ -47,6 +47,8 @@ final class CreateCustomViewHandlerTest extends TestCase
     {
         $this->handler->handle(command: $this->command());
 
+        $this->assertSame([1], $this->views->lockedOwners());
+
         $view = $this->views->findByOwnerAndTitle(owner: UserId::fromInt(value: 1), title: CustomViewTitle::fromString(value: 'Zebra scanners'));
 
         $this->assertNotNull($view);

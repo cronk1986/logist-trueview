@@ -87,8 +87,12 @@ final class ShowCustomViewEndpointTest extends TestCase
         $this->callViews(method: 'GET', token: $this->tokenOf(user: $this->owner), path: '/999')->assertNotFound();
     }
 
-    public function test_a_non_numeric_id_does_not_match_the_route(): void
+    public function test_ids_that_cannot_exist_do_not_match_the_route(): void
     {
-        $this->callViews(method: 'GET', token: $this->tokenOf(user: $this->owner), path: '/abc')->assertNotFound();
+        $token = $this->tokenOf(user: $this->owner);
+
+        foreach (['/abc', '/0', '/007', '/99999999999999999999'] as $path) {
+            $this->callViews(method: 'GET', token: $token, path: $path)->assertNotFound();
+        }
     }
 }

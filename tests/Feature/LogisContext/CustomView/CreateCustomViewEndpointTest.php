@@ -77,6 +77,14 @@ final class CreateCustomViewEndpointTest extends TestCase
             ->assertJsonPath(path: 'message', expect: 'You already have a view called "Zebra scanners".');
     }
 
+    public function test_a_title_that_differs_only_in_case_is_a_conflict(): void
+    {
+        CustomViewModel::factory()->create(attributes: ['user_id' => $this->user->id, 'title' => 'ZEBRA SCANNERS']);
+
+        $this->callViews(method: 'POST', token: $this->tokenOf(user: $this->user), data: $this->payload())
+            ->assertConflict();
+    }
+
     public function test_a_user_without_a_customer_is_forbidden(): void
     {
         $this->callViews(method: 'POST', token: $this->tokenOf(user: $this->userOf(customer: null, email: 'nobody@logis.test')), data: $this->payload())

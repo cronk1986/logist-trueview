@@ -44,7 +44,7 @@ The data model was built by `SPEC — Core Domain Model.md`, and the visibility 
 
 ## API contract
 
-Every route is protected by `auth:sanctum` and `RotateAccessTokenMiddleware`, and returns `X-Refreshed-Token`, like every authenticated route. `{id}` only matches digits (`whereNumber`). Every response uses the standard format `{ success, data, message, meta }`.
+Every route is protected by `auth:sanctum` and `RotateAccessTokenMiddleware`, and returns `X-Refreshed-Token`, like every authenticated route. Every response uses the standard format `{ success, data, message, meta }`.
 
 | Method | Path | Success | Errors |
 |---|---|---|---|
@@ -56,7 +56,8 @@ Every route is protected by `auth:sanctum` and `RotateAccessTokenMiddleware`, an
 | POST | `/api/v1/views/{id}/execute` | 200 | 401, 404, 422, 429, 504 |
 | POST | `/api/v1/views/{id}/set-default` | 200 | 401, 403, 404, 429 |
 
-- **404** when the view doesn't exist **or** the user can't see it (D4), so the API never reveals that another customer's view exists.
+- **404** when the view doesn't exist **or** the user can't see it (D4), so the API never reveals that another customer's view exists. `{id}` only matches ids that can exist (`[1-9][0-9]{0,17}`), so `0`, `007` or a number too large for an id are 404 too.
+- View titles are unique per owner **whatever their case**, as the column collation compares them (`CustomViewTitle::equals()`).
 - **403** when the user can see the view but isn't its owner and tries to change it, or when a user without a customer tries to create a view.
 - **409** when the owner already has a view with that title.
 - **504** when the execution exceeds the timeout (D9).
@@ -355,7 +356,8 @@ The entity stops being read-only:
 - **Invariant:** the columns and filters are always valid for the view's type (D2, D3). It is checked in the constructor and in `update()`, so a view that breaks the catalog can't exist. A stored view that no longer fits the catalog raises `CorruptedRecordException` in the mapper: a logged 500.
 - `ViewColumns` and `ViewFilters` keep validating the structure. A new value object, `ViewDefinition` (type + columns + filters), validates them against the catalog. `ViewFilter` holds a `FilterOperator` instead of a string.
 - **The id of a new view.** `custom_views.id` is auto-increment, so a view has no id until it is inserted. `CustomView::id()` returns `?CustomViewId`: `null` only between `create()` and `save()`. `CustomViewCreated` carries the owner id and the title (unique per owner), not the id. The alternative, a UUID key, would change the schema of the core spec for no other gain.
-- **One default per owner and type.** `SetDefaultCustomViewHandler` loads the owner's current default of that type with `CustomViewRepository::findDefaultOf(owner, type)`, unmarks it, saves it, then marks and saves the new one. The lookup uses `lockForUpdate()` over the `(user_id, view_type)` index, so two concurrent `set-default` requests of the same owner are serialised inside `TransactionMiddleware`.
+- **One default per owner and type.** `SetDefaultCustomViewHandler` loads the owner's current default of that type with `CustomViewRepository::findDefaultOf(owner, type)`, unmarks it, saves it, then marks and saves the new one.
+- **Concurrent writes are serialised per owner.** Every command that changes views first calls `CustomViewRepository::lockViewsOf(owner)`, which locks the owner's row in `users` (`SELECT … FOR UPDATE`) inside `TransactionMiddleware`, and only then loads the view (`CustomViewAccess::viewToChange()`). Two writes of the same owner (two `set-default`, or a `PUT` and a `set-default`) run one after the other, whatever the isolation level, so no default is lost or duplicated and no update overwrites another. Locking a stable row avoids depending on next-key locks, which READ COMMITTED doesn't take.
 - The events have no listeners yet. They follow the convention of `AGENTS.md`, and they are the hook for cache invalidation or audit later.
 
 ### D6. Application layer

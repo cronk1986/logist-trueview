@@ -51,6 +51,8 @@ final class SetDefaultCustomViewHandlerTest extends TestCase
     {
         $this->handler->handle(command: new SetDefaultCustomView(userId: 1, viewId: 2));
 
+        $this->assertSame([1], $this->views->lockedOwners());
+
         $this->assertFalse($this->isDefault(id: 1));
         $this->assertTrue($this->isDefault(id: 2));
         $this->assertTrue($this->isDefault(id: 3));

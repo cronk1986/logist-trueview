@@ -32,6 +32,6 @@ final readonly class CustomViewTitle
 
     public function equals(self $other): bool
     {
-        return $this->value === $other->value;
+        return mb_strtolower(string: $this->value) === mb_strtolower(string: $other->value);
     }
 }

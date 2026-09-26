@@ -219,7 +219,7 @@ final class EloquentCustomViewRepositoryTest extends TestCase
         $this->assertSame(1, CustomViewModel::query()->count());
     }
 
-    public function test_it_finds_the_default_of_an_owner_and_type_under_a_lock(): void
+    public function test_it_finds_the_default_of_an_owner_and_type(): void
     {
         $user = UserModel::factory()->create();
         $default = CustomViewModel::factory()->ofType(type: ViewType::MyAssets)->asDefault()->create(attributes: ['user_id' => $user->id]);
@@ -227,14 +227,23 @@ final class EloquentCustomViewRepositoryTest extends TestCase
         CustomViewModel::factory()->ofType(type: ViewType::MyTickets)->asDefault()->create(attributes: ['user_id' => $user->id]);
         CustomViewModel::factory()->ofType(type: ViewType::MyAssets)->asDefault()->create();
 
-        DB::enableQueryLog();
         $view = $this->repository->findDefaultOf(owner: UserId::fromInt(value: $user->id), type: ViewType::MyAssets);
-        $firstQuery = DB::getQueryLog()[0]['query'] ?? '';
-        DB::disableQueryLog();
 
         $this->assertSame($default->id, $view?->id()?->value());
-        $this->assertStringEndsWith('for update', $firstQuery);
         $this->assertNull($this->repository->findDefaultOf(owner: UserId::fromInt(value: $user->id), type: ViewType::MyContracts));
+    }
+
+    public function test_it_locks_the_views_of_an_owner_through_the_owner_row(): void
+    {
+        $user = UserModel::factory()->create();
+
+        DB::enableQueryLog();
+        $this->repository->lockViewsOf(owner: UserId::fromInt(value: $user->id));
+        $query = DB::getQueryLog()[0]['query'] ?? '';
+        DB::disableQueryLog();
+
+        $this->assertStringContainsString('from `users`', $query);
+        $this->assertStringEndsWith('for update', $query);
     }
 
     public function test_it_deletes_a_view(): void

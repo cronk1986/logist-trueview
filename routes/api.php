@@ -22,13 +22,13 @@ Route::prefix('v1')->group(function (): void {
         Route::get('auth/me', [AuthController::class, 'me']);
         Route::get('search', [SearchController::class, 'search']);
 
-        Route::prefix('views')->controller(ViewController::class)->group(function (): void {
+        Route::prefix('views')->controller(ViewController::class)->where(['id' => '[1-9][0-9]{0,17}'])->group(function (): void {
             Route::get('', 'index');
             Route::post('', 'store');
-            Route::get('{id}', 'show')->whereNumber('id');
-            Route::put('{id}', 'update')->whereNumber('id');
-            Route::delete('{id}', 'destroy')->whereNumber('id');
-            Route::post('{id}/set-default', 'setDefault')->whereNumber('id');
+            Route::get('{id}', 'show');
+            Route::put('{id}', 'update');
+            Route::delete('{id}', 'destroy');
+            Route::post('{id}/set-default', 'setDefault');
         });
     });
 });

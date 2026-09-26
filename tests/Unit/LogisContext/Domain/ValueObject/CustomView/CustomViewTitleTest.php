@@ -11,6 +11,12 @@ use PHPUnit\Framework\TestCase;
 
 final class CustomViewTitleTest extends TestCase
 {
+    public function test_titles_are_equal_whatever_their_case(): void
+    {
+        $this->assertTrue(CustomViewTitle::fromString(value: 'Zebra Scanners')->equals(other: CustomViewTitle::fromString(value: 'zebra scanners')));
+        $this->assertFalse(CustomViewTitle::fromString(value: 'Zebra')->equals(other: CustomViewTitle::fromString(value: 'Honeywell')));
+    }
+
     public function test_it_keeps_a_valid_value_without_surrounding_spaces(): void
     {
         $this->assertSame('Zebra scanners', CustomViewTitle::fromString(value: '  Zebra scanners ')->value());
