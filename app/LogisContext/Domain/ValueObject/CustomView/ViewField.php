@@ -9,7 +9,7 @@ use Logis\LogisContext\Domain\Exception\CustomView\InvalidViewFilterException;
 final readonly class ViewField
 {
     public const MAX_LIST_SIZE = 100;
-    private const MAX_TEXT_LENGTH = 255;
+    public const MAX_TEXT_LENGTH = 255;
 
     /**
      * @param list<string> $choices
