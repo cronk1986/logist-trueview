@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace Tests\Unit\LogisContext\Application\Command\LogIn;
+namespace Tests\Unit\LogisContext\Application\Command\AccessToken;
 
 use Carbon\CarbonImmutable;
-use Logis\LogisContext\Application\Command\LogIn\LogIn;
-use Logis\LogisContext\Application\Command\LogIn\LogInHandler;
+use Logis\LogisContext\Application\Command\AccessToken\LogIn;
+use Logis\LogisContext\Application\Command\AccessToken\LogInHandler;
 use Logis\LogisContext\Domain\Event\User\UserLoggedIn;
 use Logis\LogisContext\Domain\Exception\User\InvalidCredentialsException;
 use Logis\LogisContext\Domain\Exception\User\InvalidEmailException;

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Logis\LogisContext\Application\Command\LogIn;
+namespace Logis\LogisContext\Application\Command\AccessToken;
 
 final readonly class LogIn
 {

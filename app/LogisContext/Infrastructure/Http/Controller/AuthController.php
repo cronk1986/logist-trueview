@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Logis\LogisContext\Infrastructure\Http\Controller;
 
 use Illuminate\Http\JsonResponse;
-use Logis\LogisContext\Application\Query\GetAccessTokenByToken\GetAccessTokenByToken;
+use Logis\LogisContext\Application\Query\AccessToken\GetAccessTokenByToken;
 use Logis\LogisContext\Infrastructure\Http\PlainTextTokenGenerator;
 use Logis\LogisContext\Infrastructure\Http\Request\Auth\LoginRequest;
 use Logis\LogisContext\Infrastructure\Http\Request\Auth\LogoutRequest;

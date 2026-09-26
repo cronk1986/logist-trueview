@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Logis\LogisContext\Application\Query\GetAccessTokenByToken;
+namespace Logis\LogisContext\Application\Query\AccessToken;
 
 final readonly class GetAccessTokenByToken
 {

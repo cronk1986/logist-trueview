@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace Tests\Unit\LogisContext\Application\Command\RotateAccessToken;
+namespace Tests\Unit\LogisContext\Application\Command\AccessToken;
 
 use Carbon\CarbonImmutable;
-use Logis\LogisContext\Application\Command\RotateAccessToken\RotateAccessToken;
-use Logis\LogisContext\Application\Command\RotateAccessToken\RotateAccessTokenHandler;
+use Logis\LogisContext\Application\Command\AccessToken\RotateAccessToken;
+use Logis\LogisContext\Application\Command\AccessToken\RotateAccessTokenHandler;
 use Logis\LogisContext\Domain\Event\AccessToken\AccessTokenRotated;
 use Logis\LogisContext\Domain\Exception\AccessToken\AccessTokenAlreadyRotatedException;
 use Logis\LogisContext\Domain\Exception\AccessToken\AccessTokenNotFoundException;

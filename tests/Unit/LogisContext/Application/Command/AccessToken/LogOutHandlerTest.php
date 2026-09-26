@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace Tests\Unit\LogisContext\Application\Command\LogOut;
+namespace Tests\Unit\LogisContext\Application\Command\AccessToken;
 
 use Carbon\CarbonImmutable;
-use Logis\LogisContext\Application\Command\LogOut\LogOut;
-use Logis\LogisContext\Application\Command\LogOut\LogOutHandler;
+use Logis\LogisContext\Application\Command\AccessToken\LogOut;
+use Logis\LogisContext\Application\Command\AccessToken\LogOutHandler;
 use Logis\LogisContext\Domain\Event\AccessToken\AccessTokenRevoked;
 use Logis\LogisContext\Domain\Exception\AccessToken\AccessTokenNotFoundException;
 use Logis\LogisContext\Domain\ValueObject\AccessToken\PlainTextToken;

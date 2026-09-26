@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace Tests\Unit\LogisContext\Application\Query\GetAccessTokenByToken;
+namespace Tests\Unit\LogisContext\Application\Query\AccessToken;
 
 use Carbon\CarbonImmutable;
-use Logis\LogisContext\Application\Query\GetAccessTokenByToken\GetAccessTokenByToken;
-use Logis\LogisContext\Application\Query\GetAccessTokenByToken\GetAccessTokenByTokenHandler;
+use Logis\LogisContext\Application\Query\AccessToken\GetAccessTokenByToken;
+use Logis\LogisContext\Application\Query\AccessToken\GetAccessTokenByTokenHandler;
 use Logis\LogisContext\Domain\Exception\AccessToken\AccessTokenNotFoundException;
 use PHPUnit\Framework\TestCase;
 use Tests\Unit\LogisContext\Domain\Model\AccessToken\AccessTokenMother;

@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Logis\LogisContext\Infrastructure\Http\Request\Auth;
 
 use Illuminate\Foundation\Http\FormRequest;
-use Logis\LogisContext\Application\Command\LogIn\LogIn;
+use Logis\LogisContext\Application\Command\AccessToken\LogIn;
 use Logis\LogisContext\Domain\ValueObject\AccessToken\PlainTextToken;
 
 final class LoginRequest extends FormRequest

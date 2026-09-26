@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Logis\LogisContext\Application\Command\LogOut;
+namespace Logis\LogisContext\Application\Command\AccessToken;
 
 use Logis\LogisContext\Domain\Exception\AccessToken\AccessTokenNotFoundException;
 use Logis\LogisContext\Domain\Model\AccessToken\AccessToken;

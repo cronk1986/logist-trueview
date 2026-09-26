@@ -152,7 +152,7 @@ These come from the spec; they are not redecided here:
 
 **Dependencies:** T4
 
-**Files:** `Application/Command/LogIn/*`, `Application/Query/GetAccessTokenByToken/*`, `Application/ModelView/AccessToken/AccessTokenView.php`, tests
+**Files:** `Application/Command/AccessToken/*`, `Application/Query/AccessToken/*`, `Application/ModelView/AccessToken/AccessTokenView.php`, tests
 
 **Scope:** M
 

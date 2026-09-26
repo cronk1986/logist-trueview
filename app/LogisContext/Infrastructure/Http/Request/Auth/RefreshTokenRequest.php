@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Logis\LogisContext\Infrastructure\Http\Request\Auth;
 
 use Illuminate\Foundation\Http\FormRequest;
-use Logis\LogisContext\Application\Command\RotateAccessToken\RotateAccessToken;
+use Logis\LogisContext\Application\Command\AccessToken\RotateAccessToken;
 use Logis\LogisContext\Domain\ValueObject\AccessToken\PlainTextToken;
 use Logis\LogisContext\Infrastructure\Http\CurrentAccessToken;
 

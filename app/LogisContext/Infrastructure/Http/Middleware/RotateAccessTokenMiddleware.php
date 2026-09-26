@@ -6,8 +6,8 @@ namespace Logis\LogisContext\Infrastructure\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
-use Logis\LogisContext\Application\Command\RotateAccessToken\RotateAccessToken;
-use Logis\LogisContext\Application\Query\GetAccessTokenByToken\GetAccessTokenByToken;
+use Logis\LogisContext\Application\Command\AccessToken\RotateAccessToken;
+use Logis\LogisContext\Application\Query\AccessToken\GetAccessTokenByToken;
 use Logis\LogisContext\Domain\Exception\AccessToken\AccessTokenAlreadyRotatedException;
 use Logis\LogisContext\Domain\Exception\AccessToken\AccessTokenNotFoundException;
 use Logis\LogisContext\Infrastructure\Http\CurrentAccessToken;

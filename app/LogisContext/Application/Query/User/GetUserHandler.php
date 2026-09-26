@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Logis\LogisContext\Application\Query\GetUser;
+namespace Logis\LogisContext\Application\Query\User;
 
 use Logis\LogisContext\Application\ModelView\User\UserView;
 use Logis\LogisContext\Domain\Exception\User\UserNotFoundException;

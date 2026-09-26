@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Logis\LogisContext\Application\Query\GetAccessTokenByToken;
+namespace Logis\LogisContext\Application\Query\AccessToken;
 
 use Logis\LogisContext\Application\ModelView\AccessToken\AccessTokenView;
 use Logis\LogisContext\Domain\Exception\AccessToken\AccessTokenNotFoundException;

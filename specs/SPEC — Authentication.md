@@ -179,11 +179,10 @@ app/LogisContext/
         Event/User/                        UserLoggedIn
         Event/AccessToken/                 AccessTokenRotated, AccessTokenRevoked
     Application/
-        Command/LogIn/                     LogIn, LogInHandler
-        Command/LogOut/                    LogOut, LogOutHandler
-        Command/RotateAccessToken/         RotateAccessToken, RotateAccessTokenHandler
-        Query/GetAccessTokenByToken/       GetAccessTokenByToken, GetAccessTokenByTokenHandler
-        Query/GetUser/                     GetUser, GetUserHandler
+        Command/AccessToken/               LogIn, LogInHandler, LogOut, LogOutHandler,
+                                           RotateAccessToken, RotateAccessTokenHandler
+        Query/AccessToken/                 GetAccessTokenByToken, GetAccessTokenByTokenHandler
+        Query/User/                        GetUser, GetUserHandler
         ModelView/User/                    UserView
         ModelView/AccessToken/             AccessTokenView
     Infrastructure/

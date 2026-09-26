@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Tests\Unit\LogisContext\Application\Query\GetUser;
+namespace Tests\Unit\LogisContext\Application\Query\User;
 
-use Logis\LogisContext\Application\Query\GetUser\GetUser;
-use Logis\LogisContext\Application\Query\GetUser\GetUserHandler;
+use Logis\LogisContext\Application\Query\User\GetUser;
+use Logis\LogisContext\Application\Query\User\GetUserHandler;
 use Logis\LogisContext\Domain\Exception\User\UserNotFoundException;
 use PHPUnit\Framework\TestCase;
 use Tests\Unit\LogisContext\Domain\Model\User\InMemoryUserRepository;
