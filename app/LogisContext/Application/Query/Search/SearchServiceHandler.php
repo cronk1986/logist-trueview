@@ -2,8 +2,11 @@
 
 declare(strict_types=1);
 
-namespace Logis\LogisContext\Application\Query\GlobalSearch;
+namespace Logis\LogisContext\Application\Query\Search;
 
+use Logis\LogisContext\Application\ModelView\Search\EntitySearchResult;
+use Logis\LogisContext\Application\Services\Search\SearchCriteria;
+use Logis\LogisContext\Application\Services\Search\EntitySearchers;
 use Logis\LogisContext\Application\ModelView\Search\EntitySearchResultView;
 use Logis\LogisContext\Domain\Exception\User\UserNotFoundException;
 use Logis\LogisContext\Domain\Model\User\UserRepository;
@@ -14,7 +17,7 @@ use Logis\LogisContext\Domain\ValueObject\User\UserId;
 use Logis\SharedContext\Domain\QueryResponse\Meta;
 use Logis\SharedContext\Domain\QueryResponse\QueryResponse;
 
-final class GlobalSearchHandler
+final class SearchServiceHandler
 {
     public function __construct(
         private readonly UserRepository $users,
@@ -22,7 +25,7 @@ final class GlobalSearchHandler
     ) {
     }
 
-    public function handle(GlobalSearch $query): QueryResponse
+    public function handle(SearchService $query): QueryResponse
     {
         $user = $this->users->findById(id: UserId::fromInt(value: $query->userId));
 
@@ -54,7 +57,7 @@ final class GlobalSearchHandler
     /**
      * @return list<SearchableEntity>
      */
-    private function requestedEntities(GlobalSearch $query): array
+    private function requestedEntities(SearchService $query): array
     {
         $entities = [];
 

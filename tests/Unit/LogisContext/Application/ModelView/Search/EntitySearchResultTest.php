@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Tests\Unit\LogisContext\Application\Query\GlobalSearch;
+namespace Tests\Unit\LogisContext\Application\ModelView\Search;
 
-use Logis\LogisContext\Application\Query\GlobalSearch\EntitySearchResult;
+use Logis\LogisContext\Application\ModelView\Search\EntitySearchResult;
 use PHPUnit\Framework\TestCase;
 
 final class EntitySearchResultTest extends TestCase

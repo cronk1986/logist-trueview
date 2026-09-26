@@ -5,13 +5,13 @@ declare(strict_types=1);
 namespace Tests\Feature\LogisContext\Infrastructure\Persistence\Location;
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Logis\LogisContext\Application\Query\GlobalSearch\SearchCriteria;
+use Logis\LogisContext\Application\Services\Search\SearchCriteria;
 use Logis\LogisContext\Infrastructure\Persistence\Customer\CustomerModel;
 use Logis\LogisContext\Infrastructure\Persistence\Location\EloquentLocationSearcher;
 use Logis\LogisContext\Infrastructure\Persistence\Location\LocationModel;
 use Tests\Feature\CountsQueries;
 use Tests\TestCase;
-use Tests\Unit\LogisContext\Application\Query\GlobalSearch\SearchCriteriaMother;
+use Tests\Unit\LogisContext\Application\Services\Search\SearchCriteriaMother;
 
 final class EloquentLocationSearcherTest extends TestCase
 {

@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Logis\LogisContext\Application\Query\GlobalSearch;
+namespace Logis\LogisContext\Application\Query\Search;
 
-final readonly class GlobalSearch
+final readonly class SearchService
 {
     /**
      * @param list<string> $entities

@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Logis\LogisContext\Application\ModelView\Search;
 
-use Logis\LogisContext\Application\Query\GlobalSearch\EntitySearchResult;
 use Logis\LogisContext\Domain\ValueObject\Search\SearchLimit;
 
 final readonly class EntitySearchResultView

@@ -7,13 +7,13 @@ namespace Tests\Unit\LogisContext\Infrastructure\Cache;
 use Carbon\CarbonImmutable;
 use Illuminate\Cache\ArrayStore;
 use Illuminate\Cache\Repository;
-use Logis\LogisContext\Application\Query\GlobalSearch\EntitySearchResult;
-use Logis\LogisContext\Application\Query\GlobalSearch\SearchCriteria;
+use Logis\LogisContext\Application\ModelView\Search\EntitySearchResult;
+use Logis\LogisContext\Application\Services\Search\SearchCriteria;
 use Logis\LogisContext\Domain\ValueObject\Search\SearchableEntity;
 use Logis\LogisContext\Infrastructure\Cache\CachedEntitySearcher;
 use PHPUnit\Framework\TestCase;
-use Tests\Unit\LogisContext\Application\Query\GlobalSearch\InMemoryEntitySearcher;
-use Tests\Unit\LogisContext\Application\Query\GlobalSearch\SearchCriteriaMother;
+use Tests\Unit\LogisContext\Application\Services\Search\InMemoryEntitySearcher;
+use Tests\Unit\LogisContext\Application\Services\Search\SearchCriteriaMother;
 
 final class CachedEntitySearcherTest extends TestCase
 {

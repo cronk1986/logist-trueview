@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Logis\LogisContext\Application\Query\GlobalSearch;
+namespace Logis\LogisContext\Application\ModelView\Search;
 
 /**
  * @phpstan-type Row array<string, scalar|null>

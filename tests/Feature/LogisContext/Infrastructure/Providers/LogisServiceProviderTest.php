@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Feature\LogisContext\Infrastructure\Providers;
 
-use Logis\LogisContext\Application\Query\GlobalSearch\EntitySearchers;
+use Logis\LogisContext\Application\Services\Search\EntitySearchers;
 use Logis\LogisContext\Domain\ValueObject\Search\SearchableEntity;
 use Logis\LogisContext\Infrastructure\Cache\CachedEntitySearcher;
 use Tests\TestCase;

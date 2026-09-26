@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Tests\Unit\LogisContext\Application\Query\GlobalSearch;
+namespace Tests\Unit\LogisContext\Application\Services\Search;
 
-use Logis\LogisContext\Application\Query\GlobalSearch\EntitySearcherNotRegisteredException;
-use Logis\LogisContext\Application\Query\GlobalSearch\EntitySearchers;
+use Logis\LogisContext\Application\Exception\Search\EntitySearcherNotRegisteredException;
+use Logis\LogisContext\Application\Services\Search\EntitySearchers;
 use Logis\LogisContext\Domain\ValueObject\Search\SearchableEntity;
 use PHPUnit\Framework\TestCase;
 

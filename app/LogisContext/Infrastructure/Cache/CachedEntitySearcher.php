@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace Logis\LogisContext\Infrastructure\Cache;
 
 use Illuminate\Contracts\Cache\Repository;
-use Logis\LogisContext\Application\Query\GlobalSearch\EntitySearcher;
-use Logis\LogisContext\Application\Query\GlobalSearch\EntitySearchResult;
-use Logis\LogisContext\Application\Query\GlobalSearch\SearchCriteria;
+use Logis\LogisContext\Application\Services\Search\EntitySearcher;
+use Logis\LogisContext\Application\ModelView\Search\EntitySearchResult;
+use Logis\LogisContext\Application\Services\Search\SearchCriteria;
 use Logis\LogisContext\Domain\ValueObject\Search\SearchableEntity;
 
 final class CachedEntitySearcher implements EntitySearcher

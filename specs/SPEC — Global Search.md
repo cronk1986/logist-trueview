@@ -112,7 +112,7 @@ This spec implements the rule left open in D10 of `SPEC — Core Domain Model.md
 What can be searched is an **entity**, which is part of the API vocabulary. Table names never leave the adapter that owns them.
 
 - `SearchableEntity` (backed enum, `Domain/ValueObject/Search/`): `tickets`, `assets`, `contracts`, `locations`. It is the whitelist for the FormRequest (`Rule::enum`) and for the OpenAPI enum. Its case order is the canonical order of the response.
-- `EntitySearcher` (port, `Application/Query/GlobalSearch/`):
+- `EntitySearcher` (port, `Application/Services/Search/`):
 
   ```php
   interface EntitySearcher
@@ -124,12 +124,12 @@ What can be searched is an **entity**, which is part of the API vocabulary. Tabl
   ```
 
 - One adapter per entity, in the folder of its aggregate: `Persistence/Ticket/EloquentTicketSearcher`, `Persistence/Asset/EloquentAssetSearcher`, `Persistence/Contract/EloquentContractSearcher` and `Persistence/Location/EloquentLocationSearcher`. Only the adapter knows the table, the columns and the eager loading.
-- `EntitySearchers` (`Application/Query/GlobalSearch/`) receives `iterable<EntitySearcher>` and indexes them by `entity()`. Its constructor fails fast with `EntitySearcherNotRegisteredException` (a logged 500) if a case of `SearchableEntity` has no searcher, or has more than one.
+- `EntitySearchers` (`Application/Services/Search/`) receives `iterable<EntitySearcher>` and indexes them by `entity()`. Its constructor fails fast with `EntitySearcherNotRegisteredException` (`Application/Exception/Search/`, a logged 500) if a case of `SearchableEntity` has no searcher, or has more than one.
 - `LogisServiceProvider` tags the four searchers as `entity_searchers` and injects them with `giveTagged()`.
 - **Adding a searchable entity** takes a new enum case, a new searcher class and one line in the tag list. The registry test (see Testing strategy) catches a forgotten searcher.
 - The existing aggregate repositories get no `search()` method. They load the full aggregate graph (D2 of the core spec), and D4 of the core spec decided that lists are read through query handlers that return views.
 
-**Mapping to the brief.** "Controller → Service → Repository" is `SearchController` → `QueryBus` → `GlobalSearchHandler` (the search service) → `EntitySearcher` (one repository per entity). `ARCHITECTURE.md` records this mapping. There is no `SearchService` class that would only forward calls.
+**Mapping to the brief.** "Controller → Service → Repository" is `SearchController` → `QueryBus` → `SearchServiceHandler` (the search service) → `EntitySearcher` (one repository per entity). `SearchService` is the query, and `SearchServiceHandler` carries the service name of the brief. `ARCHITECTURE.md` records this mapping.
 
 ### D3. Search semantics
 
@@ -186,7 +186,7 @@ The searched columns live in the model's `matching()` scope. The searcher only c
 
 Rules: `q` → `required|string` and valid UTF-8 (invalid bytes would otherwise fail when the response is encoded, as a 500); `limit` → `nullable|integer|between:1,50`; `entities` → `nullable|array`; `entities.*` → `string` and `Rule::enum(SearchableEntity::class)`. `q` is trimmed by Laravel's global `TrimStrings` middleware, and the `SearchTerm` value object trims again, so the invariant doesn't depend on HTTP.
 
-`toQuery()` builds `GlobalSearch` with the user id from `CurrentAccessToken`, like `MeRequest`.
+`toQuery()` builds `SearchService` with the user id from `CurrentAccessToken`, like `MeRequest`.
 
 ### D7. Value objects and messages
 
@@ -198,12 +198,12 @@ Rules: `q` → `required|string` and valid UTF-8 (invalid bytes would otherwise 
 | `VisibleCustomers` | `Domain/ValueObject/Customer/` | no customer, or one customer with or without its sub-accounts |
 
 - `Search` is not an aggregate. `Domain/ValueObject/Search/` and `Domain/Exception/Search/` are an agreed exception to the "grouped by aggregate" rule. `AGENTS.md` records it in the same change.
-- `GlobalSearch` (query): `final readonly`, with `userId: int`, `term: string`, `limit: int` and `entities: list<string>`. It carries primitives, and the handler builds the value objects, as the existing handlers do.
-- `SearchCriteria` (`Application/Query/GlobalSearch/`): `final readonly`, with `SearchTerm`, `SearchLimit` and `VisibleCustomers`.
+- `SearchService` (query, `Application/Query/Search/`): `final readonly`, with `userId: int`, `term: string`, `limit: int` and `entities: list<string>`. It carries primitives, and the handler builds the value objects, as the existing handlers do.
+- `SearchCriteria` (`Application/Services/Search/`): `final readonly`, with `SearchTerm`, `SearchLimit` and `VisibleCustomers`.
 
 ### D8. Handler and views
 
-`GlobalSearchHandler::handle(GlobalSearch $query): QueryResponse` works in five steps:
+`SearchServiceHandler::handle(SearchService $query): QueryResponse` works in five steps:
 
 1. Load the user with `UserRepository` (`UserNotFoundException` if it's missing).
 2. Take its `VisibleCustomers` from `User::visibleCustomers()`.
@@ -216,7 +216,7 @@ Views (`final readonly`, a named constructor and `toArray()`):
 - `ModelView/Ticket/TicketSearchResultView`, `ModelView/Asset/AssetSearchResultView`, `ModelView/Contract/ContractSearchResultView`, `ModelView/Location/LocationSearchResultView`: the fields in the API contract, built from primitives by the Eloquent searchers.
 - `ModelView/Search/EntitySearchResultView`: `results`, `total` and `has_more`, built from an `EntitySearchResult` and the limit.
 
-`EntitySearchResult` (`Application/Query/GlobalSearch/`) holds `list<array<string, scalar|null>>` results and `total`. It is plain arrays so that it can be cached safely.
+`EntitySearchResult` (`Application/ModelView/Search/`) holds `list<array<string, scalar|null>>` results and `total`. It is plain arrays so that it can be cached safely.
 
 ### D9. Result cache
 
@@ -242,9 +242,11 @@ app/LogisContext/
 │   ├── ValueObject/Search/        SearchableEntity, SearchTerm, SearchLimit
 │   └── Exception/Search/          InvalidSearchTermException, InvalidSearchLimitException
 ├── Application/
-│   ├── Query/GlobalSearch/        GlobalSearch, GlobalSearchHandler, EntitySearcher, EntitySearchers,
-│   │                              SearchCriteria, EntitySearchResult, EntitySearcherNotRegisteredException
-│   └── ModelView/                 Ticket|Asset|Contract|Location/<X>SearchResultView, Search/EntitySearchResultView
+│   ├── Query/Search/              SearchService, SearchServiceHandler
+│   ├── Services/Search/           EntitySearcher, EntitySearchers, SearchCriteria
+│   ├── Exception/Search/          EntitySearcherNotRegisteredException
+│   └── ModelView/                 Ticket|Asset|Contract|Location/<X>SearchResultView,
+│                                  Search/EntitySearchResult, Search/EntitySearchResultView
 └── Infrastructure/
     ├── Http/Controller/           SearchController::search()
     ├── Http/Request/Search/       SearchRequest
@@ -345,7 +347,7 @@ make check     # qa + docs-lint + test, required before every commit
 - `SearchTerm` (trim, empty and whitespace-only rejected), `SearchLimit` (bounds 1 and 50, 0 and 51 rejected), `VisibleCustomers` (the three named constructors).
 - `User::canViewSubAccounts()` and `User::visibleCustomers()`: no customer, without the permission, with the permission.
 - `EntitySearchers`: every `SearchableEntity` case resolves; a missing searcher and a duplicate searcher throw `EntitySearcherNotRegisteredException`.
-- `GlobalSearchHandler`, instantiated directly with `InMemoryUserRepository` and `InMemoryEntitySearcher` (`tests/Unit/LogisContext/Application/Query/GlobalSearch/`):
+- `SearchServiceHandler`, instantiated directly with `InMemoryUserRepository` and `InMemoryEntitySearcher` (`tests/Unit/LogisContext/Application/Services/Search/`):
   - only the requested entities, in canonical order;
   - meta values;
   - `has_more`;

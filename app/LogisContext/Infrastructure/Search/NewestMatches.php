@@ -7,7 +7,7 @@ namespace Logis\LogisContext\Infrastructure\Search;
 use Closure;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
-use Logis\LogisContext\Application\Query\GlobalSearch\EntitySearchResult;
+use Logis\LogisContext\Application\ModelView\Search\EntitySearchResult;
 use Logis\LogisContext\Domain\ValueObject\Search\SearchLimit;
 
 final class NewestMatches

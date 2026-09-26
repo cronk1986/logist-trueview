@@ -5,14 +5,14 @@ declare(strict_types=1);
 namespace Tests\Feature\LogisContext\Infrastructure\Persistence\Asset;
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Logis\LogisContext\Application\Query\GlobalSearch\SearchCriteria;
+use Logis\LogisContext\Application\Services\Search\SearchCriteria;
 use Logis\LogisContext\Domain\ValueObject\Asset\AssetStatus;
 use Logis\LogisContext\Infrastructure\Persistence\Asset\AssetModel;
 use Logis\LogisContext\Infrastructure\Persistence\Asset\EloquentAssetSearcher;
 use Logis\LogisContext\Infrastructure\Persistence\Customer\CustomerModel;
 use Tests\Feature\CountsQueries;
 use Tests\TestCase;
-use Tests\Unit\LogisContext\Application\Query\GlobalSearch\SearchCriteriaMother;
+use Tests\Unit\LogisContext\Application\Services\Search\SearchCriteriaMother;
 
 final class EloquentAssetSearcherTest extends TestCase
 {

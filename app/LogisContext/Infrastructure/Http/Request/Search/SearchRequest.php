@@ -7,7 +7,7 @@ namespace Logis\LogisContext\Infrastructure\Http\Request\Search;
 use Closure;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
-use Logis\LogisContext\Application\Query\GlobalSearch\GlobalSearch;
+use Logis\LogisContext\Application\Query\Search\SearchService;
 use Logis\LogisContext\Domain\ValueObject\Search\SearchableEntity;
 use Logis\LogisContext\Domain\ValueObject\Search\SearchLimit;
 use Logis\LogisContext\Infrastructure\Http\CurrentAccessToken;
@@ -27,9 +27,9 @@ final class SearchRequest extends FormRequest
         ];
     }
 
-    public function toQuery(): GlobalSearch
+    public function toQuery(): SearchService
     {
-        return new GlobalSearch(
+        return new SearchService(
             userId: CurrentAccessToken::of(request: $this)->tokenable_id,
             term: $this->string(key: 'q')->toString(),
             limit: $this->limit(),

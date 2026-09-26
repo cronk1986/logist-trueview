@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Tests\Unit\LogisContext\Application\ModelView\Search;
 
 use Logis\LogisContext\Application\ModelView\Search\EntitySearchResultView;
-use Logis\LogisContext\Application\Query\GlobalSearch\EntitySearchResult;
+use Logis\LogisContext\Application\ModelView\Search\EntitySearchResult;
 use Logis\LogisContext\Domain\ValueObject\Search\SearchLimit;
 use PHPUnit\Framework\TestCase;
 

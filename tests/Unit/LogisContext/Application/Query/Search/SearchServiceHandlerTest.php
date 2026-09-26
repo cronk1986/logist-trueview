@@ -2,12 +2,13 @@
 
 declare(strict_types=1);
 
-namespace Tests\Unit\LogisContext\Application\Query\GlobalSearch;
+namespace Tests\Unit\LogisContext\Application\Query\Search;
 
-use Logis\LogisContext\Application\Query\GlobalSearch\EntitySearchers;
-use Logis\LogisContext\Application\Query\GlobalSearch\EntitySearchResult;
-use Logis\LogisContext\Application\Query\GlobalSearch\GlobalSearch;
-use Logis\LogisContext\Application\Query\GlobalSearch\GlobalSearchHandler;
+use Tests\Unit\LogisContext\Application\Services\Search\InMemoryEntitySearcher;
+use Logis\LogisContext\Application\Services\Search\EntitySearchers;
+use Logis\LogisContext\Application\ModelView\Search\EntitySearchResult;
+use Logis\LogisContext\Application\Query\Search\SearchService;
+use Logis\LogisContext\Application\Query\Search\SearchServiceHandler;
 use Logis\LogisContext\Domain\Exception\User\UserNotFoundException;
 use Logis\LogisContext\Domain\ValueObject\Search\SearchableEntity;
 use PHPUnit\Framework\TestCase;
@@ -15,12 +16,12 @@ use Tests\Unit\LogisContext\Domain\Model\Customer\CustomerMother;
 use Tests\Unit\LogisContext\Domain\Model\User\InMemoryUserRepository;
 use Tests\Unit\LogisContext\Domain\Model\User\UserMother;
 
-final class GlobalSearchHandlerTest extends TestCase
+final class SearchServiceHandlerTest extends TestCase
 {
     private InMemoryUserRepository $users;
     private InMemoryEntitySearcher $tickets;
     private InMemoryEntitySearcher $assets;
-    private GlobalSearchHandler $handler;
+    private SearchServiceHandler $handler;
 
     protected function setUp(): void
     {
@@ -33,7 +34,7 @@ final class GlobalSearchHandlerTest extends TestCase
             entity: SearchableEntity::Assets,
             result: EntitySearchResult::from(results: [['id' => 3]], total: 1),
         );
-        $this->handler = new GlobalSearchHandler(
+        $this->handler = new SearchServiceHandler(
             users: $this->users,
             searchers: new EntitySearchers(searchers: $this->searchers()),
         );
@@ -147,8 +148,8 @@ final class GlobalSearchHandlerTest extends TestCase
     /**
      * @param list<string> $entities
      */
-    private function search(int $userId, string $term = 'zebra', int $limit = 5, array $entities = ['tickets']): GlobalSearch
+    private function search(int $userId, string $term = 'zebra', int $limit = 5, array $entities = ['tickets']): SearchService
     {
-        return new GlobalSearch(userId: $userId, term: $term, limit: $limit, entities: $entities);
+        return new SearchService(userId: $userId, term: $term, limit: $limit, entities: $entities);
     }
 }

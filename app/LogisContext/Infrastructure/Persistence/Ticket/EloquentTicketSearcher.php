@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace Logis\LogisContext\Infrastructure\Persistence\Ticket;
 
 use Logis\LogisContext\Application\ModelView\Ticket\TicketSearchResultView;
-use Logis\LogisContext\Application\Query\GlobalSearch\EntitySearcher;
-use Logis\LogisContext\Application\Query\GlobalSearch\EntitySearchResult;
-use Logis\LogisContext\Application\Query\GlobalSearch\SearchCriteria;
+use Logis\LogisContext\Application\Services\Search\EntitySearcher;
+use Logis\LogisContext\Application\ModelView\Search\EntitySearchResult;
+use Logis\LogisContext\Application\Services\Search\SearchCriteria;
 use Logis\LogisContext\Domain\ValueObject\Search\SearchableEntity;
 use Logis\LogisContext\Infrastructure\Search\NewestMatches;
 

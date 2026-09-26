@@ -18,7 +18,7 @@ T0 branch feat/global-search + commit the spec and the branch convention
  ├─ T1 users.can_view_sub_accounts → User::canViewSubAccounts(), factory state, limited demo user
  │   └─ T2 VisibleCustomers + VisibleCustomersResolver + CustomerRepository::subAccountsOf()
  └─ T3 SearchTerm, SearchLimit, SearchableEntity (only Tickets)
-     └─ T4 GlobalSearch query + handler + EntitySearcher port + EntitySearchers registry ← T2
+     └─ T4 SearchService query + handler + EntitySearcher port + EntitySearchers registry ← T2
          └─ T5 LikePattern + TicketModel scopes + EloquentTicketSearcher
              └─ T6 SearchRequest + SearchController + route + OpenAPI  (tickets end to end)
                  ├─ T7 assets     ┐
@@ -161,18 +161,18 @@ T11 adds one `extend()` per searcher to wrap it in `CachedEntitySearcher`. Tagge
 **Description:** Build the whole Application side against the `EntitySearcher` port, tested with in-memory doubles and no database (D2, D7, D8).
 
 **Acceptance criteria:**
-- [x] `Application/Query/GlobalSearch/` contains:
-  - `GlobalSearch` (`userId`, `term`, `limit`, `entities: list<string>`);
+- [x] `Application/Query/Search/`, `Services/Search/`, `Exception/Search/` and `ModelView/Search/` contain (as regrouped by `SPEC — Application Layout.md`):
+  - `SearchService` (`userId`, `term`, `limit`, `entities: list<string>`);
   - `EntitySearcher`;
   - `SearchCriteria` (`term`, `limit`, `customers`);
   - `EntitySearchResult` (`empty()`, `from(results:, total:)`, `toArray()`, `fromArray()`);
   - `EntitySearchers`, which throws `EntitySearcherNotRegisteredException` from its constructor when a case has no searcher or has two;
-  - `GlobalSearchHandler`.
+  - `SearchServiceHandler`.
 - [x] The handler loads the user (`UserNotFoundException`) and resolves the visible customers. It asks only the requested entities, in the order of the enum cases. When the list of customers is empty, it doesn't call any searcher and returns empty results. It returns `meta.query` and `meta.limit_per_entity`.
 - [x] `ModelView/Search/EntitySearchResultView` renders `results`, `total` and `has_more` (`total > limit`).
 
 **Verification:**
-- The `GlobalSearchHandler` unit test uses `InMemoryUserRepository`, `InMemoryCustomerRepository` and a new `InMemoryEntitySearcher` that records its calls.
+- The `SearchServiceHandler` unit test uses `InMemoryUserRepository`, `InMemoryCustomerRepository` and a new `InMemoryEntitySearcher` that records its calls.
 - Unit tests for `EntitySearchers` (resolves, missing, duplicate) and for `EntitySearchResultView`.
 - `make check`: Deptrac confirms that the Application layer only depends on Domain.
 
@@ -222,7 +222,7 @@ T11 adds one `extend()` per searcher to wrap it in `CachedEntitySearcher`. Tagge
 - [x] `Http/Request/Search/SearchRequest`:
   - `prepareForValidation()` turns a comma-separated `entities` into an array, trims the values and drops empty ones and duplicates, and keeps the array form as it is;
   - rules as in D6;
-  - `toQuery()` builds `GlobalSearch` from `CurrentAccessToken`, falling back to every `SearchableEntity` case and to `SearchLimit::DEFAULT`.
+  - `toQuery()` builds `SearchService` from `CurrentAccessToken`, falling back to every `SearchableEntity` case and to `SearchLimit::DEFAULT`.
 - [x] `SearchController::search()` asks the query and returns `ApiResponse::fromQueryResponse(response:, message: 'Search results')`.
 - [x] `GET v1/search` sits in the `auth:sanctum` + `RotateAccessTokenMiddleware` group.
 - [x] `docs/openapi/openapi.yaml` documents the path:
