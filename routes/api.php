@@ -28,6 +28,7 @@ Route::prefix('v1')->group(function (): void {
             Route::get('{id}', 'show');
             Route::put('{id}', 'update');
             Route::delete('{id}', 'destroy');
+            Route::post('{id}/execute', 'execute');
             Route::post('{id}/set-default', 'setDefault');
         });
     });

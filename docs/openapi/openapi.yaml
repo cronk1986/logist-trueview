@@ -371,6 +371,48 @@ paths:
           $ref: "#/components/responses/NotFound"
         "429":
           $ref: "#/components/responses/TooManyRequests"
+  /views/{id}/execute:
+    parameters:
+      - $ref: "#/components/parameters/ViewId"
+    post:
+      tags: [Views]
+      summary: Execute a view
+      operationId: executeView
+      description: |
+        Returns one page of rows of the view's entity, with the view's columns and filters. The rows always belong
+        to the customers of the user who executes the view, never to the owner's: a public view shows each user
+        only their own data. A user without a customer gets no rows.
+
+        Pages are cursor-based: pass `meta.next_cursor` of a page as `cursor` to get the next one, with the same
+        sort. `next_cursor` is `null` on the last page. A cursor of another sort order is rejected with 422.
+        Results are cached for 5 minutes.
+
+        Only these fields can be sorted: `id`, `created_at`, `updated_at` and the text or choice fields of the
+        entity's own table (not relations nor the nullable address fields of locations).
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ViewExecutionInput"
+      responses:
+        "200":
+          description: One page of rows
+          headers:
+            X-Refreshed-Token:
+              $ref: "#/components/headers/XRefreshedToken"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ViewResultResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/ValidationFailed"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
   /views/{id}/set-default:
     parameters:
       - $ref: "#/components/parameters/ViewId"
@@ -801,6 +843,120 @@ components:
           example: View details
         meta:
           $ref: "#/components/schemas/Meta"
+    ViewExecutionInput:
+      type: object
+      properties:
+        limit:
+          type: integer
+          minimum: 1
+          maximum: 1000
+          default: 50
+          description: Rows per page
+        cursor:
+          type: [string, "null"]
+          description: The `next_cursor` of the previous page
+        sort:
+          type: object
+          required: [field]
+          properties:
+            field:
+              type: string
+              default: id
+              example: created_at
+            direction:
+              type: string
+              enum: [asc, desc]
+              default: desc
+        q:
+          type: [string, "null"]
+          description: |
+            Free text matched, literally and case-insensitively, against the same fields as the global search:
+            serial number, manufacturer and model for assets; subject, repair id and incident number for tickets;
+            name for contracts; title and address for locations.
+          example: zt4
+    ViewReference:
+      type: object
+      required: [id, label]
+      description: A related record. Filter on it by `id`.
+      properties:
+        id:
+          type: integer
+          example: 3
+        label:
+          type: [string, "null"]
+          example: Main warehouse
+    ViewRow:
+      type: object
+      required: [id]
+      description: The id of the record plus one property per column of the view, in the view's order. Relations are references, dates ISO 8601 in UTC.
+      properties:
+        id:
+          type: integer
+          example: 77
+      additionalProperties:
+        oneOf:
+          - type: string
+          - type: integer
+          - $ref: "#/components/schemas/ViewReference"
+          - type: "null"
+      example:
+        id: 77
+        serial_number: ZB-00931
+        manufacturer: Zebra
+        location:
+          id: 3
+          label: Main warehouse
+        created_at: "2024-03-01T10:15:00Z"
+    ViewResultResponse:
+      type: object
+      required: [success, data, message, meta]
+      properties:
+        success:
+          type: boolean
+          const: true
+        data:
+          type: object
+          required: [view, columns, rows]
+          properties:
+            view:
+              type: object
+              required: [id, title, view_type]
+              properties:
+                id:
+                  type: integer
+                  example: 7
+                title:
+                  type: string
+                  example: Zebra scanners
+                view_type:
+                  $ref: "#/components/schemas/ViewType"
+            columns:
+              type: array
+              items:
+                type: string
+              example: [serial_number, manufacturer, location, created_at]
+            rows:
+              type: array
+              items:
+                $ref: "#/components/schemas/ViewRow"
+        message:
+          type: string
+          example: View results
+        meta:
+          allOf:
+            - $ref: "#/components/schemas/Meta"
+            - type: object
+              required: [limit, next_cursor, has_more]
+              properties:
+                limit:
+                  type: integer
+                  example: 50
+                next_cursor:
+                  type: [string, "null"]
+                  example: eyJpZCI6NzcsIl9wb2ludHNUb05leHRJdGVtcyI6dHJ1ZX0
+                has_more:
+                  type: boolean
+                  example: true
     EmptyResponse:
       type: object
       required: [success, data, message, meta]

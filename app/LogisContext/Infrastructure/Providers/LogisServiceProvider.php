@@ -11,6 +11,8 @@ use Illuminate\Support\ServiceProvider;
 use Laravel\Sanctum\Sanctum;
 use Logis\LogisContext\Application\Command\AccessToken\LogInHandler;
 use Logis\LogisContext\Application\Command\AccessToken\RotateAccessTokenHandler;
+use Logis\LogisContext\Application\Services\CustomView\ViewBuilder;
+use Logis\LogisContext\Application\Services\CustomView\ViewBuilders;
 use Logis\LogisContext\Application\Services\Search\EntitySearcher;
 use Logis\LogisContext\Application\Services\Search\EntitySearchers;
 use Logis\LogisContext\Domain\Model\AccessToken\AccessTokenRepository;
@@ -29,15 +31,19 @@ use Logis\LogisContext\Infrastructure\Persistence\AccessToken\AccessTokenModel;
 use Logis\LogisContext\Infrastructure\Persistence\AccessToken\EloquentAccessTokenRepository;
 use Logis\LogisContext\Infrastructure\Persistence\Asset\EloquentAssetRepository;
 use Logis\LogisContext\Infrastructure\Persistence\Asset\EloquentAssetSearcher;
+use Logis\LogisContext\Infrastructure\Persistence\Asset\EloquentAssetViewBuilder;
 use Logis\LogisContext\Infrastructure\Persistence\Contract\EloquentContractRepository;
 use Logis\LogisContext\Infrastructure\Persistence\Contract\EloquentContractSearcher;
+use Logis\LogisContext\Infrastructure\Persistence\Contract\EloquentContractViewBuilder;
 use Logis\LogisContext\Infrastructure\Persistence\CustomView\EloquentCustomViewRepository;
 use Logis\LogisContext\Infrastructure\Persistence\Customer\EloquentCustomerRepository;
 use Logis\LogisContext\Infrastructure\Persistence\Location\EloquentLocationRepository;
 use Logis\LogisContext\Infrastructure\Persistence\Location\EloquentLocationSearcher;
+use Logis\LogisContext\Infrastructure\Persistence\Location\EloquentLocationViewBuilder;
 use Logis\LogisContext\Infrastructure\Persistence\TicketStatus\EloquentTicketStatusRepository;
 use Logis\LogisContext\Infrastructure\Persistence\Ticket\EloquentTicketRepository;
 use Logis\LogisContext\Infrastructure\Persistence\Ticket\EloquentTicketSearcher;
+use Logis\LogisContext\Infrastructure\Persistence\Ticket\EloquentTicketViewBuilder;
 use Logis\LogisContext\Infrastructure\Persistence\User\BcryptPasswordHasher;
 use Logis\LogisContext\Infrastructure\Persistence\User\EloquentUserRepository;
 use Logis\LogisContext\Infrastructure\Persistence\User\UserModel;
@@ -52,6 +58,16 @@ final class LogisServiceProvider extends ServiceProvider
         EloquentAssetSearcher::class,
         EloquentContractSearcher::class,
         EloquentLocationSearcher::class,
+    ];
+
+    private const VIEW_BUILDERS_TAG = 'view_builders';
+
+    /** @var list<class-string<ViewBuilder>> */
+    private const VIEW_BUILDERS = [
+        EloquentAssetViewBuilder::class,
+        EloquentTicketViewBuilder::class,
+        EloquentContractViewBuilder::class,
+        EloquentLocationViewBuilder::class,
     ];
 
     /** @var array<class-string, class-string> */
@@ -83,12 +99,22 @@ final class LogisServiceProvider extends ServiceProvider
         ));
 
         $this->registerEntitySearchers();
+        $this->registerViewBuilders();
     }
 
     public function boot(): void
     {
         Relation::enforceMorphMap(map: ['user' => UserModel::class]);
         Sanctum::usePersonalAccessTokenModel(model: AccessTokenModel::class);
+    }
+
+    private function registerViewBuilders(): void
+    {
+        $this->app->tag(abstracts: self::VIEW_BUILDERS, tags: self::VIEW_BUILDERS_TAG);
+
+        $this->app->when(concrete: ViewBuilders::class)
+            ->needs(abstract: '$builders')
+            ->giveTagged(tag: self::VIEW_BUILDERS_TAG);
     }
 
     private function registerEntitySearchers(): void
