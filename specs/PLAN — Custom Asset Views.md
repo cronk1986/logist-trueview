@@ -96,8 +96,8 @@ T19 adds one `extend()` per builder to wrap it in `CachedViewBuilder`, as `regis
 **Description:** Start the work on a branch and commit the spec and this plan.
 
 **Acceptance criteria:**
-- [ ] The branch `feat/custom-views` is created from `main`.
-- [ ] `docs(specs): specify the custom asset views endpoints` commits the spec and this plan.
+- [x] The branch `feat/custom-views` is created from `main`.
+- [x] `docs(specs): specify the custom asset views endpoints` commits the spec and this plan.
 
 **Verification:** `make check` before the commit. `git log --oneline` shows the commit on the branch.
 
@@ -110,10 +110,10 @@ T19 adds one `extend()` per builder to wrap it in `CachedViewBuilder`, as `regis
 **Description:** Add the two new base classes of the spec, and map them in `ApiExceptionRenderer` (D4, D9).
 
 **Acceptance criteria:**
-- [ ] `SharedContext/Domain/Exception/ForbiddenException` (abstract) is mapped to 403, and is not reported.
-- [ ] `SharedContext/Domain/Exception/TimeoutException` (abstract) is mapped to 504, and **is** reported: it isn't in `expectedExceptions()`.
-- [ ] The response keeps the standard format, with the exception message.
-- [ ] The exception table in `AGENTS.md` lists both classes, and notes that `TimeoutException` is logged.
+- [x] `SharedContext/Domain/Exception/ForbiddenException` (abstract) is mapped to 403, and is not reported.
+- [x] `SharedContext/Domain/Exception/TimeoutException` (abstract) is mapped to 504, and **is** reported: it isn't in `expectedExceptions()`.
+- [x] The response keeps the standard format, with the exception message.
+- [x] The exception table in `AGENTS.md` lists both classes, and notes that `TimeoutException` is logged.
 
 **Verification:** `ApiExceptionRenderer` tests for both statuses, and a test that the timeout is reported and the forbidden one isn't. `make check`.
 
@@ -124,13 +124,13 @@ T19 adds one `extend()` per builder to wrap it in `CachedViewBuilder`, as `regis
 **Description:** Add the domain vocabulary of the whitelist: field types, operators, sort direction, fields and the catalog of each view type (D2, D3).
 
 **Acceptance criteria:**
-- [ ] In `Domain/ValueObject/CustomView/`:
+- [x] In `Domain/ValueObject/CustomView/`:
   - `ViewFieldType` (`text`, `choice`, `identifier`, `date`) with `allows(FilterOperator): bool`;
   - `FilterOperator` (11 cases) with `expectsList()`, `expectsRange()` and `expectsDays()`;
   - `SortDirection` (`asc`, `desc`);
   - `ViewField` (name, type, allowed values, sortable);
   - `ViewFieldCatalog::for(ViewType)`, with `has()`, `field()` and `sortable()`, and the four tables of D2. The `choice` values come from `AssetStatus::cases()` and `ContractStatus::cases()`.
-- [ ] `ViewFilter` holds a `FilterOperator`. An unknown operator raises `InvalidViewFilterException::unknownOperator()` (422).
+- [x] `ViewFilter` holds a `FilterOperator`. An unknown operator raises `InvalidViewFilterException::unknownOperator()` (422).
 
 **Verification:**
 - Unit tests for every operator and field-type combination, for the value shapes, and for each catalog (fields, types, sortable flags).
@@ -144,16 +144,16 @@ T19 adds one `extend()` per builder to wrap it in `CachedViewBuilder`, as `regis
 **Description:** Validate columns and filters against the catalog, and add the value objects of execution: sort and page size (D3, D6).
 
 **Acceptance criteria:**
-- [ ] `ViewDefinition::from(type:, columns:, filters:)` rejects:
+- [x] `ViewDefinition::from(type:, columns:, filters:)` rejects:
   - an unknown column or filter field;
   - an operator the field type doesn't allow;
   - a value of the wrong shape or type: text of 1 to 255 characters, a valid choice, an identifier ≥ 1, a `Y-m-d` date;
   - more than 20 filters, and `in`/`not_in` lists outside 1 to 100;
   - a `between` out of order, and `in_last_days` outside 0 to 365.
-- [ ] Each rejection is a semantic `InvalidValueException` (422) whose message names the column or filter.
-- [ ] Date filters expose their UTC boundaries as `CarbonImmutable`, following the table in D3. `in_last_days` is computed from `CarbonImmutable::now()->utc()`.
-- [ ] `ViewSort::from(catalog, field, direction)` is `id desc` by default, and rejects unknown or non-sortable fields (`InvalidViewSortException`).
-- [ ] `ViewPageSize::fromInt()` accepts 1 to 1000, has `DEFAULT = 50`, and throws `InvalidViewPageSizeException` otherwise.
+- [x] Each rejection is a semantic `InvalidValueException` (422) whose message names the column or filter.
+- [x] Date filters expose their UTC boundaries as `CarbonImmutable`, following the table in D3. `in_last_days` is computed from `CarbonImmutable::now()->utc()`.
+- [x] `ViewSort::from(catalog, field, direction)` is `id desc` by default, and rejects unknown or non-sortable fields (`InvalidViewSortException`).
+- [x] `ViewPageSize::fromInt()` accepts 1 to 1000, has `DEFAULT = 50`, and throws `InvalidViewPageSizeException` otherwise.
 
 **Verification:** unit tests for every rule in the list, and for the date boundaries (`gt`, `lte`, `between` and `in_last_days 0` around midnight UTC, with `freezeTime()`). `make check`.
 
@@ -164,14 +164,14 @@ T19 adds one `extend()` per builder to wrap it in `CachedViewBuilder`, as `regis
 **Description:** Make the catalog an invariant of `CustomView`, and bring the stored data (factory and seed) in line with it (D5, D14).
 
 **Acceptance criteria:**
-- [ ] The `CustomView` constructor builds a `ViewDefinition`, so an invalid combination can't exist. `id` becomes `?CustomViewId`.
-- [ ] `CustomViewMapper` turns a catalog violation into `CorruptedRecordException` (a logged 500).
-- [ ] `CustomViewFactory::ofType()` produces catalog-valid columns and filters for every type.
-- [ ] `DemoDataSeeder`:
+- [x] The `CustomView` constructor builds a `ViewDefinition`, so an invalid combination can't exist. `id` becomes `?CustomViewId`.
+- [x] `CustomViewMapper` turns a catalog violation into `CorruptedRecordException` (a logged 500).
+- [x] `CustomViewFactory::ofType()` produces catalog-valid columns and filters for every type.
+- [x] `DemoDataSeeder`:
   - the `my_tickets` view filters `status` by the id of "Open", looked up by name;
   - a public `my_assets` view owned by `limited@logis.test`;
   - a public view of a user of the unrelated customer.
-- [ ] `CustomViewMother` and the existing tests are updated.
+- [x] `CustomViewMother` and the existing tests are updated.
 
 **Verification:**
 - The `CustomViewTest` invariant cases.
@@ -182,8 +182,8 @@ T19 adds one `extend()` per builder to wrap it in `CachedViewBuilder`, as `regis
 **Dependencies:** T3 · **Files:** `CustomView`, `CustomViewMapper`, `CustomViewFactory`, `DemoDataSeeder`, `CustomViewMother`, tests · **Scope:** M · **Commit:** `feat(views): keep every stored view within the catalog`
 
 ### Checkpoint: Foundation
-- [ ] `make fresh` seeds only valid views. `make check` is green.
-- [ ] Post-implementation flow. Human review before the endpoints.
+- [x] `make fresh` seeds only valid views. `make check` is green.
+- [x] Post-implementation flow. Human review before the endpoints.
 
 ### Phase 2 — Read side end to end
 
@@ -192,15 +192,15 @@ T19 adds one `extend()` per builder to wrap it in `CachedViewBuilder`, as `regis
 **Description:** Decide who sees a view, and read the views a user can see (D4, D6, D12).
 
 **Acceptance criteria:**
-- [ ] `Domain/Model/CustomView/ViewPolicy` implements `canSee()` and `canManage()` as in D4.
-- [ ] `CustomViewNotFoundException::withId()` (404) and `CustomViewAccessDeniedException` (403: `manage()`, `ownerWithoutCustomer()`).
-- [ ] `CustomViewRepository::findOwnedByOrPublicIn(owner, customer, ?type)` is implemented in:
+- [x] `Domain/Model/CustomView/ViewPolicy` implements `canSee()` and `canManage()` as in D4.
+- [x] `CustomViewNotFoundException::withId()` (404) and `CustomViewAccessDeniedException` (403: `manage()`, `ownerWithoutCustomer()`).
+- [x] `CustomViewRepository::findOwnedByOrPublicIn(owner, customer, ?type)` is implemented in:
   - Eloquent: eager loaded, ordered by `title`, then `id`;
   - a new `tests/Unit/…/Domain/Model/CustomView/InMemoryCustomViewRepository`.
-- [ ] `Query/CustomView/`:
+- [x] `Query/CustomView/`:
   - `ListCustomViews` (`userId`, `?type`) returns an empty list for a user without a customer, with `meta.total`;
   - `GetCustomView` (`userId`, `viewId`) throws 404 when the view is missing or can't be seen.
-- [ ] `ModelView/CustomView/CustomViewDetailsView` and `CustomViewListItemView`. `is_default` is true only for the requester's own default, and `is_owner` is included.
+- [x] `ModelView/CustomView/CustomViewDetailsView` and `CustomViewListItemView`. `is_default` is true only for the requester's own default, and `is_owner` is included.
 
 **Verification:**
 - `ViewPolicy` unit tests for the five cases of the spec.
@@ -215,9 +215,9 @@ T19 adds one `extend()` per builder to wrap it in `CachedViewBuilder`, as `regis
 **Description:** Expose `GET /views` and `GET /views/{id}` (API contract, D13).
 
 **Acceptance criteria:**
-- [ ] `ViewController::index()` and `show()`, with `ListCustomViewsRequest` (`type` optional enum) and `ShowCustomViewRequest`, each with a `toQuery()`.
-- [ ] The routes sit in the `auth:sanctum` + `RotateAccessTokenMiddleware` group. `{id}` is `whereNumber`.
-- [ ] `openapi.yaml`:
+- [x] `ViewController::index()` and `show()`, with `ListCustomViewsRequest` (`type` optional enum) and `ShowCustomViewRequest`, each with a `toQuery()`.
+- [x] The routes sit in the `auth:sanctum` + `RotateAccessTokenMiddleware` group. `{id}` is `whereNumber`.
+- [x] `openapi.yaml`:
   - the two operations, with the `CustomViewDetails` and `CustomViewListItem` schemas;
   - responses 200, 401, 404, 422 and 429;
   - bearer security and `X-Refreshed-Token`.
@@ -235,8 +235,8 @@ T19 adds one `extend()` per builder to wrap it in `CachedViewBuilder`, as `regis
 **Dependencies:** T5 · **Files:** controller, 2 requests, `routes/api.php`, `openapi.yaml`, 2 feature tests · **Scope:** M · **Commit:** `feat(views): expose the list and details of views`
 
 ### Checkpoint: Read side
-- [ ] `demo@logis.test` sees their views and the public view of `limited@logis.test`, and never the unrelated customer's view.
-- [ ] `make check` is green. Post-implementation flow. Human review.
+- [x] `demo@logis.test` sees their views and the public view of `limited@logis.test`, and never the unrelated customer's view.
+- [x] `make check` is green. Post-implementation flow. Human review.
 
 ### Phase 3 — Write side
 
@@ -245,13 +245,13 @@ T19 adds one `extend()` per builder to wrap it in `CachedViewBuilder`, as `regis
 **Description:** Create views in the domain and persist them (D5, D6, D12).
 
 **Acceptance criteria:**
-- [ ] `CustomView::create(…)` has no id, is not default, and raises `CustomViewCreated` (owner id and title). An owner without a customer raises `CustomViewAccessDeniedException::ownerWithoutCustomer()`.
-- [ ] `CustomViewRepository` gains:
+- [x] `CustomView::create(…)` has no id, is not default, and raises `CustomViewCreated` (owner id and title). An owner without a customer raises `CustomViewAccessDeniedException::ownerWithoutCustomer()`.
+- [x] `CustomViewRepository` gains:
   - `save()` (insert or update);
   - `findByOwnerAndTitle()`, implemented in Eloquent and in memory.
-- [ ] A violation of the `(user_id, title)` unique index becomes `CustomViewTitleAlreadyUsedException` (409).
-- [ ] `Command/CustomView/CreateCustomView` and its handler: they check the title with `findByOwnerAndTitle()` first (409), then save.
-- [ ] `Query/CustomView/GetCustomViewByTitle` and its handler.
+- [x] A violation of the `(user_id, title)` unique index becomes `CustomViewTitleAlreadyUsedException` (409).
+- [x] `Command/CustomView/CreateCustomView` and its handler: they check the title with `findByOwnerAndTitle()` first (409), then save.
+- [x] `Query/CustomView/GetCustomViewByTitle` and its handler.
 
 **Verification:**
 - Entity and event unit tests (`DomainEventPublisher::lastEventOfType()`).
@@ -264,9 +264,9 @@ T19 adds one `extend()` per builder to wrap it in `CachedViewBuilder`, as `regis
 #### Task 8: Create endpoint
 
 **Acceptance criteria:**
-- [ ] `CreateCustomViewRequest` has the structural rules of the API contract and `toCommand()`.
-- [ ] `ViewController::store()` dispatches the command, asks `GetCustomViewByTitle`, and answers **201** with the details.
-- [ ] `openapi.yaml`:
+- [x] `CreateCustomViewRequest` has the structural rules of the API contract and `toCommand()`.
+- [x] `ViewController::store()` dispatches the command, asks `GetCustomViewByTitle`, and answers **201** with the details.
+- [x] `openapi.yaml`:
   - the request body, with the filter schema and the operator enum;
   - responses 201, 401, 403, 409, 422 and 429.
 
@@ -284,12 +284,12 @@ T19 adds one `extend()` per builder to wrap it in `CachedViewBuilder`, as `regis
 #### Task 9: Update a view
 
 **Acceptance criteria:**
-- [ ] `CustomView::update(…)` replaces title, description, columns, filters and `is_public`, and raises `CustomViewUpdated`.
-- [ ] `UpdateCustomViewHandler`:
+- [x] `CustomView::update(…)` replaces title, description, columns, filters and `is_public`, and raises `CustomViewUpdated`.
+- [x] `UpdateCustomViewHandler`:
   - 404 if the view can't be seen, 403 if it can't be managed;
   - 422 (`CustomViewTypeCannotChangeException`) for a different `view_type`;
   - 409 for a title used by another of the owner's views; keeping its own title is allowed.
-- [ ] `PUT /views/{id}` answers 200 with the details (command, then `GetCustomView`). `UpdateCustomViewRequest` accepts `view_type` as optional. `openapi.yaml` is updated.
+- [x] `PUT /views/{id}` answers 200 with the details (command, then `GetCustomView`). `UpdateCustomViewRequest` accepts `view_type` as optional. `openapi.yaml` is updated.
 
 **Verification:** entity, handler and feature tests for every status in the contract. `make docs`, then `make check`.
 
@@ -298,10 +298,10 @@ T19 adds one `extend()` per builder to wrap it in `CachedViewBuilder`, as `regis
 #### Task 10: Delete a view
 
 **Acceptance criteria:**
-- [ ] `CustomView::delete()` raises `CustomViewDeleted`. `CustomViewRepository::delete()` removes the row (Eloquent and in memory).
-- [ ] `DeleteCustomViewHandler` answers 404 or 403 as in D4.
-- [ ] `DELETE /views/{id}` answers `ApiResponse::success`. Deleting the default leaves that type without one.
-- [ ] `openapi.yaml` is updated.
+- [x] `CustomView::delete()` raises `CustomViewDeleted`. `CustomViewRepository::delete()` removes the row (Eloquent and in memory).
+- [x] `DeleteCustomViewHandler` answers 404 or 403 as in D4.
+- [x] `DELETE /views/{id}` answers `ApiResponse::success`. Deleting the default leaves that type without one.
+- [x] `openapi.yaml` is updated.
 
 **Verification:** unit and feature tests, including a public view of the same customer (403) and one of another customer (404). `make docs`, then `make check`.
 
@@ -310,13 +310,13 @@ T19 adds one `extend()` per builder to wrap it in `CachedViewBuilder`, as `regis
 #### Task 11: Set a view as default
 
 **Acceptance criteria:**
-- [ ] `markAsDefault()` raises `CustomViewSetAsDefault`, and `unmarkAsDefault()` raises nothing.
-- [ ] `CustomViewRepository::findDefaultOf(owner, type)` uses `lockForUpdate()` over the `(user_id, view_type)` index.
-- [ ] `SetDefaultCustomViewHandler`:
+- [x] `markAsDefault()` raises `CustomViewSetAsDefault`, and `unmarkAsDefault()` raises nothing.
+- [x] `CustomViewRepository::findDefaultOf(owner, type)` uses `lockForUpdate()` over the `(user_id, view_type)` index.
+- [x] `SetDefaultCustomViewHandler`:
   - 404 or 403 as in D4;
   - unmarks and saves the previous default, then marks and saves the new one;
   - does nothing when the view is already the default.
-- [ ] `POST /views/{id}/set-default` answers 200 with the details. `openapi.yaml` is updated.
+- [x] `POST /views/{id}/set-default` answers 200 with the details. `openapi.yaml` is updated.
 
 **Verification:**
 - Handler unit tests: replacing, idempotent, another type untouched.
@@ -327,9 +327,9 @@ T19 adds one `extend()` per builder to wrap it in `CachedViewBuilder`, as `regis
 **Dependencies:** T8 · **Scope:** M · **Commit:** `feat(views): set a view as the default of its type`
 
 ### Checkpoint: CRUD
-- [ ] Six of the seven endpoints work in Swagger UI with `demo@logis.test` and `limited@logis.test`.
-- [ ] Success criteria 3, 4 and 5 of the spec are met.
-- [ ] `make check` is green. Post-implementation flow. Human review before execution.
+- [x] Six of the seven endpoints work in Swagger UI with `demo@logis.test` and `limited@logis.test`.
+- [x] Success criteria 3, 4 and 5 of the spec are met.
+- [x] `make check` is green. Post-implementation flow. Human review before execution.
 
 ### Phase 4 — Execution
 
@@ -338,12 +338,12 @@ T19 adds one `extend()` per builder to wrap it in `CachedViewBuilder`, as `regis
 **Description:** Build the Application side of execution against the `ViewBuilder` port, with in-memory doubles and no database (D6, D7).
 
 **Acceptance criteria:**
-- [ ] `Services/CustomView/`:
+- [x] `Services/CustomView/`:
   - `ViewBuilder` (`type()`, `execute()`);
   - `ViewBuilders`, which throws `ViewBuilderNotRegisteredException` (`LogicException`) when a type is missing or has two builders;
   - `ViewExecutionCriteria` (`definition`, `sort`, `pageSize`, `?cursor`, `?term`, `customers`).
-- [ ] `ModelView/CustomView/ViewPage` (rows, `?nextCursor`, `toArray()`, `fromArray()`) and `ViewResultView` (`view`, `columns`, `rows`).
-- [ ] `ExecuteCustomView` and its handler:
+- [x] `ModelView/CustomView/ViewPage` (rows, `?nextCursor`, `toArray()`, `fromArray()`) and `ViewResultView` (`view`, `columns`, `rows`).
+- [x] `ExecuteCustomView` and its handler:
   - 404 when the view can't be seen;
   - an empty page without calling the builder for a user without a customer;
   - the **executing** user's `visibleCustomers()` in the criteria;
@@ -361,15 +361,15 @@ T19 adds one `extend()` per builder to wrap it in `CachedViewBuilder`, as `regis
 **Description:** Add the shared query mechanics and the first adapter, returning the first page (D3, D7).
 
 **Acceptance criteria:**
-- [ ] `Infrastructure/CustomView/`:
+- [x] `Infrastructure/CustomView/`:
   - `FieldMapping` (`column()`, `relation(relation:, foreignKey:, label:)`);
   - `ViewFilterApplier`, which applies every operator through a `match`, binds every value, escapes `contains` with `LikePattern::contains()`, and turns dates into the ranges of D3.
-- [ ] `Persistence/Asset/EloquentAssetViewBuilder`:
+- [x] `Persistence/Asset/EloquentAssetViewBuilder`:
   - the static field map of D2, with `visibleTo()` and soft deletes;
   - `select` of only `id`, the requested columns and the foreign keys;
   - `with('relation:id,label')` of only the requested relations;
   - rows with `id` first, the columns in the view's order, relations as `{id, label}` or `null`, dates in ISO 8601 UTC.
-- [ ] The builder is tagged as `view_builders`. `ViewBuilders` is not wired yet.
+- [x] The builder is tagged as `view_builders`. `ViewBuilders` is not wired yet.
 
 **Verification:**
 - `EloquentAssetViewBuilderTest` (integration):
@@ -389,11 +389,11 @@ T19 adds one `extend()` per builder to wrap it in `CachedViewBuilder`, as `regis
 **Description:** Page with a validated cursor, sort by catalog fields and search text (D7, R8).
 
 **Acceptance criteria:**
-- [ ] `Infrastructure/CustomView/ViewPaginator`:
+- [x] `Infrastructure/CustomView/ViewPaginator`:
   - `orderBy(sort)->orderBy('id')` in the same direction, and `cursorPaginate()`;
   - `next_cursor` from the paginator.
-- [ ] The cursor is decoded with `Cursor::fromEncoded()`. A cursor that can't be decoded, or whose parameters aren't exactly `{sort column, id}`, raises `InvalidViewCursorException` (422) before any query.
-- [ ] A search term applies the model's `matching()` scope.
+- [x] The cursor is decoded with `Cursor::fromEncoded()`. A cursor that can't be decoded, or whose parameters aren't exactly `{sort column, id}`, raises `InvalidViewCursorException` (422) before any query.
+- [x] A search term applies the model's `matching()` scope.
 
 **Verification:**
 - Integration tests on the asset builder:
@@ -407,7 +407,7 @@ T19 adds one `extend()` per builder to wrap it in `CachedViewBuilder`, as `regis
 #### Task 15: Ticket builder
 
 **Acceptance criteria:**
-- [ ] `Persistence/Ticket/EloquentTicketViewBuilder`:
+- [x] `Persistence/Ticket/EloquentTicketViewBuilder`:
   - the field map of D2;
   - `status` and `asset` as relations with the labels `name` and `serial_number`;
   - soft-deleted tickets excluded;
@@ -420,9 +420,9 @@ T19 adds one `extend()` per builder to wrap it in `CachedViewBuilder`, as `regis
 #### Task 16: Contract and location builders
 
 **Acceptance criteria:**
-- [ ] `EloquentContractViewBuilder` returns contracts of every status.
-- [ ] `EloquentLocationViewBuilder` handles null address fields, both in filters and in rows.
-- [ ] Both are tagged.
+- [x] `EloquentContractViewBuilder` returns contracts of every status.
+- [x] `EloquentLocationViewBuilder` handles null address fields, both in filters and in rows.
+- [x] Both are tagged.
 
 **Verification:** one integration test per builder, with the same cases as tickets. `make check`.
 
@@ -431,10 +431,10 @@ T19 adds one `extend()` per builder to wrap it in `CachedViewBuilder`, as `regis
 #### Task 17: Execute endpoint
 
 **Acceptance criteria:**
-- [ ] `LogisServiceProvider` wires `ViewBuilders` with `giveTagged('view_builders')`.
-- [ ] `ExecuteCustomViewRequest`: `limit` 1–1000, `cursor`, `sort.field`, `sort.direction`, and `q` as valid UTF-8. It has `toQuery(id:)`.
-- [ ] `ViewController::execute()` answers `ApiResponse::fromQueryResponse(…, message: 'View results')`.
-- [ ] `openapi.yaml`:
+- [x] `LogisServiceProvider` wires `ViewBuilders` with `giveTagged('view_builders')`.
+- [x] `ExecuteCustomViewRequest`: `limit` 1–1000, `cursor`, `sort.field`, `sort.direction`, and `q` as valid UTF-8. It has `toQuery(id:)`.
+- [x] `ViewController::execute()` answers `ApiResponse::fromQueryResponse(…, message: 'View results')`.
+- [x] `openapi.yaml`:
   - the request body;
   - the row schema (a scalar or `{id, label}`) and the cursor meta;
   - responses 200, 401, 404, 422, 429 and 504.
@@ -453,18 +453,18 @@ T19 adds one `extend()` per builder to wrap it in `CachedViewBuilder`, as `regis
 **Dependencies:** T15, T16 · **Scope:** M · **Commit:** `feat(views): expose view execution`
 
 ### Checkpoint: All endpoints
-- [ ] Success criteria 1, 2, 3 and 9 of the spec are met.
-- [ ] `make check` is green. Post-implementation flow. Human review.
+- [x] Success criteria 1, 2, 3 and 9 of the spec are met.
+- [x] `make check` is green. Post-implementation flow. Human review.
 
 ### Phase 5 — Performance and robustness
 
 #### Task 18: View indexes
 
 **Acceptance criteria:**
-- [ ] Migration `add_view_indexes` with the columns of D11:
+- [x] Migration `add_view_indexes` with the columns of D11:
   - `assets`: `item_name`, `status`, `created_at`, `updated_at`;
   - `created_at` and `updated_at` on `tickets`, `contracts` and `locations`.
-- [ ] `down()` drops exactly those indexes.
+- [x] `down()` drops exactly those indexes.
 
 **Verification:** `SchemaTest` asserts the new indexes. `make migrate`, then a manual `migrate:rollback --step=1` and `make migrate`. `make check`.
 
@@ -473,12 +473,12 @@ T19 adds one `extend()` per builder to wrap it in `CachedViewBuilder`, as `regis
 #### Task 19: Result cache
 
 **Acceptance criteria:**
-- [ ] `config/views.php` → `cache_ttl_seconds` (`VIEWS_CACHE_TTL_SECONDS`, default `300`), added to `.env.example`.
-- [ ] `Infrastructure/Cache/CachedViewBuilder`:
+- [x] `config/views.php` → `cache_ttl_seconds` (`VIEWS_CACHE_TTL_SECONDS`, default `300`), added to `.env.example`.
+- [x] `Infrastructure/Cache/CachedViewBuilder`:
   - the key of D8: `views:v1:{type}:` followed by `sha256` of the canonical JSON;
   - it stores `ViewPage::toArray()`;
   - it never caches an exception.
-- [ ] `LogisServiceProvider` wraps the four builders with `extend()`.
+- [x] `LogisServiceProvider` wraps the four builders with `extend()`.
 
 **Verification:**
 - `CachedViewBuilderTest`:
@@ -494,13 +494,13 @@ T19 adds one `extend()` per builder to wrap it in `CachedViewBuilder`, as `regis
 #### Task 20: Execution timeout
 
 **Acceptance criteria:**
-- [ ] `config/views.php` → `execution_timeout_ms` (`VIEWS_EXECUTION_TIMEOUT_MS`, default `5000`), added to `.env.example`.
-- [ ] `Infrastructure/CustomView/StatementTimeout`:
+- [x] `config/views.php` → `execution_timeout_ms` (`VIEWS_EXECUTION_TIMEOUT_MS`, default `5000`), added to `.env.example`.
+- [x] `Infrastructure/CustomView/StatementTimeout`:
   - sets `max_execution_time` for the session;
   - runs the builder's queries;
   - restores the previous value in `finally`;
   - turns MySQL error 3024 into `ViewExecutionTimedOutException` (`TimeoutException`).
-- [ ] Every builder runs through it. The cache decorator sits outside, so a timeout is never cached.
+- [x] Every builder runs through it. The cache decorator sits outside, so a timeout is never cached.
 
 **Verification:**
 - `StatementTimeoutTest`: a heavy cross join over `information_schema` with 1 ms raises the exception, and the session value is restored afterwards.
@@ -510,9 +510,17 @@ T19 adds one `extend()` per builder to wrap it in `CachedViewBuilder`, as `regis
 **Dependencies:** T17 · **Scope:** M · **Commit:** `feat(views): stop view executions after five seconds`
 
 ### Checkpoint: Complete
-- [ ] Every success criterion in the spec is met.
-- [ ] `make fresh`, `make docs` and `make check` are green.
-- [ ] Post-implementation flow. Human review before opening the pull request from `feat/custom-views`. The spec is marked `done`.
+- [x] Every success criterion in the spec is met.
+- [x] `make fresh`, `make docs` and `make check` are green.
+- [x] Post-implementation flow. Human review before opening the pull request from `feat/custom-views`. The spec is marked `done`.
+
+## Deviations during implementation
+
+- **T13:** the builders were tagged in T17, together with the `ViewBuilders` wiring, instead of one by one.
+- **T14:** the cursor checks live in `Infrastructure/CustomView/ViewCursor`. After the review, each next cursor also carries its sort field and direction (`_sort`), so a cursor of the same field in the other direction is rejected too.
+- **T11:** the `lockForUpdate()` on `findDefaultOf()` was replaced, after the review, by `CustomViewRepository::lockViewsOf()`. It locks the owner's row in `users` before any write to their views (`CustomViewAccess::viewToChange()`), which serialises set-default and update whatever the isolation level.
+- **T20:** `StatementTimeout` wraps the `cursorPaginate()` call inside `ViewPaginator`, so every builder goes through it without code of its own.
+- **Extra fixes after review:** case-insensitive titles, a route pattern for `{id}` that only matches ids that can exist, length caps on `cursor` and `q`, and a test that keeps the status enums in alphabetical order.
 
 ## Risks and mitigations
 

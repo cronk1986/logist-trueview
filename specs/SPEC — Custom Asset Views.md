@@ -1,6 +1,6 @@
 # SPEC — Custom Asset Views
 
-Status: approved
+Status: done
 
 ## Objective
 
@@ -408,7 +408,7 @@ interface ViewBuilder
   4. `with()` of only the requested relations, each with only `id` and its label column (`with(['location:id,title'])`);
   5. `orderBy(sort field, direction)->orderBy('id', direction)` and `cursorPaginate(perPage: limit, cursor: …)`.
 - **Fixed number of queries:** one `SELECT … LIMIT n+1`, plus one per requested relation. `cursorPaginate` runs no `COUNT`.
-- **Cursor validation:** `ViewCursor` signs every next cursor with its sort (`_sort: "created_at:desc"`) and checks it before building Laravel's `Cursor`. A cursor that can't be decoded, whose parameters aren't exactly the sort column and `id`, or whose sort field or direction differs, raises `InvalidViewCursorException` (422). A cursor from another sort order never reaches MySQL.
+- **Cursor validation:** `ViewCursor` tags every next cursor with its sort (`_sort: "created_at:desc"`) and checks it before building Laravel's `Cursor`. A cursor that can't be decoded, whose parameters aren't exactly the sort column and `id`, or whose sort field or direction differs, raises `InvalidViewCursorException` (422). A cursor from another sort order never reaches MySQL.
 - **Enum columns are sorted by their declaration order in MySQL but compared as strings in the cursor.** `AssetStatus` and `ContractStatus` are declared in alphabetical order, so both orders agree; a test fails if a new value breaks that.
 - **Maximum 1000 records:** `ViewPageSize` caps each page at 1000. The client pages with the cursor, so no request ever loads more than 1000 rows.
 
@@ -431,6 +431,7 @@ interface ViewBuilder
 - `config/views.php` → `execution_timeout_ms`, from `VIEWS_EXECUTION_TIMEOUT_MS`, default `5000`.
 - `Infrastructure/CustomView/StatementTimeout` runs the adapter's queries with MySQL's `max_execution_time` set for the session, and restores the previous value in `finally`. `max_execution_time` applies only to `SELECT`, which is exactly what an execution runs.
 - MySQL error 3024 ("maximum statement execution time exceeded") becomes `ViewExecutionTimedOutException`.
+- The limit applies **per statement**: the page query and each eager load get up to 5 seconds each. With at most three relations per type, an execution is bounded by a few statements of 5 seconds.
 - New base class `SharedContext/Domain/Exception/TimeoutException`, which `ApiExceptionRenderer` maps to **504**. Unlike the other domain exceptions, it **is logged**: a timeout is an operational signal, not a client mistake. `AGENTS.md` adds it to the table.
 
 ### D10. Rate limiting
