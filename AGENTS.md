@@ -136,16 +136,18 @@ app/
 - Every file starts with `declare(strict_types=1)`. Classes are `final` by default.
 - No framework names in class names, even in Infrastructure: `DomainEventDispatcher`, not `LaravelDomainEventDispatcher`.
 - Exceptions are semantic and specific to the problem. For example, `UserNotFoundException::withId($id)` or `InvalidViewColumnException::for($column)`. Never throw `Exception`, `RuntimeException`, `InvalidArgumentException` or similar generic exceptions directly. Build them with named constructors. The Larastan rule `tools/PHPStan/SemanticExceptionRule.php` forbids `throw new` of built-in PHP exceptions in Domain and Application.
-- Domain and Application exceptions extend one of the abstract classes in `SharedContext/Domain/Exception/`. That base class decides the HTTP status in `ApiExceptionRenderer`, and the exception message is returned to the client, so it must be safe to show. These exceptions are not logged.
+- Domain and Application exceptions extend one of the abstract classes in `SharedContext/Domain/Exception/`. That base class decides the HTTP status in `ApiExceptionRenderer`, and the exception message is returned to the client, so it must be safe to show. These exceptions are not logged, except `TimeoutException`.
 
   | Base class | Status |
   |---|---|
   | `UnauthorizedException` | 401 |
+  | `ForbiddenException` | 403 |
   | `NotFoundException` | 404 |
   | `ConflictException` | 409 |
   | `InvalidValueException` | 422 |
+  | `TimeoutException` | 504 |
 
-  Any other exception returns a 500 with no details and is logged.
+  `TimeoutException` is the only one that is logged: a timeout is an operational signal, not a client mistake. Any other exception returns a 500 with no details and is logged.
 - An Application exception that reports a programming or configuration error, not a problem with the request, extends `LogicException` instead, so that it is a logged 500. For example, `EntitySearcherNotRegisteredException` when a searchable entity has no searcher.
 
 ## Commits

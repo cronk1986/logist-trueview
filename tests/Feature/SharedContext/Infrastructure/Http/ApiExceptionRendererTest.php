@@ -8,9 +8,12 @@ use Carbon\CarbonImmutable;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Validator;
+use Logis\SharedContext\Infrastructure\Http\ApiExceptionRenderer;
 use Logis\SharedContext\Domain\Exception\ConflictException;
+use Logis\SharedContext\Domain\Exception\ForbiddenException;
 use Logis\SharedContext\Domain\Exception\InvalidValueException;
 use Logis\SharedContext\Domain\Exception\NotFoundException;
+use Logis\SharedContext\Domain\Exception\TimeoutException;
 use Logis\SharedContext\Domain\Exception\UnauthorizedException;
 use RuntimeException;
 use Tests\TestCase;
@@ -69,9 +72,11 @@ final class ApiExceptionRendererTest extends TestCase
     {
         $cases = [
             401 => new class (message: 'Invalid credentials') extends UnauthorizedException {},
+            403 => new class (message: 'Not your view') extends ForbiddenException {},
             404 => new class (message: 'Resource not found') extends NotFoundException {},
             409 => new class (message: 'Already rotated') extends ConflictException {},
             422 => new class (message: 'Invalid email') extends InvalidValueException {},
+            504 => new class (message: 'Too slow') extends TimeoutException {},
         ];
 
         foreach ($cases as $status => $exception) {
@@ -82,6 +87,15 @@ final class ApiExceptionRendererTest extends TestCase
                 ->assertJsonPath(path: 'success', expect: false)
                 ->assertJsonPath(path: 'message', expect: $exception->getMessage());
         }
+    }
+
+    public function test_timeouts_are_reported_and_other_domain_exceptions_are_not(): void
+    {
+        $expected = ApiExceptionRenderer::expectedExceptions();
+
+        $this->assertContains(ForbiddenException::class, $expected);
+        $this->assertContains(NotFoundException::class, $expected);
+        $this->assertNotContains(TimeoutException::class, $expected);
     }
 
     public function test_an_unexpected_error_returns_500_without_details(): void

@@ -9,8 +9,10 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
 use Logis\SharedContext\Domain\Exception\ConflictException;
+use Logis\SharedContext\Domain\Exception\ForbiddenException;
 use Logis\SharedContext\Domain\Exception\InvalidValueException;
 use Logis\SharedContext\Domain\Exception\NotFoundException;
+use Logis\SharedContext\Domain\Exception\TimeoutException;
 use Logis\SharedContext\Domain\Exception\UnauthorizedException;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
@@ -20,9 +22,15 @@ final class ApiExceptionRenderer
 {
     private const DOMAIN_STATUSES = [
         UnauthorizedException::class => Response::HTTP_UNAUTHORIZED,
+        ForbiddenException::class => Response::HTTP_FORBIDDEN,
         NotFoundException::class => Response::HTTP_NOT_FOUND,
         ConflictException::class => Response::HTTP_CONFLICT,
         InvalidValueException::class => Response::HTTP_UNPROCESSABLE_ENTITY,
+        TimeoutException::class => Response::HTTP_GATEWAY_TIMEOUT,
+    ];
+
+    private const REPORTED_DOMAIN_EXCEPTIONS = [
+        TimeoutException::class,
     ];
 
     public function render(Throwable $exception, Request $request): ?JsonResponse
@@ -57,7 +65,9 @@ final class ApiExceptionRenderer
      */
     public static function expectedExceptions(): array
     {
-        return array_keys(array: self::DOMAIN_STATUSES);
+        $domainExceptions = array_keys(array: self::DOMAIN_STATUSES);
+
+        return array_values(array: array_diff($domainExceptions, self::REPORTED_DOMAIN_EXCEPTIONS));
     }
 
     private function renderHttpException(HttpExceptionInterface $exception): JsonResponse
