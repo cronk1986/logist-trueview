@@ -32,6 +32,11 @@ tags:
     description: Login, token rotation, refresh, logout and the authenticated user.
   - name: Search
     description: Global search across the entities of the customers the user can see.
+  - name: Views
+    description: |
+      Custom views: saved columns and filters over assets, tickets, contracts or locations.
+      A user sees their own views and the public views of their own customer. Only the owner can change,
+      delete or set a view as default. A view the user cannot see answers 404.
 paths:
   /auth/login:
     post:
@@ -193,12 +198,76 @@ paths:
           $ref: "#/components/responses/ValidationFailed"
         "429":
           $ref: "#/components/responses/TooManyRequests"
+  /views:
+    get:
+      tags: [Views]
+      summary: List the views the user can see
+      operationId: listViews
+      description: |
+        Returns the user's own views and the public views of the user's customer, ordered by title.
+        There is no pagination. A user without a customer gets an empty list.
+      parameters:
+        - name: type
+          in: query
+          required: false
+          description: Only views of this type.
+          schema:
+            $ref: "#/components/schemas/ViewType"
+      responses:
+        "200":
+          description: Views the user can see
+          headers:
+            X-Refreshed-Token:
+              $ref: "#/components/headers/XRefreshedToken"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CustomViewListResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "422":
+          $ref: "#/components/responses/ValidationFailed"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+  /views/{id}:
+    parameters:
+      - $ref: "#/components/parameters/ViewId"
+    get:
+      tags: [Views]
+      summary: Get the details of a view
+      operationId: getView
+      responses:
+        "200":
+          description: View details
+          headers:
+            X-Refreshed-Token:
+              $ref: "#/components/headers/XRefreshedToken"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CustomViewDetailsResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
 components:
   securitySchemes:
     sanctum:
       type: http
       scheme: bearer
       description: Sanctum access token. When it is rotated, the new one arrives in the X-Refreshed-Token header.
+  parameters:
+    ViewId:
+      name: id
+      in: path
+      required: true
+      description: View id
+      schema:
+        type: integer
+        minimum: 1
+      example: 7
   headers:
     XRefreshedToken:
       description: The rotated token. Replace the stored token with it. Absent when a concurrent request already rotated the token.
@@ -430,6 +499,131 @@ components:
           example: Search results
         meta:
           $ref: "#/components/schemas/SearchMeta"
+    ViewType:
+      type: string
+      enum: [my_assets, my_tickets, my_contracts, my_locations]
+    FilterOperator:
+      type: string
+      enum: [eq, neq, in, not_in, contains, gt, gte, lt, lte, between, in_last_days]
+    ViewFilter:
+      type: object
+      required: [column, operator, value]
+      description: |
+        A filter on one field of the view type. Filters are combined with AND.
+
+        | Field type | Operators | Value |
+        |---|---|---|
+        | text | `eq`, `neq`, `contains` / `in`, `not_in` | 1 to 255 characters / a list of 1 to 100 |
+        | choice (`status` of assets and contracts) | `eq`, `neq` / `in`, `not_in` | one of the allowed values / a list |
+        | identifier (`id` and relations such as `location`, `contract`, `customer`, ticket `status`, `asset`) | `eq` / `in`, `not_in` | a positive integer id / a list |
+        | date (`created_at`, `updated_at`) | `gt`, `gte`, `lt`, `lte` / `between` / `in_last_days` | a `Y-m-d` date / two dates / 0 to 365 days |
+
+        Dates are whole UTC days: `gt 2024-01-01` starts on 2024-01-02, `between` includes both days and
+        `in_last_days 0` is today. `contains` matches literally, `%` and `_` are not wildcards.
+      properties:
+        column:
+          type: string
+          example: manufacturer
+        operator:
+          $ref: "#/components/schemas/FilterOperator"
+        value:
+          description: A string, an integer, or a list of them, depending on the operator.
+          oneOf:
+            - type: string
+            - type: integer
+            - type: array
+              items:
+                oneOf:
+                  - type: string
+                  - type: integer
+          example: Zebra
+    CustomViewListItem:
+      type: object
+      required: [id, title, description, view_type, is_default, is_public, is_owner]
+      properties:
+        id:
+          type: integer
+          example: 7
+        title:
+          type: string
+          example: Zebra scanners
+        description:
+          type: [string, "null"]
+          example: Every active Zebra device
+        view_type:
+          $ref: "#/components/schemas/ViewType"
+        is_default:
+          type: boolean
+          description: Whether this is the requesting user's default view of its type
+        is_public:
+          type: boolean
+          description: Whether the view is shared with the users of its customer
+        is_owner:
+          type: boolean
+          description: Whether the requesting user owns the view and can change it
+    CustomViewDetails:
+      allOf:
+        - $ref: "#/components/schemas/CustomViewListItem"
+        - type: object
+          required: [columns, filters, owner]
+          properties:
+            columns:
+              type: array
+              description: Fields shown by the view, in order
+              items:
+                type: string
+              example: [serial_number, manufacturer, model, location]
+            filters:
+              type: array
+              items:
+                $ref: "#/components/schemas/ViewFilter"
+            owner:
+              type: object
+              required: [id, name]
+              properties:
+                id:
+                  type: integer
+                  example: 1
+                name:
+                  type: string
+                  example: Demo
+    CustomViewListResponse:
+      type: object
+      required: [success, data, message, meta]
+      properties:
+        success:
+          type: boolean
+          const: true
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/CustomViewListItem"
+        message:
+          type: string
+          example: Views
+        meta:
+          allOf:
+            - $ref: "#/components/schemas/Meta"
+            - type: object
+              required: [total]
+              properties:
+                total:
+                  type: integer
+                  example: 3
+    CustomViewDetailsResponse:
+      type: object
+      required: [success, data, message, meta]
+      properties:
+        success:
+          type: boolean
+          const: true
+        data:
+          $ref: "#/components/schemas/CustomViewDetails"
+        message:
+          type: string
+          example: View details
+        meta:
+          $ref: "#/components/schemas/Meta"
     EmptyResponse:
       type: object
       required: [success, data, message, meta]
@@ -505,3 +699,17 @@ components:
         application/json:
           schema:
             $ref: "#/components/schemas/ErrorResponse"
+    NotFound:
+      description: The resource does not exist, or the user cannot see it
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          example:
+            success: false
+            data: {}
+            message: View 7 not found.
+            meta:
+              timestamp: "2026-09-25T10:00:00Z"
+              version: "1.0"
+              execution_time_ms: 4
