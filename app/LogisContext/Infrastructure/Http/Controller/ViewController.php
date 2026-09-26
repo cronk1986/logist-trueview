@@ -5,10 +5,12 @@ declare(strict_types=1);
 namespace Logis\LogisContext\Infrastructure\Http\Controller;
 
 use Illuminate\Http\JsonResponse;
+use Logis\LogisContext\Infrastructure\Http\Request\CustomView\CreateCustomViewRequest;
 use Logis\LogisContext\Infrastructure\Http\Request\CustomView\ListCustomViewsRequest;
 use Logis\LogisContext\Infrastructure\Http\Request\CustomView\ShowCustomViewRequest;
 use Logis\SharedContext\Infrastructure\Http\AbstractController;
 use Logis\SharedContext\Infrastructure\Http\ApiResponse;
+use Symfony\Component\HttpFoundation\Response;
 
 final class ViewController extends AbstractController
 {
@@ -17,6 +19,14 @@ final class ViewController extends AbstractController
         $response = $this->queryBus->ask(query: $request->toQuery());
 
         return ApiResponse::fromQueryResponse(response: $response, message: 'Views');
+    }
+
+    public function store(CreateCustomViewRequest $request): JsonResponse
+    {
+        $this->commandBus->dispatch(command: $request->toCommand());
+        $response = $this->queryBus->ask(query: $request->toQuery());
+
+        return ApiResponse::fromQueryResponse(response: $response, message: 'View created', status: Response::HTTP_CREATED);
     }
 
     public function show(ShowCustomViewRequest $request, int $id): JsonResponse

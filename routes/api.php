@@ -24,6 +24,7 @@ Route::prefix('v1')->group(function (): void {
 
         Route::prefix('views')->controller(ViewController::class)->group(function (): void {
             Route::get('', 'index');
+            Route::post('', 'store');
             Route::get('{id}', 'show')->whereNumber('id');
         });
     });
