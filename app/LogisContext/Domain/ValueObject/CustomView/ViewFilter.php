@@ -8,6 +8,10 @@ use Logis\LogisContext\Domain\Exception\CustomView\InvalidViewFilterException;
 
 final readonly class ViewFilter
 {
+    private const COLUMN = 'column';
+    private const OPERATOR = 'operator';
+    private const VALUE = 'value';
+
     /**
      * @param scalar|null|list<scalar> $value
      */
@@ -23,14 +27,21 @@ final readonly class ViewFilter
      */
     public static function fromArray(array $filter): self
     {
-        $column = self::requiredText(filter: $filter, key: 'column');
-        $operator = self::requiredText(filter: $filter, key: 'operator');
+        $column = self::requiredText(filter: $filter, key: self::COLUMN);
+        $operator = self::requiredText(filter: $filter, key: self::OPERATOR);
 
-        if (!array_key_exists(key: 'value', array: $filter)) {
-            throw InvalidViewFilterException::missing(key: 'value');
+        if (!array_key_exists(key: self::VALUE, array: $filter)) {
+            throw InvalidViewFilterException::missing(key: self::VALUE);
         }
 
-        return new self(column: $column, operator: $operator, value: self::filterValue(value: $filter['value'], column: $column));
+        return new self(
+            column: $column,
+            operator: $operator,
+            value: self::filterValue(
+                value: $filter[self::VALUE],
+                column: $column
+            )
+        );
     }
 
     public function column(): string
@@ -56,7 +67,7 @@ final readonly class ViewFilter
      */
     public function toArray(): array
     {
-        return ['column' => $this->column, 'operator' => $this->operator, 'value' => $this->value];
+        return [self::COLUMN => $this->column, self::OPERATOR => $this->operator, self::VALUE => $this->value];
     }
 
     /**
