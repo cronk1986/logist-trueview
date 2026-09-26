@@ -29,6 +29,17 @@ final class ViewFiltersTest extends TestCase
         $this->assertSame([], ViewFilters::fromList(filters: [])->all());
     }
 
+    public function test_a_view_has_at_most_twenty_filters(): void
+    {
+        $filter = ['column' => 'model', 'operator' => 'eq', 'value' => 'TC52'];
+
+        $this->assertCount(20, ViewFilters::fromList(filters: array_fill(start_index: 0, count: 20, value: $filter))->all());
+
+        $this->expectException(InvalidViewFilterException::class);
+
+        ViewFilters::fromList(filters: array_fill(start_index: 0, count: 21, value: $filter));
+    }
+
     public function test_it_exposes_each_filter(): void
     {
         $filter = ViewFilters::fromList(filters: [['column' => ' model ', 'operator' => ' eq ', 'value' => 'TC52']])->all()[0];

@@ -22,4 +22,9 @@ final class InvalidViewColumnsException extends InvalidValueException
     {
         return new self(message: sprintf('The column "%s" appears more than once in the view.', $column));
     }
+
+    public static function unknown(string $column, string $viewType): self
+    {
+        return new self(message: sprintf('"%s" is not a column of %s views.', $column, $viewType));
+    }
 }

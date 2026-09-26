@@ -8,6 +8,8 @@ use Logis\LogisContext\Domain\Exception\CustomView\InvalidViewFilterException;
 
 final readonly class ViewFilters
 {
+    public const MAX_FILTERS = 20;
+
     /**
      * @param list<ViewFilter> $filters
      */
@@ -20,6 +22,10 @@ final readonly class ViewFilters
      */
     public static function fromList(array $filters): self
     {
+        if (count(value: $filters) > self::MAX_FILTERS) {
+            throw InvalidViewFilterException::tooMany(max: self::MAX_FILTERS);
+        }
+
         $viewFilters = [];
 
         foreach ($filters as $filter) {
