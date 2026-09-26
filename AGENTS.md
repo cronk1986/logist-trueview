@@ -16,9 +16,11 @@ app/
     │   ├── Exception/<Aggregate>/    # UserNotFoundException, ...
     │   └── Event/<Aggregate>/        # UserCreated, ...
     ├── Application/
-    │   ├── Command/<UseCase>/        # command + handler
-    │   ├── Query/<UseCase>/          # query + handler
-    │   └── ModelView/<Aggregate>/    # UserView, SmallUserView, ...
+    │   ├── Command/<Aggregate>/      # commands + handlers only: Command/AccessToken/LogIn, LogInHandler
+    │   ├── Query/<Aggregate>/        # queries + handlers only: Query/User/GetUser, GetUserHandler
+    │   ├── Services/<Aggregate>/     # application services, ports and the objects they exchange
+    │   ├── Exception/<Aggregate>/    # Application exceptions
+    │   └── ModelView/<Aggregate>/    # UserView, SmallUserView, result DTOs, ...
     └── Infrastructure/
         ├── Http/Controller/          # <Aggregate>Controller
         ├── Http/Request/<Aggregate>/ # one FormRequest per action
@@ -30,6 +32,10 @@ app/
 
 - Domain code is grouped by kind first and by aggregate second. For example, `Domain/ValueObject/User/Email.php` and `Domain/Exception/User/UserNotFoundException.php`, never `Domain/Model/User/Email.php`.
   - The only exception is `Search`, which is not an aggregate. Its value objects and exceptions live in `Domain/ValueObject/Search/` and `Domain/Exception/Search/`.
+- **Application is grouped by aggregate too.** Folders under `Command/` and `Query/` are named after the aggregate, and the classes inside after the use case: `Query/User/GetUser.php`, never `Query/GetUser/GetUser.php`.
+  - A command belongs to the aggregate it changes, and a query to the aggregate it returns. `LogIn` reads the user but saves an access token, so it lives in `Command/AccessToken/`.
+  - `Command/<Aggregate>/` and `Query/<Aggregate>/` hold only messages and their handlers. Everything else goes to its own folder: collaborators and ports to `Services/<Aggregate>/`, exceptions to `Exception/<Aggregate>/`, views and result DTOs to `ModelView/<Aggregate>/`.
+  - `Search` follows the same exception as in Domain: `Query/Search/`, `Services/Search/`, `Exception/Search/` and `ModelView/Search/`.
 - Each bounded context has exactly one ServiceProvider, registered in `bootstrap/providers.php`.
 - The domain is framework-agnostic. Eloquent models live in Infrastructure, and repositories map them to domain entities and back.
 - **Persistence is grouped by aggregate**, mirroring `Domain/Model/<Aggregate>/`: `Persistence/User/{UserModel, UserMapper, EloquentUserRepository, BcryptPasswordHasher}`, `Persistence/AccessToken/{AccessTokenModel, AccessTokenMapper, EloquentAccessTokenRepository}`. An adapter lives in the folder of the aggregate whose domain interface it implements. `BcryptPasswordHasher` implements `Domain/Model/User/PasswordHasher`, so it goes in `Persistence/User/`. Never put a class directly in `Persistence/`.
@@ -103,7 +109,7 @@ app/
 
 ## Tests
 
-- Unit tests live in `tests/Unit/<Context>/{Domain,Application,Infrastructure}/` and mirror the path of the class under test in `app/<Context>/`. Example: `app/LogisContext/Application/Command/CreateUser/CreateUserHandler.php` is tested by `tests/Unit/LogisContext/Application/Command/CreateUser/CreateUserHandlerTest.php`.
+- Unit tests live in `tests/Unit/<Context>/{Domain,Application,Infrastructure}/` and mirror the path of the class under test in `app/<Context>/`. Example: `app/LogisContext/Application/Command/User/CreateUserHandler.php` is tested by `tests/Unit/LogisContext/Application/Command/User/CreateUserHandlerTest.php`.
 - Every handler has a unit test that instantiates the handler directly, without the bus.
 - **No mocks of our own interfaces.** Use an InMemory implementation placed at the same path as the interface, but under `tests/Unit/`. Example: `app/LogisContext/Domain/Model/User/UserRepository.php` is implemented by `tests/Unit/LogisContext/Domain/Model/User/InMemoryUserRepository.php`.
 - Value objects, entities and views have their own unit tests, for example `tests/Unit/LogisContext/Domain/ValueObject/User/EmailTest.php`.
@@ -140,6 +146,7 @@ app/
   | `InvalidValueException` | 422 |
 
   Any other exception returns a 500 with no details and is logged.
+- An Application exception that reports a programming or configuration error, not a problem with the request, extends `LogicException` instead, so that it is a logged 500. For example, `EntitySearcherNotRegisteredException` when a searchable entity has no searcher.
 
 ## Commits
 
