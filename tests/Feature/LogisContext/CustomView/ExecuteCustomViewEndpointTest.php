@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Tests\Feature\LogisContext\CustomView;
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Testing\TestResponse;
 use Logis\LogisContext\Application\Services\CustomView\ViewBuilders;
 use Logis\LogisContext\Domain\ValueObject\CustomView\ViewType;
@@ -179,6 +181,15 @@ final class ExecuteCustomViewEndpointTest extends TestCase
             ->assertJsonStructure(structure: ['data' => ['q']]);
     }
 
+    public function test_a_repeated_execution_runs_no_view_queries(): void
+    {
+        AssetModel::factory()->count(count: 3)->create(attributes: ['customer_id' => $this->parent->id]);
+        $view = $this->customView(owner: $this->owner, type: ViewType::MyAssets, filters: []);
+
+        $this->assertSame(1, $this->assetQueriesOf(view: $view));
+        $this->assertSame(0, $this->assetQueriesOf(view: $view));
+    }
+
     public function test_the_number_of_queries_does_not_grow_with_the_rows(): void
     {
         $view = $this->customView(owner: $this->owner, type: ViewType::MyAssets, columns: ['serial_number', 'location', 'contract'], filters: []);
@@ -188,6 +199,7 @@ final class ExecuteCustomViewEndpointTest extends TestCase
         $withOne = $this->countQueries(callback: $execute($this->tokenOf(user: $this->owner)));
 
         AssetModel::factory()->count(count: 30)->withLocation()->withContract()->create(attributes: ['customer_id' => $this->parent->id]);
+        Cache::flush();
 
         $this->assertSame($withOne, $this->countQueries(callback: $execute($this->tokenOf(user: $this->owner))));
     }
@@ -226,5 +238,18 @@ final class ExecuteCustomViewEndpointTest extends TestCase
     private function rowIds(UserModel $user, CustomViewModel $view): array
     {
         return array_column(array: (array) $this->execute(user: $user, view: $view)->json(key: 'data.rows'), column_key: 'id');
+    }
+
+    private function assetQueriesOf(CustomViewModel $view): int
+    {
+        $token = $this->tokenOf(user: $this->owner);
+
+        DB::flushQueryLog();
+        DB::enableQueryLog();
+        $this->callViews(method: 'POST', token: $token, path: '/' . $view->id . '/execute')->assertOk();
+        $queries = array_filter(array: DB::getQueryLog(), callback: fn (array $query): bool => str_contains(haystack: $query['query'], needle: 'from `assets`'));
+        DB::disableQueryLog();
+
+        return count(value: $queries);
     }
 }

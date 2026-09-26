@@ -26,6 +26,7 @@ use Logis\LogisContext\Domain\Model\Ticket\TicketRepository;
 use Logis\LogisContext\Domain\Model\User\PasswordHasher;
 use Logis\LogisContext\Domain\Model\User\UserRepository;
 use Logis\LogisContext\Infrastructure\Cache\CachedEntitySearcher;
+use Logis\LogisContext\Infrastructure\Cache\CachedViewBuilder;
 use Logis\LogisContext\Infrastructure\Http\PlainTextTokenGenerator;
 use Logis\LogisContext\Infrastructure\Persistence\AccessToken\AccessTokenModel;
 use Logis\LogisContext\Infrastructure\Persistence\AccessToken\EloquentAccessTokenRepository;
@@ -110,6 +111,14 @@ final class LogisServiceProvider extends ServiceProvider
 
     private function registerViewBuilders(): void
     {
+        foreach (self::VIEW_BUILDERS as $builder) {
+            $this->app->extend(abstract: $builder, closure: fn (ViewBuilder $builder, Application $app): ViewBuilder => new CachedViewBuilder(
+                builder: $builder,
+                cache: $app->make(abstract: Repository::class),
+                ttlSeconds: (int) $app->make(abstract: 'config')->get(key: 'views.cache_ttl_seconds'),
+            ));
+        }
+
         $this->app->tag(abstracts: self::VIEW_BUILDERS, tags: self::VIEW_BUILDERS_TAG);
 
         $this->app->when(concrete: ViewBuilders::class)

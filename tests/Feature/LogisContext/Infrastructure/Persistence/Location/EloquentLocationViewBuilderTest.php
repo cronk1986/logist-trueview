@@ -11,6 +11,7 @@ use Logis\LogisContext\Domain\ValueObject\Customer\VisibleCustomers;
 use Logis\LogisContext\Domain\ValueObject\CustomView\ViewField;
 use Logis\LogisContext\Domain\ValueObject\CustomView\ViewFieldCatalog;
 use Logis\LogisContext\Domain\ValueObject\CustomView\ViewType;
+use Logis\LogisContext\Infrastructure\CustomView\ViewPaginator;
 use Logis\LogisContext\Infrastructure\Persistence\Customer\CustomerModel;
 use Logis\LogisContext\Infrastructure\Persistence\Location\EloquentLocationViewBuilder;
 use Logis\LogisContext\Infrastructure\Persistence\Location\LocationModel;
@@ -30,7 +31,7 @@ final class EloquentLocationViewBuilderTest extends TestCase
     {
         parent::setUp();
 
-        $this->builder = $this->app->make(abstract: EloquentLocationViewBuilder::class);
+        $this->builder = new EloquentLocationViewBuilder(paginator: $this->app->make(abstract: ViewPaginator::class));
         $this->customer = CustomerModel::factory()->create();
     }
 

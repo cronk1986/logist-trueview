@@ -11,6 +11,7 @@ use Logis\LogisContext\Domain\ValueObject\Customer\VisibleCustomers;
 use Logis\LogisContext\Domain\ValueObject\CustomView\ViewField;
 use Logis\LogisContext\Domain\ValueObject\CustomView\ViewFieldCatalog;
 use Logis\LogisContext\Domain\ValueObject\CustomView\ViewType;
+use Logis\LogisContext\Infrastructure\CustomView\ViewPaginator;
 use Logis\LogisContext\Infrastructure\Persistence\Contract\ContractModel;
 use Logis\LogisContext\Infrastructure\Persistence\Contract\EloquentContractViewBuilder;
 use Logis\LogisContext\Infrastructure\Persistence\Customer\CustomerModel;
@@ -30,7 +31,7 @@ final class EloquentContractViewBuilderTest extends TestCase
     {
         parent::setUp();
 
-        $this->builder = $this->app->make(abstract: EloquentContractViewBuilder::class);
+        $this->builder = new EloquentContractViewBuilder(paginator: $this->app->make(abstract: ViewPaginator::class));
         $this->customer = CustomerModel::factory()->create(attributes: ['name' => 'Logis Demo']);
     }
 

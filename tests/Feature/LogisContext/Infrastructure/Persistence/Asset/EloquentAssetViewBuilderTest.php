@@ -14,6 +14,7 @@ use Logis\LogisContext\Domain\ValueObject\Customer\VisibleCustomers;
 use Logis\LogisContext\Domain\ValueObject\CustomView\ViewField;
 use Logis\LogisContext\Domain\ValueObject\CustomView\ViewFieldCatalog;
 use Logis\LogisContext\Domain\ValueObject\CustomView\ViewType;
+use Logis\LogisContext\Infrastructure\CustomView\ViewPaginator;
 use Logis\LogisContext\Infrastructure\Persistence\Asset\AssetModel;
 use Logis\LogisContext\Infrastructure\Persistence\Asset\EloquentAssetViewBuilder;
 use Logis\LogisContext\Infrastructure\Persistence\Contract\ContractModel;
@@ -35,7 +36,7 @@ final class EloquentAssetViewBuilderTest extends TestCase
     {
         parent::setUp();
 
-        $this->builder = $this->app->make(abstract: EloquentAssetViewBuilder::class);
+        $this->builder = new EloquentAssetViewBuilder(paginator: $this->app->make(abstract: ViewPaginator::class));
         $this->customer = CustomerModel::factory()->create(attributes: ['name' => 'Logis Demo']);
     }
 

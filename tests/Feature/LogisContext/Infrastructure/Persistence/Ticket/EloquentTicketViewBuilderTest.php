@@ -11,6 +11,7 @@ use Logis\LogisContext\Domain\ValueObject\Customer\VisibleCustomers;
 use Logis\LogisContext\Domain\ValueObject\CustomView\ViewField;
 use Logis\LogisContext\Domain\ValueObject\CustomView\ViewFieldCatalog;
 use Logis\LogisContext\Domain\ValueObject\CustomView\ViewType;
+use Logis\LogisContext\Infrastructure\CustomView\ViewPaginator;
 use Logis\LogisContext\Infrastructure\Persistence\Asset\AssetModel;
 use Logis\LogisContext\Infrastructure\Persistence\Customer\CustomerModel;
 use Logis\LogisContext\Infrastructure\Persistence\Ticket\EloquentTicketViewBuilder;
@@ -32,7 +33,7 @@ final class EloquentTicketViewBuilderTest extends TestCase
     {
         parent::setUp();
 
-        $this->builder = $this->app->make(abstract: EloquentTicketViewBuilder::class);
+        $this->builder = new EloquentTicketViewBuilder(paginator: $this->app->make(abstract: ViewPaginator::class));
         $this->customer = CustomerModel::factory()->create(attributes: ['name' => 'Logis Demo']);
     }
 
