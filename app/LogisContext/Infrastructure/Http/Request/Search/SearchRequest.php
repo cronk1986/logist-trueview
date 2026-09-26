@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace Logis\LogisContext\Infrastructure\Http\Request\Search;
 
-use Closure;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 use Logis\LogisContext\Application\Query\Search\SearchService;
 use Logis\LogisContext\Domain\ValueObject\Search\SearchableEntity;
 use Logis\LogisContext\Domain\ValueObject\Search\SearchLimit;
 use Logis\LogisContext\Infrastructure\Http\CurrentAccessToken;
+use Logis\LogisContext\Infrastructure\Http\Rule\ValidUtf8;
 
 final class SearchRequest extends FormRequest
 {
@@ -20,7 +20,7 @@ final class SearchRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'q' => ['required', 'string', $this->validUtf8()],
+            'q' => ['required', 'string', new ValidUtf8()],
             'limit' => ['nullable', 'integer', 'between:' . SearchLimit::MIN . ',' . SearchLimit::MAX],
             'entities' => ['nullable', 'array'],
             'entities.*' => ['string', Rule::enum(type: SearchableEntity::class)],
@@ -50,15 +50,6 @@ final class SearchRequest extends FormRequest
         if (is_array(value: $entities)) {
             $this->merge(input: ['entities' => $this->withoutEmptyValues(values: $entities)]);
         }
-    }
-
-    private function validUtf8(): Closure
-    {
-        return function (string $attribute, mixed $value, Closure $fail): void {
-            if (is_string(value: $value) && !mb_check_encoding(value: $value, encoding: 'UTF-8')) {
-                $fail('The :attribute field must be valid UTF-8 text.');
-            }
-        };
     }
 
     /**
