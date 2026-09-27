@@ -121,7 +121,9 @@ app/
 ## Code rules
 
 - All code, identifiers, commit messages and documentation are written in English.
-- No comments. Code must explain itself through naming and small methods. The only exception is PHPDoc types that Larastan needs, such as generics or array shapes.
+- No comments. Code must explain itself through naming and small methods. There are two exceptions, both as PHPDoc:
+  - types that Larastan needs, such as generics or array shapes;
+  - a short explanation of *why*, on a class or method whose reason can't be read from the code: a database error code, a framework syntax, a non-obvious validation. It never describes *what* the code does. Examples: `StatementTimeout`, `ViewCursor`, `CalendarDay::tryFrom()`.
 - **Named arguments everywhere.** Every call to a function, method or constructor passes its arguments by name: `new LogIn(email: $email, password: $password)`, `UserId::fromInt(value: $id)`, `hash(algo: 'sha256', data: $token)`. This applies to our code, to Laravel and to native PHP functions. Arguments stay positional only where names are impossible or unsafe:
   - **variadic calls:** a call that passes values into a variadic parameter is fully positional, e.g. `sprintf('User %d not found.', $id)`, because PHP forbids positional arguments after named ones;
   - **argument unpacking:** calls that use `...$arguments`;
