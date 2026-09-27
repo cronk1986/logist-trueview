@@ -44,6 +44,24 @@ final readonly class ViewFilter
         );
     }
 
+    /**
+     * @return list<scalar>
+     */
+    public function values(): array
+    {
+        $value = $this->value;
+
+        if (is_array(value: $value)) {
+            return $value;
+        }
+
+        if ($value === null) {
+            return [];
+        }
+
+        return [$value];
+    }
+
     public function column(): string
     {
         return $this->column;

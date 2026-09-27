@@ -32,6 +32,18 @@ final readonly class ViewDefinition
         return new self(catalog: $catalog, columns: $columns, filters: $filters);
     }
 
+    public function refinedBy(UserFilters $filters): self
+    {
+        $effective = $this->filters;
+
+        foreach ($filters->byField() as $field => $requested) {
+            $this->ensureCanBeFilteredBy(field: $field, requested: $requested);
+            $effective = $effective->replacing(field: $field, filters: $requested);
+        }
+
+        return new self(catalog: $this->catalog, columns: $this->columns, filters: $effective);
+    }
+
     public function type(): ViewType
     {
         return $this->catalog->type();
@@ -56,6 +68,69 @@ final readonly class ViewDefinition
     {
         if ($catalog->find(name: $column) === null) {
             throw InvalidViewColumnsException::unknown(column: $column, viewType: $catalog->type()->value);
+        }
+    }
+
+    /**
+     * @param list<ViewFilter> $requested
+     */
+    private function ensureCanBeFilteredBy(string $field, array $requested): void
+    {
+        $catalogField = $this->catalog->find(name: $field);
+
+        if ($catalogField === null) {
+            throw InvalidViewFilterException::unknownField(column: $field, viewType: $this->type()->value);
+        }
+
+        foreach ($requested as $filter) {
+            $catalogField->ensureAccepts(filter: $filter);
+        }
+
+        $mode = $this->filters->modeOf(field: $field);
+
+        if ($mode === null) {
+            $this->ensureIsAColumn(field: $field);
+
+            return;
+        }
+
+        if (!$mode->allowsUserFilter()) {
+            throw InvalidViewFilterException::locked(column: $field);
+        }
+
+        if ($mode->requiresDiscreteValues()) {
+            $this->ensureWithinSavedValues(field: $field, requested: $requested);
+        }
+    }
+
+    private function ensureIsAColumn(string $field): void
+    {
+        if (!in_array(needle: $field, haystack: $this->columns->toArray(), strict: true)) {
+            throw InvalidViewFilterException::notFilterable(column: $field);
+        }
+    }
+
+    /**
+     * @param list<ViewFilter> $requested
+     */
+    private function ensureWithinSavedValues(string $field, array $requested): void
+    {
+        $allowed = [];
+
+        foreach ($this->filters->of(field: $field) as $saved) {
+            $allowed = [...$allowed, ...$saved->values()];
+        }
+
+        foreach ($requested as $filter) {
+            if (!$filter->operator()->isDiscrete()) {
+                throw InvalidViewFilterException::restrictedNeedsDiscreteValues(column: $field);
+            }
+
+            foreach ($filter->values() as $value) {
+                if (!in_array(needle: $value, haystack: $allowed, strict: true)) {
+                    throw InvalidViewFilterException::outsideRestrictedValues(column: $field, values: $allowed);
+                }
+            }
         }
     }
 

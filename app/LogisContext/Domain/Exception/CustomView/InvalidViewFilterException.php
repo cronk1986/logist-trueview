@@ -115,4 +115,22 @@ final class InvalidViewFilterException extends InvalidValueException
     {
         return new self(message: sprintf('"%s" can have only one restricted filter.', $column));
     }
+
+    public static function locked(string $column): self
+    {
+        return new self(message: sprintf('The filter on "%s" is locked by the owner of the view.', $column));
+    }
+
+    public static function notFilterable(string $column): self
+    {
+        return new self(message: sprintf('"%s" is not a column of this view, so it cannot be filtered.', $column));
+    }
+
+    /**
+     * @param list<scalar> $values
+     */
+    public static function outsideRestrictedValues(string $column, array $values): self
+    {
+        return new self(message: sprintf('The filter on "%s" accepts only: %s.', $column, implode(separator: ', ', array: array_map(callback: strval(...), array: $values))));
+    }
 }

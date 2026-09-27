@@ -67,6 +67,16 @@ final readonly class ViewFilters
         return array_values(array: array_filter(array: $this->filters, callback: fn (ViewFilter $filter): bool => $filter->column() === $field));
     }
 
+    /**
+     * @param list<ViewFilter> $filters
+     */
+    public function replacing(string $field, array $filters): self
+    {
+        $kept = array_filter(array: $this->filters, callback: fn (ViewFilter $filter): bool => $filter->column() !== $field);
+
+        return new self(filters: [...array_values(array: $kept), ...$filters], modes: $this->modes);
+    }
+
     public function modeOf(string $field): ?UserFilterMode
     {
         return $this->modes[$field] ?? null;
