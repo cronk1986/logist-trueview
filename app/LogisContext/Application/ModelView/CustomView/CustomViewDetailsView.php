@@ -11,7 +11,7 @@ final readonly class CustomViewDetailsView
 {
     /**
      * @param list<string> $columns
-     * @param list<array{column: string, operator: string, value: scalar|null|list<scalar>, user_filter: string|null}> $filters
+     * @param list<array{column: string, operator: string, value: scalar|null|list<scalar>, user_filter: string}> $filters
      */
     private function __construct(
         public int $id,
@@ -54,7 +54,7 @@ final readonly class CustomViewDetailsView
      *     description: ?string,
      *     view_type: string,
      *     columns: list<string>,
-     *     filters: list<array{column: string, operator: string, value: scalar|null|list<scalar>, user_filter: string|null}>,
+     *     filters: list<array{column: string, operator: string, value: scalar|null|list<scalar>, user_filter: string}>,
      *     is_default: bool,
      *     is_public: bool,
      *     is_owner: bool,

@@ -30,9 +30,10 @@ final class ExecuteCustomViewHandler
     {
         $user = $this->access->user(userId: $query->userId);
         $view = $this->access->viewVisibleTo(user: $user, viewId: $query->viewId);
+        $definition = $view->definition()->refinedBy(filters: UserFilters::fromList(filters: $query->filters));
 
         $criteria = new ViewExecutionCriteria(
-            definition: $view->definition()->refinedBy(filters: UserFilters::fromList(filters: $query->filters)),
+            definition: $definition,
             sort: $this->sort(query: $query, view: $view),
             pageSize: ViewPageSize::fromInt(value: $query->limit),
             cursor: $query->cursor,

@@ -115,11 +115,7 @@ final readonly class ViewDefinition
      */
     private function ensureWithinSavedValues(string $field, array $requested): void
     {
-        $allowed = [];
-
-        foreach ($this->filters->of(field: $field) as $saved) {
-            $allowed = [...$allowed, ...$saved->values()];
-        }
+        $allowed = $this->filters->of(field: $field)[0]->values();
 
         foreach ($requested as $filter) {
             if (!$filter->operator()->isDiscrete()) {

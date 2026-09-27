@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Unit\LogisContext\Domain\ValueObject\CustomView;
 
 use Logis\LogisContext\Domain\Exception\CustomView\InvalidViewFilterException;
+use Logis\LogisContext\Domain\ValueObject\CustomView\UserFilterMode;
 use Logis\LogisContext\Domain\ValueObject\CustomView\UserFilters;
 use Logis\LogisContext\Domain\ValueObject\CustomView\ViewColumns;
 use Logis\LogisContext\Domain\ValueObject\CustomView\ViewDefinition;
@@ -33,7 +34,7 @@ final class ViewDefinitionRefinementTest extends TestCase
 
     public function test_without_user_filters_the_saved_filters_apply(): void
     {
-        $this->assertSame($this->definition->filters()->toArray(), $this->definition->refinedBy(filters: UserFilters::none())->filters()->toArray());
+        $this->assertSame($this->definition->filters()->toArray(), $this->definition->refinedBy(filters: UserFilters::fromList(filters: []))->filters()->toArray());
     }
 
     public function test_a_restricted_field_can_be_narrowed_to_a_subset_of_its_values(): void
@@ -69,6 +70,48 @@ final class ViewDefinitionRefinementTest extends TestCase
         $this->assertCount(3, $refined->filters()->all());
     }
 
+    public function test_several_user_filters_on_a_restricted_field_only_narrow(): void
+    {
+        $refined = $this->refine(filters: [
+            ['column' => 'status', 'operator' => 'in', 'value' => ['active', 'inactive']],
+            ['column' => 'status', 'operator' => 'eq', 'value' => 'active'],
+        ]);
+
+        $this->assertCount(2, $refined->filters()->of(field: 'status'));
+    }
+
+    public function test_replacing_an_open_field_keeps_the_saved_filters_of_other_fields(): void
+    {
+        $refined = $this->refine(filters: [['column' => 'created_at', 'operator' => 'in_last_days', 'value' => 7]]);
+
+        $this->assertSame([['column' => 'manufacturer', 'operator' => 'eq', 'value' => 'Zebra']], $this->conditionsOf(definition: $refined, field: 'manufacturer'));
+        $this->assertSame([['column' => 'status', 'operator' => 'in', 'value' => ['active', 'inactive']]], $this->conditionsOf(definition: $refined, field: 'status'));
+        $this->assertSame(UserFilterMode::Locked, $refined->filters()->modeOf(field: 'manufacturer'));
+    }
+
+    public function test_a_filter_added_on_a_column_without_a_saved_filter_is_open(): void
+    {
+        $refined = $this->refine(filters: [['column' => 'location', 'operator' => 'eq', 'value' => 3]]);
+
+        $this->assertSame(UserFilterMode::Open, $refined->filters()->modeOf(field: 'location'));
+    }
+
+    public function test_a_restricted_identifier_outside_the_saved_ids_is_rejected(): void
+    {
+        $definition = ViewDefinition::from(
+            type: ViewType::MyAssets,
+            columns: ViewColumns::fromList(columns: ['serial_number']),
+            filters: ViewFilters::fromList(filters: [['column' => 'location', 'operator' => 'in', 'value' => [3, 4], 'user_filter' => 'restricted']]),
+        );
+
+        $this->assertCount(1, $definition->refinedBy(filters: UserFilters::fromList(filters: [['column' => 'location', 'operator' => 'eq', 'value' => 4]]))->filters()->all());
+
+        $this->expectException(InvalidViewFilterException::class);
+        $this->expectExceptionMessage('The filter on "location" accepts only: 3, 4.');
+
+        $definition->refinedBy(filters: UserFilters::fromList(filters: [['column' => 'location', 'operator' => 'eq', 'value' => 5]]));
+    }
+
     public function test_the_saved_definition_is_not_changed(): void
     {
         $this->refine(filters: [['column' => 'location', 'operator' => 'eq', 'value' => 3]]);
@@ -97,8 +140,8 @@ final class ViewDefinitionRefinementTest extends TestCase
             'locked field' => [[['column' => 'manufacturer', 'operator' => 'eq', 'value' => 'Honeywell']], 'The filter on "manufacturer" is locked by the owner of the view.'],
             'value outside the restricted ones' => [[['column' => 'status', 'operator' => 'eq', 'value' => 'retired']], 'The filter on "status" accepts only: active, inactive.'],
             'one value outside the restricted ones' => [[['column' => 'status', 'operator' => 'in', 'value' => ['active', 'retired']]], 'The filter on "status" accepts only: active, inactive.'],
-            'restricted value in another case' => [[['column' => 'status', 'operator' => 'eq', 'value' => 'Active']], 'The filter on "status" accepts only: active, inactive, retired.'],
-            'restricted identifier as text' => [[['column' => 'location', 'operator' => 'eq', 'value' => '3']], 'The filter on "location" needs positive integer ids.'],
+            'value unknown to the catalog on a restricted field' => [[['column' => 'status', 'operator' => 'eq', 'value' => 'Active']], 'The filter on "status" accepts only: active, inactive, retired.'],
+            'identifier sent as text' => [[['column' => 'location', 'operator' => 'eq', 'value' => '3']], 'The filter on "location" needs positive integer ids.'],
             'restricted field with a non-discrete operator' => [[['column' => 'status', 'operator' => 'neq', 'value' => 'active']], 'A restricted filter on "status" must use eq or in.'],
             'hidden field without a saved filter' => [[['column' => 'item_name', 'operator' => 'eq', 'value' => 'Zebra TC52']], '"item_name" is not a column of this view, so it cannot be filtered.'],
             'unknown field' => [[['column' => 'customer_id', 'operator' => 'eq', 'value' => 1]], '"customer_id" is not a filterable field of my_assets views.'],

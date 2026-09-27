@@ -112,8 +112,8 @@ final class ExecuteCustomViewHandlerTest extends TestCase
 
         $this->assertSame(
             [
+                ['column' => 'location', 'operator' => 'in', 'value' => [3], 'user_filter' => 'open'],
                 ['column' => 'status', 'operator' => 'eq', 'value' => 'inactive', 'user_filter' => 'restricted'],
-                ['column' => 'location', 'operator' => 'in', 'value' => [3], 'user_filter' => null],
             ],
             $this->assets->executions()[0]->definition->filters()->toArray(),
         );

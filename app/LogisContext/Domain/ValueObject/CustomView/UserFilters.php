@@ -15,11 +15,6 @@ final readonly class UserFilters
     {
     }
 
-    public static function none(): self
-    {
-        return new self(filters: []);
-    }
-
     /**
      * @param array<mixed> $filters
      */
@@ -42,11 +37,6 @@ final readonly class UserFilters
         return new self(filters: $userFilters);
     }
 
-    public function isEmpty(): bool
-    {
-        return $this->filters === [];
-    }
-
     /**
      * @return array<string, list<ViewFilter>>
      */
@@ -57,6 +47,8 @@ final readonly class UserFilters
         foreach ($this->filters as $filter) {
             $byField[$filter->column()][] = $filter;
         }
+
+        ksort(array: $byField);
 
         return $byField;
     }

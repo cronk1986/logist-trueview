@@ -73,8 +73,10 @@ final readonly class ViewFilters
     public function replacing(string $field, array $filters): self
     {
         $kept = array_filter(array: $this->filters, callback: fn (ViewFilter $filter): bool => $filter->column() !== $field);
+        $modes = $this->modes;
+        $modes[$field] ??= UserFilterMode::Open;
 
-        return new self(filters: [...array_values(array: $kept), ...$filters], modes: $this->modes);
+        return new self(filters: [...array_values(array: $kept), ...$filters], modes: $modes);
     }
 
     public function modeOf(string $field): ?UserFilterMode
@@ -83,14 +85,19 @@ final readonly class ViewFilters
     }
 
     /**
-     * @return list<array{column: string, operator: string, value: scalar|null|list<scalar>, user_filter: string|null}>
+     * @return list<array{column: string, operator: string, value: scalar|null|list<scalar>, user_filter: string}>
      */
     public function toArray(): array
     {
         return array_map(
-            callback: fn (ViewFilter $filter): array => [...$filter->toArray(), self::USER_FILTER => $this->modeOf(field: $filter->column())?->value],
+            callback: fn (ViewFilter $filter): array => [...$filter->toArray(), self::USER_FILTER => $this->modeFor(filter: $filter)->value],
             array: $this->filters,
         );
+    }
+
+    private function modeFor(ViewFilter $filter): UserFilterMode
+    {
+        return $this->modes[$filter->column()] ?? UserFilterMode::Locked;
     }
 
     /**
