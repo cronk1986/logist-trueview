@@ -12,6 +12,7 @@ use Logis\LogisContext\Application\Services\CustomView\ViewExecutionCriteria;
 use Logis\LogisContext\Domain\Exception\CustomView\InvalidViewPageSizeException;
 use Logis\LogisContext\Domain\ValueObject\Customer\CustomerId;
 use Logis\LogisContext\Domain\ValueObject\Customer\VisibleCustomers;
+use Logis\LogisContext\Domain\ValueObject\CustomView\UserFilters;
 use Logis\LogisContext\Domain\ValueObject\CustomView\ViewType;
 use Logis\LogisContext\Infrastructure\Cache\CachedViewBuilder;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -76,6 +77,29 @@ final class CachedViewBuilderTest extends TestCase
             'other page size' => [['pageSize' => 10]],
             'a cursor' => [['cursor' => 'abc']],
         ];
+    }
+
+    public function test_different_user_filters_miss_the_cache(): void
+    {
+        $saved = ViewExecutionCriteriaMother::create(
+            type: ViewType::MyAssets,
+            customers: VisibleCustomers::ownCustomer(customer: CustomerId::fromInt(value: 1)),
+            columns: ['serial_number', 'location'],
+            filters: [['column' => 'status', 'operator' => 'in', 'value' => ['active', 'inactive'], 'user_filter' => 'restricted']],
+        );
+        $refined = new ViewExecutionCriteria(
+            definition: $saved->definition->refinedBy(filters: UserFilters::fromList(filters: [['column' => 'status', 'operator' => 'eq', 'value' => 'active']])),
+            sort: $saved->sort,
+            pageSize: $saved->pageSize,
+            cursor: $saved->cursor,
+            term: $saved->term,
+            customers: $saved->customers,
+        );
+
+        $this->cachedAssets->execute(criteria: $saved);
+        $this->cachedAssets->execute(criteria: $refined);
+
+        $this->assertCount(2, $this->assets->executions());
     }
 
     public function test_a_term_that_only_differs_in_case_hits_the_same_entry(): void

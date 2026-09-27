@@ -15,6 +15,7 @@ use Logis\LogisContext\Application\ModelView\CustomView\ViewPage;
 use Logis\LogisContext\Application\Services\CustomView\ViewBuilder;
 use Logis\LogisContext\Application\Services\CustomView\ViewBuilders;
 use Logis\LogisContext\Application\Services\CustomView\ViewExecutionCriteria;
+use Logis\LogisContext\Domain\ValueObject\Asset\AssetStatus;
 use Logis\LogisContext\Domain\ValueObject\CustomView\ViewType;
 use Logis\LogisContext\Infrastructure\CustomView\StatementTimeout;
 use Logis\LogisContext\Infrastructure\Persistence\Asset\AssetModel;
@@ -236,6 +237,74 @@ final class ExecuteCustomViewEndpointTest extends TestCase
         Exceptions::assertReported(ViewExecutionTimedOutException::class);
     }
 
+    public function test_user_filters_follow_the_mode_of_each_saved_filter(): void
+    {
+        $active = AssetModel::factory()->create(attributes: ['customer_id' => $this->parent->id, 'manufacturer' => 'Zebra', 'model' => 'TC52', 'status' => AssetStatus::Active]);
+        $inactive = AssetModel::factory()->create(attributes: ['customer_id' => $this->parent->id, 'manufacturer' => 'Zebra', 'model' => 'TC57', 'status' => AssetStatus::Inactive]);
+        $retired = AssetModel::factory()->create(attributes: ['customer_id' => $this->parent->id, 'manufacturer' => 'Zebra', 'model' => 'TC52', 'status' => AssetStatus::Retired]);
+        AssetModel::factory()->create(attributes: ['customer_id' => $this->parent->id, 'manufacturer' => 'Honeywell', 'status' => AssetStatus::Active]);
+        AssetModel::factory()->create(attributes: ['manufacturer' => 'Zebra', 'model' => 'TC52', 'status' => AssetStatus::Active]);
+        $view = $this->customView(owner: $this->owner, type: ViewType::MyAssets, columns: ['serial_number', 'model'], filters: [
+            ['column' => 'manufacturer', 'operator' => 'eq', 'value' => 'Zebra', 'user_filter' => 'locked'],
+            ['column' => 'status', 'operator' => 'in', 'value' => ['active', 'inactive'], 'user_filter' => 'restricted'],
+        ]);
+        $openView = $this->customView(owner: $this->owner, type: ViewType::MyAssets, columns: ['serial_number'], filters: [
+            ['column' => 'status', 'operator' => 'in', 'value' => ['active', 'inactive'], 'user_filter' => 'open'],
+        ]);
+
+        $this->assertSame([$inactive->id, $active->id], $this->rowIds(user: $this->owner, view: $view));
+        $this->assertSame([$active->id], $this->rowIds(user: $this->owner, view: $view, filters: [['column' => 'status', 'operator' => 'eq', 'value' => 'active']]));
+        $this->assertSame([$active->id], $this->rowIds(user: $this->owner, view: $view, filters: [['column' => 'model', 'operator' => 'eq', 'value' => 'TC52']]));
+        $this->assertSame([$retired->id], $this->rowIds(user: $this->owner, view: $openView, filters: [['column' => 'status', 'operator' => 'eq', 'value' => 'retired']]));
+    }
+
+    /**
+     * @param list<array<string, mixed>> $filters
+     */
+    #[DataProvider('rejectedUserFilters')]
+    public function test_user_filters_the_view_does_not_allow_are_rejected(array $filters, ?string $field, ?string $message): void
+    {
+        $view = $this->customView(owner: $this->owner, type: ViewType::MyAssets, columns: ['serial_number', 'model'], filters: [
+            ['column' => 'manufacturer', 'operator' => 'eq', 'value' => 'Zebra', 'user_filter' => 'locked'],
+            ['column' => 'status', 'operator' => 'in', 'value' => ['active', 'inactive'], 'user_filter' => 'restricted'],
+        ]);
+
+        $response = $this->execute(user: $this->owner, view: $view, body: ['filters' => $filters])->assertUnprocessable();
+
+        if ($field !== null) {
+            $response->assertJsonStructure(structure: ['data' => [$field]]);
+        }
+
+        if ($message !== null) {
+            $response->assertJsonPath(path: 'message', expect: $message);
+        }
+    }
+
+    /**
+     * @return array<string, array{list<array<string, mixed>>, ?string, ?string}>
+     */
+    public static function rejectedUserFilters(): array
+    {
+        return [
+            'locked field' => [[['column' => 'manufacturer', 'operator' => 'eq', 'value' => 'Honeywell']], null, 'The filter on "manufacturer" is locked by the owner of the view.'],
+            'outside the restricted values' => [[['column' => 'status', 'operator' => 'eq', 'value' => 'retired']], null, 'The filter on "status" accepts only: active, inactive.'],
+            'hidden field' => [[['column' => 'location', 'operator' => 'eq', 'value' => 3]], null, '"location" is not a column of this view, so it cannot be filtered.'],
+            'a mode in a user filter' => [[['column' => 'model', 'operator' => 'eq', 'value' => 'TC52', 'user_filter' => 'open']], 'filters.0.user_filter', null],
+            'unknown operator' => [[['column' => 'model', 'operator' => 'like', 'value' => 'TC']], 'filters.0.operator', null],
+            'too many filters' => [array_fill(start_index: 0, count: 21, value: ['column' => 'model', 'operator' => 'eq', 'value' => 'TC52']), 'filters', null],
+        ];
+    }
+
+    public function test_user_filters_never_reach_rows_of_other_customers(): void
+    {
+        $mine = AssetModel::factory()->create(attributes: ['customer_id' => $this->parent->id, 'model' => 'TC52']);
+        $foreign = AssetModel::factory()->create(attributes: ['model' => 'TC52']);
+        $view = $this->customView(owner: $this->owner, type: ViewType::MyAssets, columns: ['model'], filters: []);
+
+        $this->assertSame([$mine->id], $this->rowIds(user: $this->owner, view: $view, filters: [['column' => 'model', 'operator' => 'in', 'value' => ['TC52']]]));
+        $this->assertNotContains($foreign->id, $this->rowIds(user: $this->owner, view: $view, filters: [['column' => 'model', 'operator' => 'eq', 'value' => 'TC52']]));
+    }
+
     public function test_the_number_of_queries_does_not_grow_with_the_rows(): void
     {
         $view = $this->customView(owner: $this->owner, type: ViewType::MyAssets, columns: ['serial_number', 'location', 'contract'], filters: []);
@@ -279,11 +348,12 @@ final class ExecuteCustomViewEndpointTest extends TestCase
     }
 
     /**
+     * @param list<array<string, mixed>> $filters
      * @return list<mixed>
      */
-    private function rowIds(UserModel $user, CustomViewModel $view): array
+    private function rowIds(UserModel $user, CustomViewModel $view, array $filters = []): array
     {
-        return array_column(array: (array) $this->execute(user: $user, view: $view)->json(key: 'data.rows'), column_key: 'id');
+        return array_column(array: (array) $this->execute(user: $user, view: $view, body: ['filters' => $filters])->json(key: 'data.rows'), column_key: 'id');
     }
 
     private function assetQueriesOf(CustomViewModel $view): int

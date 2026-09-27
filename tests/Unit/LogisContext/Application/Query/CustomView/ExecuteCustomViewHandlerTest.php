@@ -10,6 +10,7 @@ use Logis\LogisContext\Application\Query\CustomView\ExecuteCustomViewHandler;
 use Logis\LogisContext\Application\Services\CustomView\CustomViewAccess;
 use Logis\LogisContext\Application\Services\CustomView\ViewBuilders;
 use Logis\LogisContext\Domain\Exception\CustomView\CustomViewNotFoundException;
+use Logis\LogisContext\Domain\Exception\CustomView\InvalidViewFilterException;
 use Logis\LogisContext\Domain\Exception\CustomView\InvalidViewPageSizeException;
 use Logis\LogisContext\Domain\Exception\CustomView\InvalidViewSortException;
 use Logis\LogisContext\Domain\Model\CustomView\ViewPolicy;
@@ -94,6 +95,47 @@ final class ExecuteCustomViewHandlerTest extends TestCase
         $this->assertSame('zt4', $criteria->term?->value());
     }
 
+    public function test_the_builder_receives_the_definition_refined_by_the_user_filters(): void
+    {
+        $this->views->add(view: CustomViewMother::create(
+            id: 7,
+            user: $this->owner,
+            title: 'Restricted status',
+            columns: ['serial_number', 'location'],
+            filters: [['column' => 'status', 'operator' => 'in', 'value' => ['active', 'inactive'], 'user_filter' => 'restricted']],
+        ));
+
+        $this->handler->handle(query: $this->query(viewId: 7, filters: [
+            ['column' => 'status', 'operator' => 'eq', 'value' => 'inactive'],
+            ['column' => 'location', 'operator' => 'in', 'value' => [3]],
+        ]));
+
+        $this->assertSame(
+            [
+                ['column' => 'status', 'operator' => 'eq', 'value' => 'inactive', 'user_filter' => 'restricted'],
+                ['column' => 'location', 'operator' => 'in', 'value' => [3], 'user_filter' => null],
+            ],
+            $this->assets->executions()[0]->definition->filters()->toArray(),
+        );
+    }
+
+    public function test_without_user_filters_the_builder_receives_the_saved_filters(): void
+    {
+        $this->handler->handle(query: $this->query());
+
+        $this->assertSame(
+            [['column' => 'manufacturer', 'operator' => 'eq', 'value' => 'Zebra', 'user_filter' => 'locked']],
+            $this->assets->executions()[0]->definition->filters()->toArray(),
+        );
+    }
+
+    public function test_a_user_filter_on_a_locked_field_is_rejected(): void
+    {
+        $this->expectException(InvalidViewFilterException::class);
+
+        $this->handler->handle(query: $this->query(filters: [['column' => 'manufacturer', 'operator' => 'eq', 'value' => 'Honeywell']]));
+    }
+
     public function test_a_sort_without_direction_is_descending(): void
     {
         $this->handler->handle(query: $this->query(sortField: 'serial_number'));
@@ -154,6 +196,9 @@ final class ExecuteCustomViewHandlerTest extends TestCase
         $this->handler->handle(query: $this->query(limit: 1001));
     }
 
+    /**
+     * @param list<array<string, mixed>> $filters
+     */
     private function query(
         int $userId = 1,
         int $viewId = 5,
@@ -162,6 +207,7 @@ final class ExecuteCustomViewHandlerTest extends TestCase
         ?string $sortField = null,
         ?string $sortDirection = null,
         ?string $term = null,
+        array $filters = [],
     ): ExecuteCustomView {
         return new ExecuteCustomView(
             userId: $userId,
@@ -171,6 +217,7 @@ final class ExecuteCustomViewHandlerTest extends TestCase
             sortField: $sortField,
             sortDirection: $sortDirection,
             term: $term,
+            filters: $filters,
         );
     }
 }

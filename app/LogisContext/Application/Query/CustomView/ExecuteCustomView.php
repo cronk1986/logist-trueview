@@ -6,6 +6,9 @@ namespace Logis\LogisContext\Application\Query\CustomView;
 
 final readonly class ExecuteCustomView
 {
+    /**
+     * @param array<mixed> $filters
+     */
     public function __construct(
         public int $userId,
         public int $viewId,
@@ -14,6 +17,7 @@ final readonly class ExecuteCustomView
         public ?string $sortField,
         public ?string $sortDirection,
         public ?string $term,
+        public array $filters,
     ) {
     }
 }

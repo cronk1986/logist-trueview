@@ -11,6 +11,7 @@ use Logis\LogisContext\Application\Services\CustomView\ViewBuilders;
 use Logis\LogisContext\Application\Services\CustomView\ViewExecutionCriteria;
 use Logis\LogisContext\Domain\Model\CustomView\CustomView;
 use Logis\LogisContext\Domain\ValueObject\CustomView\SortDirection;
+use Logis\LogisContext\Domain\ValueObject\CustomView\UserFilters;
 use Logis\LogisContext\Domain\ValueObject\CustomView\ViewPageSize;
 use Logis\LogisContext\Domain\ValueObject\CustomView\ViewSort;
 use Logis\LogisContext\Domain\ValueObject\Search\SearchTerm;
@@ -31,7 +32,7 @@ final class ExecuteCustomViewHandler
         $view = $this->access->viewVisibleTo(user: $user, viewId: $query->viewId);
 
         $criteria = new ViewExecutionCriteria(
-            definition: $view->definition(),
+            definition: $view->definition()->refinedBy(filters: UserFilters::fromList(filters: $query->filters)),
             sort: $this->sort(query: $query, view: $view),
             pageSize: ViewPageSize::fromInt(value: $query->limit),
             cursor: $query->cursor,

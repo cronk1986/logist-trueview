@@ -901,6 +901,49 @@ components:
             serial number, manufacturer and model for assets; subject, repair id and incident number for tickets;
             name for contracts; title and address for locations.
           example: zt4
+        filters:
+          type: array
+          maxItems: 20
+          description: |
+            Filters of the user who executes the view, combined with AND. Each one follows the catalog rules of
+            `ViewFilter` and the `user_filter` of the saved filters of its field:
+
+            | Field | What happens |
+            |---|---|
+            | saved filter `restricted` | accepted if it uses `eq` or `in` with a subset of the saved values; it replaces the saved filter |
+            | saved filter `open` | accepted; it replaces every saved filter of that field |
+            | saved filter `locked` | 422 |
+            | no saved filter, column of the view | accepted and added |
+            | no saved filter, not a column of the view | 422 |
+          items:
+            $ref: "#/components/schemas/UserViewFilter"
+          example:
+            - column: status
+              operator: eq
+              value: active
+            - column: model
+              operator: in
+              value: [TC52, TC57]
+    UserViewFilter:
+      type: object
+      required: [column, operator, value]
+      description: A filter sent when executing a view. It has no `user_filter`; sending one is 422.
+      properties:
+        column:
+          type: string
+          example: status
+        operator:
+          $ref: "#/components/schemas/FilterOperator"
+        value:
+          oneOf:
+            - type: string
+            - type: integer
+            - type: array
+              items:
+                oneOf:
+                  - type: string
+                  - type: integer
+          example: active
     ViewReference:
       type: object
       required: [id, label]
