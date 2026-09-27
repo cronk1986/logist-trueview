@@ -37,6 +37,29 @@ final class ViewFiltersTest extends TestCase
         $this->assertNull($filters->modeOf(field: 'manufacturer'));
     }
 
+    public function test_the_filters_of_one_field_share_their_mode(): void
+    {
+        $this->expectException(InvalidViewFilterException::class);
+        $this->expectExceptionMessage('The filters on "created_at" must share the same user_filter mode.');
+
+        ViewFilters::fromList(filters: [
+            ['column' => 'created_at', 'operator' => 'gte', 'value' => '2024-01-01', 'user_filter' => 'open'],
+            ['column' => 'created_at', 'operator' => 'lte', 'value' => '2024-12-31', 'user_filter' => 'locked'],
+        ]);
+    }
+
+    public function test_it_lists_the_filters_of_a_field(): void
+    {
+        $filters = ViewFilters::fromList(filters: [
+            ['column' => 'created_at', 'operator' => 'gte', 'value' => '2024-01-01', 'user_filter' => 'open'],
+            ['column' => 'model', 'operator' => 'eq', 'value' => 'TC52', 'user_filter' => 'open'],
+            ['column' => 'created_at', 'operator' => 'lte', 'value' => '2024-12-31', 'user_filter' => 'open'],
+        ]);
+
+        $this->assertCount(2, $filters->of(field: 'created_at'));
+        $this->assertSame([], $filters->of(field: 'status'));
+    }
+
     public function test_a_filter_without_a_mode_is_rejected(): void
     {
         $this->expectException(InvalidViewFilterException::class);

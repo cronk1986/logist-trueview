@@ -26,6 +26,7 @@ final readonly class ViewDefinition
 
         foreach ($filters->all() as $filter) {
             self::filteredField(catalog: $catalog, filter: $filter)->ensureAccepts(filter: $filter);
+            self::ensureFitsItsUserFilter(filters: $filters, filter: $filter);
         }
 
         return new self(catalog: $catalog, columns: $columns, filters: $filters);
@@ -55,6 +56,23 @@ final readonly class ViewDefinition
     {
         if ($catalog->find(name: $column) === null) {
             throw InvalidViewColumnsException::unknown(column: $column, viewType: $catalog->type()->value);
+        }
+    }
+
+    private static function ensureFitsItsUserFilter(ViewFilters $filters, ViewFilter $filter): void
+    {
+        $column = $filter->column();
+
+        if ($filters->modeOf(field: $column)?->requiresDiscreteValues() !== true) {
+            return;
+        }
+
+        if (!$filter->operator()->isDiscrete()) {
+            throw InvalidViewFilterException::restrictedNeedsDiscreteValues(column: $column);
+        }
+
+        if (count(value: $filters->of(field: $column)) > 1) {
+            throw InvalidViewFilterException::singleRestrictedFilter(column: $column);
         }
     }
 

@@ -720,6 +720,9 @@ components:
         | `restricted` | a subset of the saved values, with `eq` or `in` |
         | `open` | any valid filter for the field, which replaces the saved ones |
         | `locked` (default) | nothing: the saved filters always apply |
+
+        When a view is saved, all the filters of one field must share their `user_filter`, and a `restricted`
+        field has a single filter with `eq` or `in`. Otherwise the response is 422.
       properties:
         column:
           type: string

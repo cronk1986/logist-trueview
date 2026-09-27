@@ -174,6 +174,15 @@ final class CreateCustomViewEndpointTest extends TestCase
             'column of another type' => [['view_type' => 'my_contracts', 'columns' => ['serial_number']], '"serial_number" is not a column of my_contracts views.'],
             'operator not allowed' => [['filters' => [['column' => 'model', 'operator' => 'gt', 'value' => 'A', 'user_filter' => 'locked']]], 'The operator "gt" cannot be used on "model".'],
             'wrong value type' => [['filters' => [['column' => 'location', 'operator' => 'eq', 'value' => 'Main', 'user_filter' => 'locked']]], 'The filter on "location" needs positive integer ids.'],
+            'mixed user filter modes' => [['filters' => [
+                ['column' => 'created_at', 'operator' => 'gte', 'value' => '2024-01-01', 'user_filter' => 'open'],
+                ['column' => 'created_at', 'operator' => 'lte', 'value' => '2024-12-31', 'user_filter' => 'locked'],
+            ]], 'The filters on "created_at" must share the same user_filter mode.'],
+            'restricted with contains' => [['filters' => [['column' => 'model', 'operator' => 'contains', 'value' => 'TC', 'user_filter' => 'restricted']]], 'A restricted filter on "model" must use eq or in.'],
+            'two restricted filters on one field' => [['filters' => [
+                ['column' => 'status', 'operator' => 'eq', 'value' => 'active', 'user_filter' => 'restricted'],
+                ['column' => 'status', 'operator' => 'in', 'value' => ['inactive'], 'user_filter' => 'restricted'],
+            ]], '"status" can have only one restricted filter.'],
             'invalid date' => [['filters' => [['column' => 'created_at', 'operator' => 'gt', 'value' => '2024-13-01', 'user_filter' => 'locked']]], 'The filter on "created_at" needs dates in the Y-m-d format.'],
         ];
     }

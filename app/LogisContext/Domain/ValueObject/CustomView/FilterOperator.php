@@ -26,6 +26,14 @@ enum FilterOperator: string
         };
     }
 
+    public function isDiscrete(): bool
+    {
+        return match ($this) {
+            self::Equals, self::In => true,
+            default => false,
+        };
+    }
+
     public function expectsRange(): bool
     {
         return $this === self::Between;

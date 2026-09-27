@@ -100,4 +100,19 @@ final class InvalidViewFilterException extends InvalidValueException
     {
         return new self(message: sprintf('The filter on "%s" uses the unknown user_filter mode "%s". Use restricted, open or locked.', $column, $mode));
     }
+
+    public static function mixedUserFilters(string $column): self
+    {
+        return new self(message: sprintf('The filters on "%s" must share the same user_filter mode.', $column));
+    }
+
+    public static function restrictedNeedsDiscreteValues(string $column): self
+    {
+        return new self(message: sprintf('A restricted filter on "%s" must use eq or in.', $column));
+    }
+
+    public static function singleRestrictedFilter(string $column): self
+    {
+        return new self(message: sprintf('"%s" can have only one restricted filter.', $column));
+    }
 }

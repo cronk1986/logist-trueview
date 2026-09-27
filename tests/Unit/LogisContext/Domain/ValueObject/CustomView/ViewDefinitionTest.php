@@ -105,6 +105,50 @@ final class ViewDefinitionTest extends TestCase
         ];
     }
 
+    /**
+     * @param list<array<string, mixed>> $filters
+     */
+    #[DataProvider('invalidUserFilterModes')]
+    public function test_it_rejects_restricted_filters_that_are_not_a_single_discrete_filter(array $filters, string $message): void
+    {
+        $this->expectException(InvalidViewFilterException::class);
+        $this->expectExceptionMessage($message);
+
+        $this->definition(type: ViewType::MyAssets, columns: ['id'], filters: $filters);
+    }
+
+    /**
+     * @return array<string, array{list<array<string, mixed>>, string}>
+     */
+    public static function invalidUserFilterModes(): array
+    {
+        return [
+            'restricted contains' => [[['column' => 'model', 'operator' => 'contains', 'value' => 'TC', 'user_filter' => 'restricted']], 'A restricted filter on "model" must use eq or in.'],
+            'restricted neq' => [[['column' => 'status', 'operator' => 'neq', 'value' => 'retired', 'user_filter' => 'restricted']], 'A restricted filter on "status" must use eq or in.'],
+            'restricted date' => [[['column' => 'created_at', 'operator' => 'in_last_days', 'value' => 30, 'user_filter' => 'restricted']], 'A restricted filter on "created_at" must use eq or in.'],
+            'two restricted filters' => [
+                [
+                    ['column' => 'status', 'operator' => 'eq', 'value' => 'active', 'user_filter' => 'restricted'],
+                    ['column' => 'status', 'operator' => 'in', 'value' => ['active', 'inactive'], 'user_filter' => 'restricted'],
+                ],
+                '"status" can have only one restricted filter.',
+            ],
+        ];
+    }
+
+    public function test_open_and_locked_fields_accept_ranges(): void
+    {
+        $definition = $this->definition(type: ViewType::MyAssets, columns: ['id'], filters: [
+            ['column' => 'created_at', 'operator' => 'gte', 'value' => '2024-01-01', 'user_filter' => 'open'],
+            ['column' => 'created_at', 'operator' => 'lte', 'value' => '2024-12-31', 'user_filter' => 'open'],
+            ['column' => 'updated_at', 'operator' => 'gte', 'value' => '2024-01-01', 'user_filter' => 'locked'],
+            ['column' => 'updated_at', 'operator' => 'lte', 'value' => '2024-12-31', 'user_filter' => 'locked'],
+            ['column' => 'status', 'operator' => 'in', 'value' => ['active', 'inactive'], 'user_filter' => 'restricted'],
+        ]);
+
+        $this->assertCount(5, $definition->filters()->all());
+    }
+
     public function test_the_list_limits_are_inclusive(): void
     {
         $definition = $this->definition(

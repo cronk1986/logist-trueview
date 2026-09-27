@@ -37,8 +37,15 @@ final readonly class ViewFilters
             }
 
             $viewFilter = ViewFilter::fromArray(filter: $filter);
+            $column = $viewFilter->column();
+            $mode = self::userFilterOf(filter: $filter, column: $column);
+
+            if (isset($modes[$column]) && $modes[$column] !== $mode) {
+                throw InvalidViewFilterException::mixedUserFilters(column: $column);
+            }
+
             $viewFilters[] = $viewFilter;
-            $modes[$viewFilter->column()] = self::userFilterOf(filter: $filter, column: $viewFilter->column());
+            $modes[$column] = $mode;
         }
 
         return new self(filters: $viewFilters, modes: $modes);
@@ -50,6 +57,14 @@ final readonly class ViewFilters
     public function all(): array
     {
         return $this->filters;
+    }
+
+    /**
+     * @return list<ViewFilter>
+     */
+    public function of(string $field): array
+    {
+        return array_values(array: array_filter(array: $this->filters, callback: fn (ViewFilter $filter): bool => $filter->column() === $field));
     }
 
     public function modeOf(string $field): ?UserFilterMode
