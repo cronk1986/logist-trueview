@@ -85,7 +85,7 @@ final class CustomViewTest extends TestCase
         $this->assertSame('Every Zebra device', $view->description());
         $this->assertSame(ViewType::MyAssets, $view->type());
         $this->assertSame(['serial_number', 'model'], $view->columns()->toArray());
-        $this->assertSame([['column' => 'manufacturer', 'operator' => 'eq', 'value' => 'Zebra']], $view->filters()->toArray());
+        $this->assertSame([['column' => 'manufacturer', 'operator' => 'eq', 'value' => 'Zebra', 'user_filter' => 'locked']], $view->filters()->toArray());
         $this->assertTrue($view->isDefault());
         $this->assertTrue($view->isPublic());
     }
@@ -112,14 +112,14 @@ final class CustomViewTest extends TestCase
             title: CustomViewTitle::fromString(value: 'Retired'),
             description: null,
             columns: ViewColumns::fromList(columns: ['serial_number', 'status']),
-            filters: ViewFilters::fromList(filters: [['column' => 'status', 'operator' => 'eq', 'value' => 'retired']]),
+            filters: ViewFilters::fromList(filters: [['column' => 'status', 'operator' => 'eq', 'value' => 'retired', 'user_filter' => 'locked']]),
             isPublic: true,
         );
 
         $this->assertSame('Retired', $view->title()->value());
         $this->assertNull($view->description());
         $this->assertSame(['serial_number', 'status'], $view->columns()->toArray());
-        $this->assertSame([['column' => 'status', 'operator' => 'eq', 'value' => 'retired']], $view->filters()->toArray());
+        $this->assertSame([['column' => 'status', 'operator' => 'eq', 'value' => 'retired', 'user_filter' => 'locked']], $view->filters()->toArray());
         $this->assertTrue($view->isPublic());
         $this->assertTrue($view->isDefault());
         $this->assertSame(ViewType::MyAssets, $view->type());
@@ -212,7 +212,7 @@ final class CustomViewTest extends TestCase
     {
         $this->expectException(InvalidViewFilterException::class);
 
-        $this->viewOfType(type: ViewType::MyTickets, columns: ['subject'], filters: [['column' => 'manufacturer', 'operator' => 'eq', 'value' => 'Zebra']]);
+        $this->viewOfType(type: ViewType::MyTickets, columns: ['subject'], filters: [['column' => 'manufacturer', 'operator' => 'eq', 'value' => 'Zebra', 'user_filter' => 'locked']]);
     }
 
     public function test_it_exposes_its_definition(): void

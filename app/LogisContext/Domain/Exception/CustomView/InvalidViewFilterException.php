@@ -90,4 +90,14 @@ final class InvalidViewFilterException extends InvalidValueException
     {
         return new self(message: sprintf('The filter on "%s" needs dates in the Y-m-d format.', $column));
     }
+
+    public static function missingUserFilter(string $column): self
+    {
+        return new self(message: sprintf('The filter on "%s" needs a user_filter mode: restricted, open or locked.', $column));
+    }
+
+    public static function unknownUserFilter(string $column, string $mode): self
+    {
+        return new self(message: sprintf('The filter on "%s" uses the unknown user_filter mode "%s". Use restricted, open or locked.', $column, $mode));
+    }
 }

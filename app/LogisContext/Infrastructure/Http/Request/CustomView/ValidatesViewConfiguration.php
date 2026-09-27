@@ -7,6 +7,7 @@ namespace Logis\LogisContext\Infrastructure\Http\Request\CustomView;
 use Illuminate\Validation\Rule;
 use Logis\LogisContext\Domain\ValueObject\CustomView\CustomViewTitle;
 use Logis\LogisContext\Domain\ValueObject\CustomView\FilterOperator;
+use Logis\LogisContext\Domain\ValueObject\CustomView\UserFilterMode;
 use Logis\LogisContext\Domain\ValueObject\CustomView\ViewFilters;
 
 trait ValidatesViewConfiguration
@@ -26,6 +27,7 @@ trait ValidatesViewConfiguration
             'filters.*.column' => ['required', 'string'],
             'filters.*.operator' => ['required', 'string', Rule::enum(type: FilterOperator::class)],
             'filters.*.value' => ['present'],
+            'filters.*.user_filter' => ['nullable', 'string', Rule::enum(type: UserFilterMode::class)],
             'is_public' => ['sometimes', 'boolean'],
         ];
     }
@@ -42,6 +44,23 @@ trait ValidatesViewConfiguration
         }
 
         return $this->string(key: 'description')->toString();
+    }
+
+    /**
+     * @return array<mixed>
+     */
+    private function savedFilters(): array
+    {
+        return array_map(callback: fn (mixed $filter): mixed => $this->withDefaultUserFilter(filter: $filter), array: $this->listOf(key: 'filters'));
+    }
+
+    private function withDefaultUserFilter(mixed $filter): mixed
+    {
+        if (!is_array(value: $filter) || isset($filter['user_filter'])) {
+            return $filter;
+        }
+
+        return [...$filter, 'user_filter' => UserFilterMode::Locked->value];
     }
 
     /**

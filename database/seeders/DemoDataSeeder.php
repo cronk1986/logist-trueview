@@ -100,11 +100,11 @@ final class DemoDataSeeder extends Seeder
             'user_id' => $owner->id,
             'customer_id' => $owner->customer_id,
             'title' => 'Zebra scanners',
-            'description' => 'Every active Zebra device',
+            'description' => 'Zebra devices in service, active or inactive',
             'columns' => ['serial_number', 'manufacturer', 'model', 'location'],
             'filters' => [
-                ['column' => 'manufacturer', 'operator' => 'eq', 'value' => 'Zebra'],
-                ['column' => 'status', 'operator' => 'eq', 'value' => 'active'],
+                ['column' => 'manufacturer', 'operator' => 'eq', 'value' => 'Zebra', 'user_filter' => 'locked'],
+                ['column' => 'status', 'operator' => 'in', 'value' => ['active', 'inactive'], 'user_filter' => 'restricted'],
             ],
         ]);
 
@@ -114,7 +114,7 @@ final class DemoDataSeeder extends Seeder
             'title' => 'Open tickets',
             'description' => 'Tickets that are still open, shared with the whole customer',
             'columns' => ['repair_id', 'subject', 'status'],
-            'filters' => [['column' => 'status', 'operator' => 'eq', 'value' => $this->ticketStatusId(name: 'Open')]],
+            'filters' => [['column' => 'status', 'operator' => 'eq', 'value' => $this->ticketStatusId(name: 'Open'), 'user_filter' => 'open']],
         ]);
     }
 
@@ -126,7 +126,10 @@ final class DemoDataSeeder extends Seeder
             'title' => 'Retired devices',
             'description' => 'Assets retired from service, shared with the whole customer',
             'columns' => ['serial_number', 'model', 'status', 'updated_at'],
-            'filters' => [['column' => 'status', 'operator' => 'eq', 'value' => 'retired']],
+            'filters' => [
+                ['column' => 'status', 'operator' => 'eq', 'value' => 'retired', 'user_filter' => 'locked'],
+                ['column' => 'updated_at', 'operator' => 'in_last_days', 'value' => 365, 'user_filter' => 'open'],
+            ],
         ]);
 
         CustomViewModel::factory()->ofType(type: ViewType::MyContracts)->public()->create(attributes: [

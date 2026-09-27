@@ -57,12 +57,24 @@ final class DemoDataSeederTest extends TestCase
         $this->assertTrue(CustomViewModel::query()->where(column: 'customer_id', operator: $unrelated->id)->where(column: 'is_public', operator: true)->exists());
     }
 
+    public function test_the_seeded_views_cover_the_three_user_filter_modes(): void
+    {
+        $modes = CustomViewModel::query()->pluck(column: 'filters')
+            ->flatMap(callback: fn (array $filters): array => array_column(array: $filters, column_key: 'user_filter'))
+            ->unique()
+            ->sort()
+            ->values()
+            ->all();
+
+        $this->assertSame(['locked', 'open', 'restricted'], $modes);
+    }
+
     public function test_the_ticket_view_filters_the_open_status_by_id(): void
     {
         $openStatusId = TicketStatusModel::query()->where(column: 'name', operator: 'Open')->value(column: 'id');
         $view = CustomViewModel::query()->where(column: 'title', operator: 'Open tickets')->firstOrFail();
 
-        $this->assertEquals([['column' => 'status', 'operator' => 'eq', 'value' => $openStatusId]], $view->filters);
+        $this->assertEquals([['column' => 'status', 'operator' => 'eq', 'value' => $openStatusId, 'user_filter' => 'open']], $view->filters);
     }
 
     public function test_only_the_demo_user_can_view_the_sub_accounts_of_the_parent_customer(): void

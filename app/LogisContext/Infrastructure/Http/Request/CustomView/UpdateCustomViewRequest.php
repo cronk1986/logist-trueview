@@ -33,7 +33,7 @@ final class UpdateCustomViewRequest extends FormRequest
             description: $this->description(),
             viewType: $this->viewType(),
             columns: $this->listOf(key: 'columns'),
-            filters: $this->listOf(key: 'filters'),
+            filters: $this->savedFilters(),
             isPublic: $this->boolean(key: 'is_public'),
         );
     }

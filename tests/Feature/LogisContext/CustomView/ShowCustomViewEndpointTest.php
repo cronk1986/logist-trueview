@@ -37,7 +37,7 @@ final class ShowCustomViewEndpointTest extends TestCase
             'user_id' => $this->owner->id,
             'title' => 'Zebra scanners',
             'columns' => ['serial_number', 'location'],
-            'filters' => [['column' => 'manufacturer', 'operator' => 'eq', 'value' => 'Zebra']],
+            'filters' => [['column' => 'manufacturer', 'operator' => 'eq', 'value' => 'Zebra', 'user_filter' => 'locked']],
         ]);
 
         $this->callViews(method: 'GET', token: $this->tokenOf(user: $this->owner), path: '/' . $view->id)

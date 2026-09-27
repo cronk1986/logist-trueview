@@ -69,7 +69,7 @@ final class ExecuteCustomViewEndpointTest extends TestCase
     {
         $zebra = AssetModel::factory()->create(attributes: ['customer_id' => $this->parent->id, 'manufacturer' => 'Zebra', 'serial_number' => 'ZB-1']);
         AssetModel::factory()->create(attributes: ['customer_id' => $this->parent->id, 'manufacturer' => 'Honeywell']);
-        $view = $this->customView(owner: $this->owner, type: ViewType::MyAssets, columns: ['serial_number', 'manufacturer'], filters: [['column' => 'manufacturer', 'operator' => 'eq', 'value' => 'Zebra']]);
+        $view = $this->customView(owner: $this->owner, type: ViewType::MyAssets, columns: ['serial_number', 'manufacturer'], filters: [['column' => 'manufacturer', 'operator' => 'eq', 'value' => 'Zebra', 'user_filter' => 'locked']]);
 
         $this->execute(user: $this->owner, view: $view)
             ->assertOk()

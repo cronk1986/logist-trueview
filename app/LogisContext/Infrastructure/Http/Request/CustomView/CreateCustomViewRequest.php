@@ -32,7 +32,7 @@ final class CreateCustomViewRequest extends FormRequest
             description: $this->description(),
             viewType: $this->string(key: 'view_type')->toString(),
             columns: $this->listOf(key: 'columns'),
-            filters: $this->listOf(key: 'filters'),
+            filters: $this->savedFilters(),
             isPublic: $this->boolean(key: 'is_public'),
         );
     }

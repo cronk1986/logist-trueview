@@ -29,7 +29,7 @@ final class CustomViewFactory extends Factory
             'description' => fake()->sentence(),
             'view_type' => ViewType::MyAssets,
             'columns' => ['serial_number', 'manufacturer', 'model', 'location'],
-            'filters' => [['column' => 'manufacturer', 'operator' => 'eq', 'value' => 'Zebra']],
+            'filters' => [['column' => 'manufacturer', 'operator' => 'eq', 'value' => 'Zebra', 'user_filter' => 'locked']],
             'is_default' => false,
             'is_public' => false,
         ];
@@ -48,19 +48,19 @@ final class CustomViewFactory extends Factory
         return match ($type) {
             ViewType::MyAssets => [
                 'columns' => ['serial_number', 'manufacturer', 'model', 'location'],
-                'filters' => [['column' => 'manufacturer', 'operator' => 'eq', 'value' => 'Zebra']],
+                'filters' => [['column' => 'manufacturer', 'operator' => 'eq', 'value' => 'Zebra', 'user_filter' => 'locked']],
             ],
             ViewType::MyTickets => [
                 'columns' => ['repair_id', 'subject', 'status'],
-                'filters' => [['column' => 'subject', 'operator' => 'contains', 'value' => 'printer']],
+                'filters' => [['column' => 'subject', 'operator' => 'contains', 'value' => 'printer', 'user_filter' => 'locked']],
             ],
             ViewType::MyContracts => [
                 'columns' => ['name', 'status'],
-                'filters' => [['column' => 'status', 'operator' => 'eq', 'value' => 'active']],
+                'filters' => [['column' => 'status', 'operator' => 'eq', 'value' => 'active', 'user_filter' => 'locked']],
             ],
             ViewType::MyLocations => [
                 'columns' => ['title', 'city', 'state'],
-                'filters' => [['column' => 'created_at', 'operator' => 'in_last_days', 'value' => 365]],
+                'filters' => [['column' => 'created_at', 'operator' => 'in_last_days', 'value' => 365, 'user_filter' => 'locked']],
             ],
         };
     }

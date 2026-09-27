@@ -51,6 +51,33 @@ final class CreateCustomViewEndpointTest extends TestCase
         $this->assertSame($this->user->customer_id, $stored->customer_id);
     }
 
+    public function test_a_filter_without_a_mode_is_locked(): void
+    {
+        $payload = [...$this->payload(), 'filters' => [['column' => 'manufacturer', 'operator' => 'eq', 'value' => 'Zebra']]];
+
+        $response = $this->callViews(method: 'POST', token: $this->tokenOf(user: $this->user), data: $payload)
+            ->assertCreated()
+            ->assertJsonPath(path: 'data.filters.0.user_filter', expect: 'locked');
+
+        $stored = CustomViewModel::query()->findOrFail(id: (int) $response->json(key: 'data.id'));
+        $this->assertSame('locked', $stored->filters[0]['user_filter'] ?? null);
+    }
+
+    public function test_the_three_modes_are_stored_and_returned(): void
+    {
+        $payload = [...$this->payload(), 'filters' => [
+            ['column' => 'status', 'operator' => 'in', 'value' => ['active', 'inactive'], 'user_filter' => 'restricted'],
+            ['column' => 'model', 'operator' => 'contains', 'value' => 'TC', 'user_filter' => 'open'],
+            ['column' => 'manufacturer', 'operator' => 'eq', 'value' => 'Zebra', 'user_filter' => 'locked'],
+        ]];
+
+        $this->callViews(method: 'POST', token: $this->tokenOf(user: $this->user), data: $payload)
+            ->assertCreated()
+            ->assertJsonPath(path: 'data.filters.0.user_filter', expect: 'restricted')
+            ->assertJsonPath(path: 'data.filters.1.user_filter', expect: 'open')
+            ->assertJsonPath(path: 'data.filters.2.user_filter', expect: 'locked');
+    }
+
     public function test_is_default_in_the_body_is_ignored(): void
     {
         $this->callViews(method: 'POST', token: $this->tokenOf(user: $this->user), data: [...$this->payload(), 'is_default' => true])
@@ -116,10 +143,11 @@ final class CreateCustomViewEndpointTest extends TestCase
             'no columns' => [['columns' => []], 'columns'],
             'duplicated columns' => [['columns' => ['model', 'model']], 'columns.0'],
             'filters missing' => [['filters' => null], 'filters'],
-            'too many filters' => [['filters' => array_fill(start_index: 0, count: 21, value: ['column' => 'model', 'operator' => 'eq', 'value' => 'A'])], 'filters'],
-            'unknown operator' => [['filters' => [['column' => 'model', 'operator' => 'like', 'value' => 'A']]], 'filters.0.operator'],
+            'too many filters' => [['filters' => array_fill(start_index: 0, count: 21, value: ['column' => 'model', 'operator' => 'eq', 'value' => 'A', 'user_filter' => 'locked'])], 'filters'],
+            'unknown operator' => [['filters' => [['column' => 'model', 'operator' => 'like', 'value' => 'A', 'user_filter' => 'locked']]], 'filters.0.operator'],
             'filter without column' => [['filters' => [['operator' => 'eq', 'value' => 'A']]], 'filters.0.column'],
             'is_public not a boolean' => [['is_public' => 'yes'], 'is_public'],
+            'unknown user filter mode' => [['filters' => [['column' => 'model', 'operator' => 'eq', 'value' => 'A', 'user_filter' => 'public']]], 'filters.0.user_filter'],
         ];
     }
 
@@ -144,9 +172,9 @@ final class CreateCustomViewEndpointTest extends TestCase
         return [
             'restricted column' => [['columns' => ['serial_number', 'customer_id']], '"customer_id" is not a column of my_assets views.'],
             'column of another type' => [['view_type' => 'my_contracts', 'columns' => ['serial_number']], '"serial_number" is not a column of my_contracts views.'],
-            'operator not allowed' => [['filters' => [['column' => 'model', 'operator' => 'gt', 'value' => 'A']]], 'The operator "gt" cannot be used on "model".'],
-            'wrong value type' => [['filters' => [['column' => 'location', 'operator' => 'eq', 'value' => 'Main']]], 'The filter on "location" needs positive integer ids.'],
-            'invalid date' => [['filters' => [['column' => 'created_at', 'operator' => 'gt', 'value' => '2024-13-01']]], 'The filter on "created_at" needs dates in the Y-m-d format.'],
+            'operator not allowed' => [['filters' => [['column' => 'model', 'operator' => 'gt', 'value' => 'A', 'user_filter' => 'locked']]], 'The operator "gt" cannot be used on "model".'],
+            'wrong value type' => [['filters' => [['column' => 'location', 'operator' => 'eq', 'value' => 'Main', 'user_filter' => 'locked']]], 'The filter on "location" needs positive integer ids.'],
+            'invalid date' => [['filters' => [['column' => 'created_at', 'operator' => 'gt', 'value' => '2024-13-01', 'user_filter' => 'locked']]], 'The filter on "created_at" needs dates in the Y-m-d format.'],
         ];
     }
 
@@ -161,8 +189,8 @@ final class CreateCustomViewEndpointTest extends TestCase
             'view_type' => 'my_assets',
             'columns' => ['serial_number', 'location'],
             'filters' => [
-                ['column' => 'manufacturer', 'operator' => 'eq', 'value' => 'Zebra'],
-                ['column' => 'created_at', 'operator' => 'between', 'value' => ['2024-01-01', '2024-06-30']],
+                ['column' => 'manufacturer', 'operator' => 'eq', 'value' => 'Zebra', 'user_filter' => 'locked'],
+                ['column' => 'created_at', 'operator' => 'between', 'value' => ['2024-01-01', '2024-06-30'], 'user_filter' => 'locked'],
             ],
             'is_public' => true,
         ];

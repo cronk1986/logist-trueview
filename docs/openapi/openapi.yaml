@@ -712,6 +712,14 @@ components:
 
         Dates are whole UTC days: `gt 2024-01-01` starts on 2024-01-02, `between` includes both days and
         `in_last_days 0` is today. `contains` matches literally, `%` and `_` are not wildcards.
+
+        `user_filter` decides what the user who executes the view can do with the saved filters of that field:
+
+        | `user_filter` | The user can send |
+        |---|---|
+        | `restricted` | a subset of the saved values, with `eq` or `in` |
+        | `open` | any valid filter for the field, which replaces the saved ones |
+        | `locked` (default) | nothing: the saved filters always apply |
       properties:
         column:
           type: string
@@ -729,6 +737,11 @@ components:
                   - type: string
                   - type: integer
           example: Zebra
+        user_filter:
+          type: string
+          enum: [restricted, open, locked]
+          default: locked
+          description: Optional on input. Always present in responses.
     CustomViewInput:
       type: object
       required: [title, columns, filters]

@@ -1101,7 +1101,7 @@
           "operator",
           "value"
         ],
-        "description": "A filter on one field of the view type. Filters are combined with AND.\n\n| Field type | Operators | Value |\n|---|---|---|\n| text | `eq`, `neq`, `contains` / `in`, `not_in` | 1 to 255 characters / a list of 1 to 100 |\n| choice (`status` of assets and contracts) | `eq`, `neq` / `in`, `not_in` | one of the allowed values / a list |\n| identifier (`id` and relations such as `location`, `contract`, `customer`, ticket `status`, `asset`) | `eq` / `in`, `not_in` | a positive integer id / a list |\n| date (`created_at`, `updated_at`) | `gt`, `gte`, `lt`, `lte` / `between` / `in_last_days` | a `Y-m-d` date / two dates / 0 to 365 days |\n\nDates are whole UTC days: `gt 2024-01-01` starts on 2024-01-02, `between` includes both days and\n`in_last_days 0` is today. `contains` matches literally, `%` and `_` are not wildcards.\n",
+        "description": "A filter on one field of the view type. Filters are combined with AND.\n\n| Field type | Operators | Value |\n|---|---|---|\n| text | `eq`, `neq`, `contains` / `in`, `not_in` | 1 to 255 characters / a list of 1 to 100 |\n| choice (`status` of assets and contracts) | `eq`, `neq` / `in`, `not_in` | one of the allowed values / a list |\n| identifier (`id` and relations such as `location`, `contract`, `customer`, ticket `status`, `asset`) | `eq` / `in`, `not_in` | a positive integer id / a list |\n| date (`created_at`, `updated_at`) | `gt`, `gte`, `lt`, `lte` / `between` / `in_last_days` | a `Y-m-d` date / two dates / 0 to 365 days |\n\nDates are whole UTC days: `gt 2024-01-01` starts on 2024-01-02, `between` includes both days and\n`in_last_days 0` is today. `contains` matches literally, `%` and `_` are not wildcards.\n\n`user_filter` decides what the user who executes the view can do with the saved filters of that field:\n\n| `user_filter` | The user can send |\n|---|---|\n| `restricted` | a subset of the saved values, with `eq` or `in` |\n| `open` | any valid filter for the field, which replaces the saved ones |\n| `locked` (default) | nothing: the saved filters always apply |\n",
         "properties": {
           "column": {
             "type": "string",
@@ -1134,6 +1134,16 @@
               }
             ],
             "example": "Zebra"
+          },
+          "user_filter": {
+            "type": "string",
+            "enum": [
+              "restricted",
+              "open",
+              "locked"
+            ],
+            "default": "locked",
+            "description": "Optional on input. Always present in responses."
           }
         }
       },

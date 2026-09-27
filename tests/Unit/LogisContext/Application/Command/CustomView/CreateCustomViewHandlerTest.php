@@ -53,7 +53,7 @@ final class CreateCustomViewHandlerTest extends TestCase
         $this->assertSame(3, $view->customer()->id()->value());
         $this->assertSame(ViewType::MyAssets, $view->type());
         $this->assertSame(['serial_number', 'location'], $view->columns()->toArray());
-        $this->assertSame([['column' => 'manufacturer', 'operator' => 'eq', 'value' => 'Zebra']], $view->filters()->toArray());
+        $this->assertSame([['column' => 'manufacturer', 'operator' => 'eq', 'value' => 'Zebra', 'user_filter' => 'locked']], $view->filters()->toArray());
         $this->assertSame('Every Zebra', $view->description());
         $this->assertTrue($view->isPublic());
         $this->assertFalse($view->isDefault());
@@ -104,7 +104,7 @@ final class CreateCustomViewHandlerTest extends TestCase
             description: 'Every Zebra',
             viewType: $viewType,
             columns: $columns,
-            filters: [['column' => 'manufacturer', 'operator' => 'eq', 'value' => 'Zebra']],
+            filters: [['column' => 'manufacturer', 'operator' => 'eq', 'value' => 'Zebra', 'user_filter' => 'locked']],
             isPublic: true,
         );
     }

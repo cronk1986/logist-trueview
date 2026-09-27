@@ -12,6 +12,7 @@ use Logis\LogisContext\Domain\ValueObject\CustomView\ViewFieldCatalog;
 use Logis\LogisContext\Domain\ValueObject\CustomView\ViewFilters;
 use Logis\LogisContext\Domain\ValueObject\CustomView\ViewPageSize;
 use Logis\LogisContext\Domain\ValueObject\CustomView\ViewSort;
+use Logis\LogisContext\Domain\ValueObject\CustomView\UserFilterMode;
 use Logis\LogisContext\Domain\ValueObject\CustomView\ViewType;
 use Logis\LogisContext\Domain\ValueObject\Search\SearchTerm;
 
@@ -36,7 +37,7 @@ final class ViewExecutionCriteriaMother
             definition: ViewDefinition::from(
                 type: $type,
                 columns: ViewColumns::fromList(columns: $columns),
-                filters: ViewFilters::fromList(filters: $filters),
+                filters: ViewFilters::fromList(filters: array_map(callback: self::withDefaultUserFilter(...), array: $filters)),
             ),
             sort: self::sort(type: $type, field: $sortField, direction: $sortDirection),
             pageSize: ViewPageSize::fromInt(value: $pageSize),
@@ -44,6 +45,15 @@ final class ViewExecutionCriteriaMother
             term: $term === null ? null : SearchTerm::fromString(value: $term),
             customers: $customers,
         );
+    }
+
+    /**
+     * @param array<string, mixed> $filter
+     * @return array<string, mixed>
+     */
+    private static function withDefaultUserFilter(array $filter): array
+    {
+        return ['user_filter' => UserFilterMode::Locked->value, ...$filter];
     }
 
     private static function sort(ViewType $type, ?string $field, string $direction): ViewSort

@@ -28,7 +28,7 @@ final class CustomViewMother
         string $title = 'Zebra scanners',
         ViewType $type = ViewType::MyAssets,
         array $columns = ['serial_number', 'model'],
-        array $filters = [['column' => 'manufacturer', 'operator' => 'eq', 'value' => 'Zebra']],
+        array $filters = [['column' => 'manufacturer', 'operator' => 'eq', 'value' => 'Zebra', 'user_filter' => 'locked']],
         bool $isDefault = false,
         bool $isPublic = false,
     ): CustomView {

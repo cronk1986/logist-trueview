@@ -25,7 +25,7 @@ final class CustomViewDetailsViewTest extends TestCase
                 'description' => 'Every Zebra device',
                 'view_type' => 'my_assets',
                 'columns' => ['serial_number', 'model'],
-                'filters' => [['column' => 'manufacturer', 'operator' => 'eq', 'value' => 'Zebra']],
+                'filters' => [['column' => 'manufacturer', 'operator' => 'eq', 'value' => 'Zebra', 'user_filter' => 'locked']],
                 'is_default' => true,
                 'is_public' => false,
                 'is_owner' => true,

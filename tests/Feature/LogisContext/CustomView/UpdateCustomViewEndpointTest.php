@@ -112,7 +112,7 @@ final class UpdateCustomViewEndpointTest extends TestCase
             'title' => 'Retired devices',
             'description' => null,
             'columns' => ['serial_number', 'status'],
-            'filters' => [['column' => 'status', 'operator' => 'eq', 'value' => 'retired']],
+            'filters' => [['column' => 'status', 'operator' => 'eq', 'value' => 'retired', 'user_filter' => 'locked']],
         ];
     }
 }

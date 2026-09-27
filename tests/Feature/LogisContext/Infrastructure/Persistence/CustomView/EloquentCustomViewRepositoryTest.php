@@ -42,8 +42,8 @@ final class EloquentCustomViewRepositoryTest extends TestCase
     public function test_it_maps_a_view_and_its_json_configuration(): void
     {
         $filters = [
-            ['column' => 'subject', 'operator' => 'contains', 'value' => 'printer'],
-            ['column' => 'status', 'operator' => 'in', 'value' => [1, 2]],
+            ['column' => 'subject', 'operator' => 'contains', 'value' => 'printer', 'user_filter' => 'locked'],
+            ['column' => 'status', 'operator' => 'in', 'value' => [1, 2], 'user_filter' => 'locked'],
         ];
         $model = CustomViewModel::factory()->ofType(type: ViewType::MyTickets)->asDefault()->public()->create(attributes: [
             'title' => 'Open tickets',
@@ -168,7 +168,7 @@ final class EloquentCustomViewRepositoryTest extends TestCase
     public function test_it_inserts_a_new_view(): void
     {
         $owner = $this->domainUser(model: UserModel::factory()->create());
-        $filters = [['column' => 'created_at', 'operator' => 'between', 'value' => ['2024-01-01', '2024-01-31']]];
+        $filters = [['column' => 'created_at', 'operator' => 'between', 'value' => ['2024-01-01', '2024-01-31'], 'user_filter' => 'locked']];
 
         $this->repository->save(view: CustomView::create(
             owner: $owner,
@@ -270,6 +270,15 @@ final class EloquentCustomViewRepositoryTest extends TestCase
 
         $this->assertSame($model->id, $view?->id()?->value());
         $this->assertNull($this->repository->findByOwnerAndTitle(owner: UserId::fromInt(value: $model->user_id), title: CustomViewTitle::fromString(value: 'Other')));
+    }
+
+    public function test_a_stored_filter_without_a_mode_is_reported_as_corrupted(): void
+    {
+        $model = CustomViewModel::factory()->ofType(type: ViewType::MyAssets)->create(attributes: ['filters' => [['column' => 'model', 'operator' => 'eq', 'value' => 'TC52']]]);
+
+        $this->expectException(CorruptedRecordException::class);
+
+        $this->repository->findById(id: CustomViewId::fromInt(value: $model->id));
     }
 
     private function domainUser(UserModel $model): User
