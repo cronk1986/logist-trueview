@@ -137,8 +137,9 @@ final readonly class ViewDefinition
     private static function ensureFitsItsUserFilter(ViewFilters $filters, ViewFilter $filter): void
     {
         $column = $filter->column();
+        $mode = $filters->modeOf(field: $column);
 
-        if ($filters->modeOf(field: $column)?->requiresDiscreteValues() !== true) {
+        if ($mode === null || !$mode->requiresDiscreteValues()) {
             return;
         }
 

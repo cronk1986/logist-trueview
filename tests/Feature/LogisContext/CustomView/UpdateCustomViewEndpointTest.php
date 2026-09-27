@@ -49,6 +49,19 @@ final class UpdateCustomViewEndpointTest extends TestCase
         $this->assertSame('Retired devices', $this->view->fresh()?->title);
     }
 
+    public function test_a_filter_sent_without_a_mode_or_with_a_null_mode_is_locked(): void
+    {
+        $payload = [...$this->payload(), 'filters' => [
+            ['column' => 'status', 'operator' => 'eq', 'value' => 'retired'],
+            ['column' => 'model', 'operator' => 'eq', 'value' => 'TC52', 'user_filter' => null],
+        ]];
+
+        $this->callViews(method: 'PUT', token: $this->tokenOf(user: $this->owner), path: '/' . $this->view->id, data: $payload)
+            ->assertOk()
+            ->assertJsonPath(path: 'data.filters.0.user_filter', expect: 'locked')
+            ->assertJsonPath(path: 'data.filters.1.user_filter', expect: 'locked');
+    }
+
     public function test_the_current_type_may_be_sent(): void
     {
         $this->callViews(method: 'PUT', token: $this->tokenOf(user: $this->owner), path: '/' . $this->view->id, data: [...$this->payload(), 'view_type' => 'my_assets'])

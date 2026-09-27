@@ -1136,16 +1136,43 @@
             "example": "Zebra"
           },
           "user_filter": {
-            "type": "string",
+            "type": [
+              "string",
+              "null"
+            ],
             "enum": [
               "restricted",
               "open",
-              "locked"
+              "locked",
+              null
             ],
             "default": "locked",
-            "description": "Optional on input. Always present in responses."
+            "description": "Optional. Absent or null means locked."
           }
         }
+      },
+      "SavedViewFilter": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/ViewFilter"
+          },
+          {
+            "type": "object",
+            "required": [
+              "user_filter"
+            ],
+            "properties": {
+              "user_filter": {
+                "type": "string",
+                "enum": [
+                  "restricted",
+                  "open",
+                  "locked"
+                ]
+              }
+            }
+          }
+        ]
       },
       "CustomViewInput": {
         "type": "object",
@@ -1270,7 +1297,7 @@
               "filters": {
                 "type": "array",
                 "items": {
-                  "$ref": "#/components/schemas/ViewFilter"
+                  "$ref": "#/components/schemas/SavedViewFilter"
                 }
               },
               "owner": {

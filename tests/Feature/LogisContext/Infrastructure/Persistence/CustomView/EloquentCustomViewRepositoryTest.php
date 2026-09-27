@@ -168,7 +168,11 @@ final class EloquentCustomViewRepositoryTest extends TestCase
     public function test_it_inserts_a_new_view(): void
     {
         $owner = $this->domainUser(model: UserModel::factory()->create());
-        $filters = [['column' => 'created_at', 'operator' => 'between', 'value' => ['2024-01-01', '2024-01-31'], 'user_filter' => 'locked']];
+        $filters = [
+            ['column' => 'created_at', 'operator' => 'between', 'value' => ['2024-01-01', '2024-01-31'], 'user_filter' => 'open'],
+            ['column' => 'city', 'operator' => 'in', 'value' => ['Austin', 'Dallas'], 'user_filter' => 'restricted'],
+            ['column' => 'title', 'operator' => 'contains', 'value' => 'Depot', 'user_filter' => 'locked'],
+        ];
 
         $this->repository->save(view: CustomView::create(
             owner: $owner,

@@ -48,6 +48,7 @@ final class ShowCustomViewEndpointTest extends TestCase
             ->assertJsonPath(path: 'data.view_type', expect: 'my_assets')
             ->assertJsonPath(path: 'data.columns', expect: ['serial_number', 'location'])
             ->assertJsonPath(path: 'data.filters.0.value', expect: 'Zebra')
+            ->assertJsonPath(path: 'data.filters.0.user_filter', expect: 'locked')
             ->assertJsonPath(path: 'data.is_default', expect: true)
             ->assertJsonPath(path: 'data.is_owner', expect: true)
             ->assertJsonPath(path: 'data.owner.id', expect: $this->owner->id);
