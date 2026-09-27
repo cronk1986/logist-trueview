@@ -14,7 +14,6 @@ use Logis\LogisContext\Domain\ValueObject\CustomView\CustomViewId;
 use Logis\LogisContext\Domain\ValueObject\CustomView\CustomViewTitle;
 use Logis\LogisContext\Domain\ValueObject\CustomView\ViewType;
 use Logis\LogisContext\Domain\ValueObject\User\UserId;
-use Logis\LogisContext\Infrastructure\Persistence\User\UserModel;
 
 final class EloquentCustomViewRepository implements CustomViewRepository
 {
@@ -83,11 +82,6 @@ final class EloquentCustomViewRepository implements CustomViewRepository
         $views = $query->get()->map(callback: fn (CustomViewModel $model): CustomView => $this->mapper->toDomain(model: $model));
 
         return array_values(array: $views->all());
-    }
-
-    public function lockViewsOf(UserId $owner): void
-    {
-        UserModel::query()->whereKey(id: $owner->value())->lockForUpdate()->value(column: 'id');
     }
 
     public function save(CustomView $view): void

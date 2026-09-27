@@ -46,13 +46,6 @@ final class CustomViewAccess
         return $view;
     }
 
-    public function viewToChange(User $user, int $viewId): CustomView
-    {
-        $this->views->lockViewsOf(owner: $user->id());
-
-        return $this->viewManagedBy(user: $user, viewId: $viewId);
-    }
-
     public function viewManagedBy(User $user, int $viewId): CustomView
     {
         $view = $this->viewVisibleTo(user: $user, viewId: $viewId);

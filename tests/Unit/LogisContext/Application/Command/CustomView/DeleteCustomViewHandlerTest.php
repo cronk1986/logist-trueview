@@ -48,8 +48,6 @@ final class DeleteCustomViewHandlerTest extends TestCase
     {
         $this->handler->handle(command: new DeleteCustomView(userId: 1, viewId: 3));
 
-        $this->assertSame([1], $this->views->lockedOwners());
-
         $this->assertNull($this->views->findById(id: CustomViewId::fromInt(value: 3)));
 
         $event = DomainEventPublisher::lastEventOfType(domainEventType: CustomViewDeleted::class);

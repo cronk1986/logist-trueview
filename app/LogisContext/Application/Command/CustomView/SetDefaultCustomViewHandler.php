@@ -18,7 +18,7 @@ final class SetDefaultCustomViewHandler
     public function handle(SetDefaultCustomView $command): void
     {
         $owner = $this->access->user(userId: $command->userId);
-        $view = $this->access->viewToChange(user: $owner, viewId: $command->viewId);
+        $view = $this->access->viewManagedBy(user: $owner, viewId: $command->viewId);
         $currentDefault = $this->views->findDefaultOf(owner: $owner->id(), type: $view->type());
 
         if ($currentDefault !== null && $currentDefault->savedId()->equals(other: $view->savedId())) {

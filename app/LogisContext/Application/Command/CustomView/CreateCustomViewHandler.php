@@ -24,7 +24,6 @@ final class CreateCustomViewHandler
     public function handle(CreateCustomView $command): void
     {
         $owner = $this->access->user(userId: $command->userId);
-        $this->views->lockViewsOf(owner: $owner->id());
         $title = CustomViewTitle::fromString(value: $command->title);
 
         if ($this->views->findByOwnerAndTitle(owner: $owner->id(), title: $title) !== null) {

@@ -10,7 +10,6 @@ use Logis\LogisContext\Domain\Model\CustomView\ViewPolicy;
 use Logis\LogisContext\Domain\Model\User\User;
 use Logis\LogisContext\Domain\Model\User\UserRepository;
 use Logis\LogisContext\Domain\ValueObject\Customer\CustomerId;
-use Illuminate\Support\Facades\DB;
 use Logis\LogisContext\Domain\Exception\CustomView\CustomViewTitleAlreadyUsedException;
 use Logis\LogisContext\Domain\ValueObject\CustomView\CustomViewId;
 use Logis\LogisContext\Domain\ValueObject\CustomView\CustomViewTitle;
@@ -231,19 +230,6 @@ final class EloquentCustomViewRepositoryTest extends TestCase
 
         $this->assertSame($default->id, $view?->id()?->value());
         $this->assertNull($this->repository->findDefaultOf(owner: UserId::fromInt(value: $user->id), type: ViewType::MyContracts));
-    }
-
-    public function test_it_locks_the_views_of_an_owner_through_the_owner_row(): void
-    {
-        $user = UserModel::factory()->create();
-
-        DB::enableQueryLog();
-        $this->repository->lockViewsOf(owner: UserId::fromInt(value: $user->id));
-        $query = DB::getQueryLog()[0]['query'] ?? '';
-        DB::disableQueryLog();
-
-        $this->assertStringContainsString('from `users`', $query);
-        $this->assertStringEndsWith('for update', $query);
     }
 
     public function test_it_deletes_a_view(): void

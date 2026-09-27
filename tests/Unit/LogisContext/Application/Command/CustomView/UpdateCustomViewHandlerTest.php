@@ -49,8 +49,6 @@ final class UpdateCustomViewHandlerTest extends TestCase
     {
         $this->handler->handle(command: $this->command(title: 'Retired devices', viewType: 'my_assets'));
 
-        $this->assertSame([1], $this->views->lockedOwners());
-
         $view = $this->views->findById(id: CustomViewId::fromInt(value: 1));
         $this->assertNotNull($view);
         $this->assertSame('Retired devices', $view->title()->value());

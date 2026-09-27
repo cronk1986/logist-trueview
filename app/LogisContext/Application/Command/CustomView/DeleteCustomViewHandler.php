@@ -18,7 +18,7 @@ final class DeleteCustomViewHandler
     public function handle(DeleteCustomView $command): void
     {
         $owner = $this->access->user(userId: $command->userId);
-        $view = $this->access->viewToChange(user: $owner, viewId: $command->viewId);
+        $view = $this->access->viewManagedBy(user: $owner, viewId: $command->viewId);
 
         $view->delete();
         $this->views->delete(id: $view->savedId());
