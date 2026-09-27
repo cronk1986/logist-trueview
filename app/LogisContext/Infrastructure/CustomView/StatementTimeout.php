@@ -9,6 +9,13 @@ use Illuminate\Database\ConnectionInterface;
 use Illuminate\Database\QueryException;
 use Logis\LogisContext\Application\Exception\CustomView\ViewExecutionTimedOutException;
 
+/**
+ * Limits how long the SELECT statements of a callback may run, with MySQL's max_execution_time.
+ *
+ * The limit is a session variable, so it outlives the request on a reused connection (queue workers,
+ * tests). run() reads the current value first and restores it afterwards. MySQL stops a statement
+ * that exceeds the limit with error 3024 (ER_QUERY_TIMEOUT), which becomes a ViewExecutionTimedOutException.
+ */
 final class StatementTimeout
 {
     private const MAX_EXECUTION_TIME_EXCEEDED = 3024;

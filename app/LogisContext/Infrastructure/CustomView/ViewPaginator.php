@@ -100,6 +100,10 @@ final class ViewPaginator
     }
 
     /**
+     * Eager loads each relation shown as a column with only the columns it needs, using Eloquent's
+     * "relation:column,column" syntax, e.g. "location:id,title". The id is required to match each related
+     * row with its parent, and the label column is what the row shows.
+     *
      * @param array<string, FieldMapping> $fields
      * @return list<string>
      */

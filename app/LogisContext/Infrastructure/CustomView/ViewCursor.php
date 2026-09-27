@@ -6,6 +6,12 @@ namespace Logis\LogisContext\Infrastructure\CustomView;
 
 use Illuminate\Pagination\Cursor;
 
+/**
+ * Laravel's cursor only stores the values of the order columns of the last row. The same cursor would be
+ * accepted by a request with another sort field or direction, and would then skip or repeat rows.
+ * encode() adds the sort it was built for (_sort, e.g. "created_at:desc"), and decode() rejects a cursor
+ * whose sort or columns don't match the current request.
+ */
 final class ViewCursor
 {
     private const DIRECTION_KEY = '_pointsToNextItems';

@@ -15,6 +15,11 @@ final readonly class CalendarDay
     {
     }
 
+    /**
+     * The "!" in the format sets the time to midnight UTC. Parsing alone is not enough: it rolls impossible
+     * dates over (2026-02-30 becomes 2026-03-02) and accepts unpadded ones (2026-9-7). Formatting the date
+     * again and comparing it with the input rejects both.
+     */
     public static function tryFrom(mixed $value): ?self
     {
         if (!is_string(value: $value)) {
