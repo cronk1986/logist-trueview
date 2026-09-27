@@ -78,7 +78,7 @@ Route → FormRequest → Controller → CommandBus / QueryBus → Handler → D
 | DTOs for view configurations | Value objects in `Domain/ValueObject/CustomView/` (`ViewDefinition`, `ViewFilters`, `ViewColumns`…) |
 | `CustomView` model with JSON casts | `Infrastructure/Persistence/CustomView/CustomViewModel` |
 | Resources (API transformers) | `Application/ModelView/<Aggregate>/` |
-| Events | `Domain/Event/<Aggregate>/` |
+| Events and jobs | `Domain/Event/<Aggregate>/`, and asynchronous listeners in `Infrastructure/AsyncListeners/` (`LogCustomViewCreated`) |
 | `DB::transaction()` | `TransactionMiddleware` of the command bus |
 | Column and operator whitelist | `Domain/ValueObject/CustomView/ViewFieldCatalog` |
 | Cache | `CachedEntitySearcher` and `CachedViewBuilder` decorators |
@@ -153,7 +153,7 @@ Route → FormRequest → Controller → CommandBus / QueryBus → Handler → D
 
 **A global rate limit.** The assessment asks for rate limiting on view execution. The global limit of 60 requests per minute per user covers it, without a separate limiter for `execute`.
 
-**No jobs.** No feature sends emails or calls external services, so there is nothing to queue. The infrastructure is ready: asynchronous listeners (`AsyncEventListener`) go to the `events` queue, the job is inserted inside the command transaction, and the `worker` service consumes it.
+**Queued work through domain events.** No feature sends emails or calls external services, so there are no hand-written jobs. Queued work runs as asynchronous listeners of domain events (`AsyncEventListener`, `events` queue): the job is inserted in `jobs` inside the command transaction, so it exists only if the command succeeds, and the `worker` service consumes it. `LogCustomViewCreated` is the example: it logs every new view.
 
 **No Laravel Scout.** Search uses `LIKE` with indexes and a 5-minute cache, which is enough for the data volume. Scout would need another service (Meilisearch, Typesense or Algolia) and would have to keep its index in sync. Its `database` driver also uses `LIKE`, so it would add nothing. Adding Scout is transparent to the application: it would be a new `EntitySearcher` adapter, without changing the handler, the cache or the response. The adapter would still have to filter by the user's customers inside the index.
 
