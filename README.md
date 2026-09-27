@@ -101,6 +101,14 @@ Unit tests (`tests/Unit/`) test the domain and the handlers with in-memory imple
 | `scheduler` | Laravel scheduler: prunes expired tokens every hour |
 | `apidocs` | Swagger UI, published on `APIDOCS_PORT` |
 
+## Workflow
+
+- Every feature starts with a spec in `specs/SPEC — <name>.md`. Once approved, an implementation plan follows in `specs/PLAN — <name>.md`.
+- Branches follow [Conventional Branch](https://conventional-branch.github.io) (`feat/custom-views`) and commits follow [Conventional Commits](https://www.conventionalcommits.org) (`feat(views): …`).
+- A change is complete only when `make check` passes. After each implementation: `make qa`, simplification, `make test`, code review and, if an endpoint changed, `make docs`.
+
+`AGENTS.md` holds the full rules.
+
 ## Further documentation
 
 - `ARCHITECTURE.md`: design decisions, assumptions and trade-offs
