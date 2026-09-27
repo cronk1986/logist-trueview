@@ -36,7 +36,7 @@ final class SetDefaultCustomViewEndpointTest extends TestCase
         $this->postJson(uri: '/api/v1/views/' . $this->view->id . '/set-default')->assertUnauthorized();
     }
 
-    public function test_the_owner_replaces_the_default_of_the_type(): void
+    public function test_the_owner_replaces_the_default_of_the_type_without_returning_data(): void
     {
         $ticketsDefault = CustomViewModel::factory()->ofType(type: ViewType::MyTickets)->asDefault()->create(attributes: ['user_id' => $this->owner->id]);
 
@@ -44,9 +44,9 @@ final class SetDefaultCustomViewEndpointTest extends TestCase
             ->assertOk()
             ->assertHeader(headerName: 'X-Refreshed-Token')
             ->assertJsonPath(path: 'message', expect: 'View set as default')
-            ->assertJsonPath(path: 'data.id', expect: $this->view->id)
-            ->assertJsonPath(path: 'data.is_default', expect: true);
+            ->assertJsonPath(path: 'data', expect: []);
 
+        $this->assertTrue($this->view->fresh()?->is_default);
         $this->assertFalse($this->currentDefault->fresh()?->is_default);
         $this->assertTrue($ticketsDefault->fresh()?->is_default);
         $this->assertSame(1, CustomViewModel::query()->where(column: 'user_id', operator: $this->owner->id)->where(column: 'view_type', operator: 'my_assets')->where(column: 'is_default', operator: true)->count());

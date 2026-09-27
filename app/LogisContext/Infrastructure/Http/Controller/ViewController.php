@@ -28,9 +28,8 @@ final class ViewController extends AbstractController
     public function store(CreateCustomViewRequest $request): JsonResponse
     {
         $this->commandBus->dispatch(command: $request->toCommand());
-        $response = $this->queryBus->ask(query: $request->toQuery());
 
-        return ApiResponse::fromQueryResponse(response: $response, message: 'View created', status: Response::HTTP_CREATED);
+        return ApiResponse::success(message: 'View created', status: Response::HTTP_CREATED);
     }
 
     public function show(ShowCustomViewRequest $request, int $id): JsonResponse
@@ -43,9 +42,8 @@ final class ViewController extends AbstractController
     public function update(UpdateCustomViewRequest $request, int $id): JsonResponse
     {
         $this->commandBus->dispatch(command: $request->toCommand(id: $id));
-        $response = $this->queryBus->ask(query: $request->toQuery(id: $id));
 
-        return ApiResponse::fromQueryResponse(response: $response, message: 'View updated');
+        return ApiResponse::success(message: 'View updated');
     }
 
     public function destroy(DeleteCustomViewRequest $request, int $id): JsonResponse
@@ -65,8 +63,7 @@ final class ViewController extends AbstractController
     public function setDefault(SetDefaultCustomViewRequest $request, int $id): JsonResponse
     {
         $this->commandBus->dispatch(command: $request->toCommand(id: $id));
-        $response = $this->queryBus->ask(query: $request->toQuery(id: $id));
 
-        return ApiResponse::fromQueryResponse(response: $response, message: 'View set as default');
+        return ApiResponse::success(message: 'View set as default');
     }
 }

@@ -7,7 +7,6 @@ namespace Logis\LogisContext\Infrastructure\Http\Request\CustomView;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 use Logis\LogisContext\Application\Command\CustomView\UpdateCustomView;
-use Logis\LogisContext\Application\Query\CustomView\GetCustomView;
 use Logis\LogisContext\Domain\ValueObject\CustomView\ViewType;
 use Logis\LogisContext\Infrastructure\Http\CurrentAccessToken;
 
@@ -36,11 +35,6 @@ final class UpdateCustomViewRequest extends FormRequest
             filters: $this->savedFilters(),
             isPublic: $this->boolean(key: 'is_public'),
         );
-    }
-
-    public function toQuery(int $id): GetCustomView
-    {
-        return new GetCustomView(userId: CurrentAccessToken::userId(request: $this), viewId: $id);
     }
 
     private function viewType(): ?string

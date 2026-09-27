@@ -314,7 +314,7 @@
         ],
         "summary": "Create a view",
         "operationId": "createView",
-        "description": "Creates a view owned by the user, for the user's customer. The columns and filters must belong to the\nfield catalog of the view type (see `ViewFilter`); otherwise the response is 422 with a message that\nnames the column or filter. A new view is never the default: use `set-default`.\n\n| View type | Fields |\n|---|---|\n| `my_assets` | id, serial_number, manufacturer, model, item_name, status, customer, contract, location, created_at, updated_at |\n| `my_tickets` | id, repair_id, incident_number, subject, status, asset, customer, created_at, updated_at |\n| `my_contracts` | id, name, status, customer, created_at, updated_at |\n| `my_locations` | id, title, full_address, city, state, postal_code, customer, created_at, updated_at |\n",
+        "description": "Creates a view owned by the user, for the user's customer. The columns and filters must belong to the\nfield catalog of the view type (see `ViewFilter`); otherwise the response is 422 with a message that\nnames the column or filter. A new view is never the default: use `set-default`. The response carries no data.\n\n| View type | Fields |\n|---|---|\n| `my_assets` | id, serial_number, manufacturer, model, item_name, status, customer, contract, location, created_at, updated_at |\n| `my_tickets` | id, repair_id, incident_number, subject, status, asset, customer, created_at, updated_at |\n| `my_contracts` | id, name, status, customer, created_at, updated_at |\n| `my_locations` | id, title, full_address, city, state, postal_code, customer, created_at, updated_at |\n",
         "requestBody": {
           "required": true,
           "content": {
@@ -342,7 +342,7 @@
         },
         "responses": {
           "201": {
-            "description": "The created view",
+            "description": "The view was created. Read it with `GET /views` or `GET /views/{id}`.",
             "headers": {
               "X-Refreshed-Token": {
                 "$ref": "#/components/headers/XRefreshedToken"
@@ -351,7 +351,17 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/CustomViewDetailsResponse"
+                  "$ref": "#/components/schemas/EmptyResponse"
+                },
+                "example": {
+                  "success": true,
+                  "data": {},
+                  "message": "View created",
+                  "meta": {
+                    "timestamp": "2026-09-25T10:00:00Z",
+                    "version": "1.0",
+                    "execution_time_ms": 12
+                  }
                 }
               }
             }
@@ -444,7 +454,7 @@
         },
         "responses": {
           "200": {
-            "description": "The updated view",
+            "description": "The view was replaced",
             "headers": {
               "X-Refreshed-Token": {
                 "$ref": "#/components/headers/XRefreshedToken"
@@ -453,7 +463,17 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/CustomViewDetailsResponse"
+                  "$ref": "#/components/schemas/EmptyResponse"
+                },
+                "example": {
+                  "success": true,
+                  "data": {},
+                  "message": "View updated",
+                  "meta": {
+                    "timestamp": "2026-09-25T10:00:00Z",
+                    "version": "1.0",
+                    "execution_time_ms": 11
+                  }
                 }
               }
             }
@@ -598,7 +618,7 @@
         "description": "Makes the view the owner's default for its type. The previous default of that owner and type stops being\nthe default in the same transaction. Setting the current default again changes nothing. Only the owner can\ndo it.\n",
         "responses": {
           "200": {
-            "description": "The view, now the default of its type",
+            "description": "The view is now the default of its type",
             "headers": {
               "X-Refreshed-Token": {
                 "$ref": "#/components/headers/XRefreshedToken"
@@ -607,7 +627,17 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/CustomViewDetailsResponse"
+                  "$ref": "#/components/schemas/EmptyResponse"
+                },
+                "example": {
+                  "success": true,
+                  "data": {},
+                  "message": "View set as default",
+                  "meta": {
+                    "timestamp": "2026-09-25T10:00:00Z",
+                    "version": "1.0",
+                    "execution_time_ms": 9
+                  }
                 }
               }
             }

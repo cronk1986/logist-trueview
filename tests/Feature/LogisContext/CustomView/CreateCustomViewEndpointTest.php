@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Feature\LogisContext\CustomView;
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Logis\LogisContext\Domain\ValueObject\CustomView\ViewType;
 use Logis\LogisContext\Infrastructure\Persistence\Customer\CustomerModel;
 use Logis\LogisContext\Infrastructure\Persistence\CustomView\CustomViewModel;
 use Logis\LogisContext\Infrastructure\Persistence\User\UserModel;
@@ -30,40 +31,36 @@ final class CreateCustomViewEndpointTest extends TestCase
         $this->postJson(uri: '/api/v1/views', data: $this->payload())->assertUnauthorized();
     }
 
-    public function test_it_creates_the_view_and_returns_its_details(): void
+    public function test_it_creates_the_view_without_returning_data(): void
     {
-        $response = $this->callViews(method: 'POST', token: $this->tokenOf(user: $this->user), data: $this->payload());
-
-        $response->assertCreated()
+        $this->callViews(method: 'POST', token: $this->tokenOf(user: $this->user), data: $this->payload())
+            ->assertCreated()
             ->assertHeader(headerName: 'X-Refreshed-Token')
             ->assertJsonPath(path: 'success', expect: true)
             ->assertJsonPath(path: 'message', expect: 'View created')
-            ->assertJsonPath(path: 'data.title', expect: 'Zebra scanners')
-            ->assertJsonPath(path: 'data.view_type', expect: 'my_assets')
-            ->assertJsonPath(path: 'data.columns', expect: ['serial_number', 'location'])
-            ->assertJsonPath(path: 'data.filters.1.value', expect: ['2024-01-01', '2024-06-30'])
-            ->assertJsonPath(path: 'data.is_public', expect: true)
-            ->assertJsonPath(path: 'data.is_default', expect: false)
-            ->assertJsonPath(path: 'data.is_owner', expect: true);
+            ->assertJsonPath(path: 'data', expect: []);
 
-        $stored = CustomViewModel::query()->findOrFail(id: (int) $response->json(key: 'data.id'));
+        $stored = $this->storedView();
         $this->assertSame($this->user->id, $stored->user_id);
         $this->assertSame($this->user->customer_id, $stored->customer_id);
+        $this->assertSame('Every Zebra device', $stored->description);
+        $this->assertSame(ViewType::MyAssets, $stored->view_type);
+        $this->assertSame(['serial_number', 'location'], $stored->columns);
+        $this->assertSame(['2024-01-01', '2024-06-30'], $stored->filters[1]['value'] ?? null);
+        $this->assertTrue($stored->is_public);
+        $this->assertFalse($stored->is_default);
     }
 
     public function test_a_filter_without_a_mode_is_locked(): void
     {
         $payload = [...$this->payload(), 'filters' => [['column' => 'manufacturer', 'operator' => 'eq', 'value' => 'Zebra']]];
 
-        $response = $this->callViews(method: 'POST', token: $this->tokenOf(user: $this->user), data: $payload)
-            ->assertCreated()
-            ->assertJsonPath(path: 'data.filters.0.user_filter', expect: 'locked');
+        $this->callViews(method: 'POST', token: $this->tokenOf(user: $this->user), data: $payload)->assertCreated();
 
-        $stored = CustomViewModel::query()->findOrFail(id: (int) $response->json(key: 'data.id'));
-        $this->assertSame('locked', $stored->filters[0]['user_filter'] ?? null);
+        $this->assertSame('locked', $this->storedView()->filters[0]['user_filter'] ?? null);
     }
 
-    public function test_the_three_modes_are_stored_and_returned(): void
+    public function test_the_three_modes_are_stored(): void
     {
         $payload = [...$this->payload(), 'filters' => [
             ['column' => 'status', 'operator' => 'in', 'value' => ['active', 'inactive'], 'user_filter' => 'restricted'],
@@ -71,18 +68,17 @@ final class CreateCustomViewEndpointTest extends TestCase
             ['column' => 'manufacturer', 'operator' => 'eq', 'value' => 'Zebra', 'user_filter' => 'locked'],
         ]];
 
-        $this->callViews(method: 'POST', token: $this->tokenOf(user: $this->user), data: $payload)
-            ->assertCreated()
-            ->assertJsonPath(path: 'data.filters.0.user_filter', expect: 'restricted')
-            ->assertJsonPath(path: 'data.filters.1.user_filter', expect: 'open')
-            ->assertJsonPath(path: 'data.filters.2.user_filter', expect: 'locked');
+        $this->callViews(method: 'POST', token: $this->tokenOf(user: $this->user), data: $payload)->assertCreated();
+
+        $this->assertSame(['restricted', 'open', 'locked'], array_column(array: $this->storedView()->filters, column_key: 'user_filter'));
     }
 
     public function test_is_default_in_the_body_is_ignored(): void
     {
         $this->callViews(method: 'POST', token: $this->tokenOf(user: $this->user), data: [...$this->payload(), 'is_default' => true])
-            ->assertCreated()
-            ->assertJsonPath(path: 'data.is_default', expect: false);
+            ->assertCreated();
+
+        $this->assertFalse($this->storedView()->is_default);
     }
 
     public function test_is_public_defaults_to_false(): void
@@ -91,8 +87,9 @@ final class CreateCustomViewEndpointTest extends TestCase
         unset($payload['is_public']);
 
         $this->callViews(method: 'POST', token: $this->tokenOf(user: $this->user), data: $payload)
-            ->assertCreated()
-            ->assertJsonPath(path: 'data.is_public', expect: false);
+            ->assertCreated();
+
+        $this->assertFalse($this->storedView()->is_public);
     }
 
     public function test_a_title_the_owner_already_uses_is_a_conflict(): void
@@ -185,6 +182,11 @@ final class CreateCustomViewEndpointTest extends TestCase
             ]], '"status" can have only one restricted filter.'],
             'invalid date' => [['filters' => [['column' => 'created_at', 'operator' => 'gt', 'value' => '2024-13-01', 'user_filter' => 'locked']]], 'The filter on "created_at" needs dates in the Y-m-d format.'],
         ];
+    }
+
+    private function storedView(): CustomViewModel
+    {
+        return CustomViewModel::query()->where(column: 'title', operator: 'Zebra scanners')->sole();
     }
 
     /**

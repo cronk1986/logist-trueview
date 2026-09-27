@@ -236,7 +236,7 @@ paths:
       description: |
         Creates a view owned by the user, for the user's customer. The columns and filters must belong to the
         field catalog of the view type (see `ViewFilter`); otherwise the response is 422 with a message that
-        names the column or filter. A new view is never the default: use `set-default`.
+        names the column or filter. A new view is never the default: use `set-default`. The response carries no data.
 
         | View type | Fields |
         |---|---|
@@ -258,14 +258,22 @@ paths:
                       $ref: "#/components/schemas/ViewType"
       responses:
         "201":
-          description: The created view
+          description: The view was created. Read it with `GET /views` or `GET /views/{id}`.
           headers:
             X-Refreshed-Token:
               $ref: "#/components/headers/XRefreshedToken"
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/CustomViewDetailsResponse"
+                $ref: "#/components/schemas/EmptyResponse"
+              example:
+                success: true
+                data: {}
+                message: View created
+                meta:
+                  timestamp: "2026-09-25T10:00:00Z"
+                  version: "1.0"
+                  execution_time_ms: 12
         "401":
           $ref: "#/components/responses/Unauthorized"
         "403":
@@ -320,14 +328,22 @@ paths:
                       $ref: "#/components/schemas/ViewType"
       responses:
         "200":
-          description: The updated view
+          description: The view was replaced
           headers:
             X-Refreshed-Token:
               $ref: "#/components/headers/XRefreshedToken"
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/CustomViewDetailsResponse"
+                $ref: "#/components/schemas/EmptyResponse"
+              example:
+                success: true
+                data: {}
+                message: View updated
+                meta:
+                  timestamp: "2026-09-25T10:00:00Z"
+                  version: "1.0"
+                  execution_time_ms: 11
         "401":
           $ref: "#/components/responses/Unauthorized"
         "403":
@@ -428,14 +444,22 @@ paths:
         do it.
       responses:
         "200":
-          description: The view, now the default of its type
+          description: The view is now the default of its type
           headers:
             X-Refreshed-Token:
               $ref: "#/components/headers/XRefreshedToken"
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/CustomViewDetailsResponse"
+                $ref: "#/components/schemas/EmptyResponse"
+              example:
+                success: true
+                data: {}
+                message: View set as default
+                meta:
+                  timestamp: "2026-09-25T10:00:00Z"
+                  version: "1.0"
+                  execution_time_ms: 9
         "401":
           $ref: "#/components/responses/Unauthorized"
         "403":

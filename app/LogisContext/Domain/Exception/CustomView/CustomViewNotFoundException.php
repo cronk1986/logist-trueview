@@ -12,9 +12,4 @@ final class CustomViewNotFoundException extends NotFoundException
     {
         return new self(message: sprintf('View %d not found.', $id));
     }
-
-    public static function withTitle(string $title): self
-    {
-        return new self(message: sprintf('View "%s" not found.', $title));
-    }
 }

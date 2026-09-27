@@ -33,20 +33,20 @@ final class UpdateCustomViewEndpointTest extends TestCase
         $this->putJson(uri: '/api/v1/views/' . $this->view->id, data: $this->payload())->assertUnauthorized();
     }
 
-    public function test_the_owner_replaces_the_view(): void
+    public function test_the_owner_replaces_the_view_without_returning_data(): void
     {
         $this->callViews(method: 'PUT', token: $this->tokenOf(user: $this->owner), path: '/' . $this->view->id, data: $this->payload())
             ->assertOk()
             ->assertHeader(headerName: 'X-Refreshed-Token')
             ->assertJsonPath(path: 'message', expect: 'View updated')
-            ->assertJsonPath(path: 'data.id', expect: $this->view->id)
-            ->assertJsonPath(path: 'data.title', expect: 'Retired devices')
-            ->assertJsonPath(path: 'data.description', expect: null)
-            ->assertJsonPath(path: 'data.columns', expect: ['serial_number', 'status'])
-            ->assertJsonPath(path: 'data.is_public', expect: false)
-            ->assertJsonPath(path: 'data.is_default', expect: true);
+            ->assertJsonPath(path: 'data', expect: []);
 
-        $this->assertSame('Retired devices', $this->view->fresh()?->title);
+        $stored = $this->view->refresh();
+        $this->assertSame('Retired devices', $stored->title);
+        $this->assertNull($stored->description);
+        $this->assertSame(['serial_number', 'status'], $stored->columns);
+        $this->assertFalse($stored->is_public);
+        $this->assertTrue($stored->is_default);
     }
 
     public function test_a_filter_sent_without_a_mode_or_with_a_null_mode_is_locked(): void
@@ -57,9 +57,9 @@ final class UpdateCustomViewEndpointTest extends TestCase
         ]];
 
         $this->callViews(method: 'PUT', token: $this->tokenOf(user: $this->owner), path: '/' . $this->view->id, data: $payload)
-            ->assertOk()
-            ->assertJsonPath(path: 'data.filters.0.user_filter', expect: 'locked')
-            ->assertJsonPath(path: 'data.filters.1.user_filter', expect: 'locked');
+            ->assertOk();
+
+        $this->assertSame(['locked', 'locked'], array_column(array: $this->view->refresh()->filters, column_key: 'user_filter'));
     }
 
     public function test_the_current_type_may_be_sent(): void
