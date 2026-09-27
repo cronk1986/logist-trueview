@@ -137,7 +137,7 @@ Route → FormRequest → Controller → CommandBus / QueryBus → Handler → D
   - three classes per aggregate (entity, model, mapper) and hand-written mapping;
   - Eloquent features (casts, relations, scopes) aren't available in the domain;
   - the whole relation graph is loaded even when part of it isn't used.
-- Exception: view execution and search read Eloquent models directly in their adapters. Their rows are only displayed, so building thousands of entities would cost performance and add nothing. The rules still apply, because the catalog and the filters are validated before the query is built.
+- Exception: reads that only display data. View execution and search don't build domain entities. Their adapters query the Eloquent models and turn each row into an array for the response. These rows are never changed, so entity rules have nothing to protect, and building up to 1000 entities per page, each with its relations, would only add cost. The domain still decides the query: `ViewDefinition` validates columns and filters, `ViewPolicy` decides access, and `User::visibleCustomers()` decides which customers' rows are returned.
 
 **A command bus instead of `DB::transaction()`.** Handlers don't open transactions. `TransactionMiddleware` wraps every command, and `DomainEventMiddleware` publishes the domain events inside the same transaction. No handler can forget the transaction, and events are published only if the command succeeds.
 
