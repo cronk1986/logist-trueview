@@ -64,7 +64,7 @@ Every route is protected by `auth:sanctum` and `RotateAccessTokenMiddleware`, an
 
 ### Shapes
 
-**View details** (`GET /views/{id}`, and the responses of `POST`, `PUT` and `set-default`):
+**View details** (`GET /views/{id}`):
 
 ```json
 {
@@ -131,7 +131,7 @@ Every route is protected by `auth:sanctum` and `RotateAccessTokenMiddleware`, an
 - `PUT` replaces the whole view: title, description, columns, filters and `is_public`. `view_type` can't change (R4): a different value returns 422.
 - The whitelist (which columns and operators exist for the type, and the type of each value) is a domain rule (D2, D3). A violation returns 422 with a message that names the column or filter.
 - `is_default` isn't accepted here. The default only changes through `set-default` (D5).
-- `POST` returns **201** with the view details.
+- `POST` returns **201** and `PUT` returns 200, both through `ApiResponse::success` with no data (`SPEC — View Writes Without Response Data.md`).
 
 ### `DELETE /api/v1/views/{id}`
 
@@ -139,7 +139,7 @@ Deletes the view (hard delete) and returns `ApiResponse::success` with no data. 
 
 ### `POST /api/v1/views/{id}/set-default`
 
-Makes the view the owner's default for its type. The previous default of that owner and type stops being the default in the same transaction. Setting a view that is already the default succeeds and changes nothing. Returns the view details.
+Makes the view the owner's default for its type. The previous default of that owner and type stops being the default in the same transaction. Setting a view that is already the default succeeds and changes nothing. Returns `ApiResponse::success` with no data.
 
 ### `POST /api/v1/views/{id}/execute`
 
@@ -367,13 +367,13 @@ Grouped by aggregate (`SPEC — Application Layout.md`). A command belongs to th
 | Folder | Classes |
 |---|---|
 | `Command/CustomView/` | `CreateCustomView`, `UpdateCustomView`, `DeleteCustomView`, `SetDefaultCustomView` and their handlers |
-| `Query/CustomView/` | `ListCustomViews`, `GetCustomView`, `GetCustomViewByTitle`, `ExecuteCustomView` and their handlers |
+| `Query/CustomView/` | `ListCustomViews`, `GetCustomView`, `ExecuteCustomView` and their handlers |
 | `Services/CustomView/` | `ViewBuilder` (port), `ViewBuilders` (registry), `ViewExecutionCriteria` |
 | `Exception/CustomView/` | `ViewBuilderNotRegisteredException` (`LogicException`, logged 500), `ViewExecutionTimedOutException` (`TimeoutException`, 504) |
 | `ModelView/CustomView/` | `CustomViewDetailsView`, `CustomViewListItemView`, `ViewPage`, `ViewResultView` |
 
 - Messages are `final readonly` and carry primitives (`userId`, `viewId`, `title`, `columns` as arrays…). The handlers build the value objects, as the existing handlers do.
-- **Create returns the new view without breaking CQRS.** Commands return nothing. The controller dispatches `CreateCustomView`, then asks `GetCustomViewByTitle(userId, title)`: the title is unique per owner, so no id has to flow back from the command.
+- **Writes return no data.** Commands return nothing, and the controller answers create, update and set-default with `ApiResponse::success`. The client reads the view with `GET /views` or `GET /views/{id}`.
 - `ExecuteCustomView` is a query even though the route is `POST` (the brief fixes the method): it changes no state and runs without a transaction.
 - `ExecuteCustomViewHandler`:
   1. loads the user and the view; 404 if `canSee` is false;
@@ -484,10 +484,7 @@ interface CustomViewRepository
   - `ListCustomViewsRequest`, `CreateCustomViewRequest`, `ShowCustomViewRequest`, `UpdateCustomViewRequest`, `DeleteCustomViewRequest`, `ExecuteCustomViewRequest`, `SetDefaultCustomViewRequest`;
   - each has `toCommand(id: …)` or `toQuery(id: …)`, with the user id from `CurrentAccessToken`.
 - FormRequests validate the **structure** (API contract). The catalog rules are validated once, in the domain.
-- `store`:
-  - dispatches the command, asks `GetCustomViewByTitle`, and returns `fromQueryResponse(…, status: 201)`;
-  - builds that query itself from the command's values, which is allowed: they are values the controller already holds.
-- `update` and `setDefault` dispatch the command and then ask `GetCustomView`.
+- `store`, `update` and `setDefault` dispatch the command and return `ApiResponse::success`, with 201 on `store`, like `destroy`.
 
 ### D14. Seed data
 
@@ -514,7 +511,7 @@ app/LogisContext/
 │                                          InvalidViewSortException, InvalidViewPageSizeException, …
 ├── Application/
 │   ├── Command/CustomView/                Create/Update/Delete/SetDefault CustomView + handlers
-│   ├── Query/CustomView/                  ListCustomViews, GetCustomView, GetCustomViewByTitle, ExecuteCustomView + handlers
+│   ├── Query/CustomView/                  ListCustomViews, GetCustomView, ExecuteCustomView + handlers
 │   ├── Services/CustomView/               ViewBuilder, ViewBuilders, ViewExecutionCriteria
 │   ├── Exception/CustomView/              ViewBuilderNotRegisteredException, ViewExecutionTimedOutException
 │   └── ModelView/CustomView/              CustomViewDetailsView, CustomViewListItemView, ViewPage, ViewResultView
@@ -659,7 +656,7 @@ make check        # qa + docs-lint + test, required before every commit
   - another customer's view returns 404 on every endpoint;
   - a public view of the same customer can be seen and executed but not changed (403);
   - executing another user's public view returns the executing user's rows.
-- The response format of the API contract, `meta` of the cursor, `X-Refreshed-Token`, 201 on create.
+- The response format of the API contract, `meta` of the cursor, `X-Refreshed-Token`, 201 on create, and no data on create, update and set-default.
 - 504 when the execution times out (with the timeout set to 1 ms in the test's configuration).
 - `DemoDataSeeder` creates the views of D14.
 

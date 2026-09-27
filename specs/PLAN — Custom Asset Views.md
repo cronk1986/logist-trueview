@@ -521,6 +521,7 @@ T19 adds one `extend()` per builder to wrap it in `CachedViewBuilder`, as `regis
 - **T11:** the `lockForUpdate()` on `findDefaultOf()` was replaced, after the review, by `CustomViewRepository::lockViewsOf()`, which locked the owner's row in `users` before any write to their views. Both were later removed as over-engineering, because one person works in one account at a time (`SPEC — Remove View Write Lock.md`). Concurrent writes of the same owner are not serialised.
 - **T20:** `StatementTimeout` wraps the `cursorPaginate()` call inside `ViewPaginator`, so every builder goes through it without code of its own.
 - **Extra fixes after review:** case-insensitive titles, a route pattern for `{id}` that only matches ids that can exist, length caps on `cursor` and `q`, and a test that keeps the status enums in alphabetical order.
+- **T8, T9, T11:** create, update and set-default no longer return the view details, only `ApiResponse::success` with no data. `GetCustomViewByTitle` and the `toQuery()` of those FormRequests were removed (`SPEC — View Writes Without Response Data.md`).
 
 ## Risks and mitigations
 
