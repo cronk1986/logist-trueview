@@ -518,7 +518,7 @@ T19 adds one `extend()` per builder to wrap it in `CachedViewBuilder`, as `regis
 
 - **T13:** the builders were tagged in T17, together with the `ViewBuilders` wiring, instead of one by one.
 - **T14:** the cursor checks live in `Infrastructure/CustomView/ViewCursor`. After the review, each next cursor also carries its sort field and direction (`_sort`), so a cursor of the same field in the other direction is rejected too.
-- **T11:** the `lockForUpdate()` on `findDefaultOf()` was replaced, after the review, by `CustomViewRepository::lockViewsOf()`. It locks the owner's row in `users` before any write to their views (`CustomViewAccess::viewToChange()`), which serialises set-default and update whatever the isolation level.
+- **T11:** the `lockForUpdate()` on `findDefaultOf()` was replaced, after the review, by `CustomViewRepository::lockViewsOf()`, which locked the owner's row in `users` before any write to their views. Both were later removed as over-engineering, because one person works in one account at a time (`SPEC — Remove View Write Lock.md`). Concurrent writes of the same owner are not serialised.
 - **T20:** `StatementTimeout` wraps the `cursorPaginate()` call inside `ViewPaginator`, so every builder goes through it without code of its own.
 - **Extra fixes after review:** case-insensitive titles, a route pattern for `{id}` that only matches ids that can exist, length caps on `cursor` and `q`, and a test that keeps the status enums in alphabetical order.
 
@@ -529,7 +529,6 @@ T19 adds one `extend()` per builder to wrap it in `CachedViewBuilder`, as `regis
 | `cursorPaginate()` needs the order columns in the select list, and may qualify them (`assets.created_at`), so the cursor parameters differ from the bare names | Medium | `ViewPaginator` always selects the sort column and orders by bare column names. T14 tests the parameter names of the generated cursor. |
 | `Cursor::fromEncoded()` returns `null` for garbage, and a mismatched cursor fails deep in Laravel | Medium | An explicit check before querying: a cursor that is sent but decodes to `null`, or has other parameters, raises the 422 (T14). |
 | `max_execution_time` behaves differently inside the `RefreshDatabase` transaction, or a 1 ms test is flaky | Medium | A cross join large enough to always exceed 1 ms. `SLEEP()` is not used, because it is interrupted without an error. If it stays flaky, the feature test binds a fake builder that throws the exception. |
-| `lockForUpdate()` can't be proven with real concurrency in PHPUnit | Low | Assert `for update` in the query log, and the handler's order of operations. Record it as a limit of the tests. |
 | `CustomView::id()` becoming nullable spreads `null` checks | Low | Only `create()` produces a view without an id. Views loaded from the repository always have one. Handlers that need the id read it from views loaded from the repository. |
 | `Model::preventLazyLoading()` fails when a row reads a relation that wasn't eager loaded | Low | This is a guard, not a problem: T13 and T15 assert the relations through `with()`. |
 | Existing `custom_views` rows in development databases don't fit the catalog | Low | The project is not deployed. `make fresh` recreates the seed, and T4 makes the seed valid. |
