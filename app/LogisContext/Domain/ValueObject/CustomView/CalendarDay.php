@@ -5,8 +5,7 @@ declare(strict_types=1);
 namespace Logis\LogisContext\Domain\ValueObject\CustomView;
 
 use Carbon\CarbonImmutable;
-use DateTimeImmutable;
-use DateTimeZone;
+use Carbon\Exceptions\InvalidFormatException;
 
 final readonly class CalendarDay
 {
@@ -22,13 +21,17 @@ final readonly class CalendarDay
             return null;
         }
 
-        $date = DateTimeImmutable::createFromFormat(format: '!' . self::FORMAT, datetime: $value, timezone: new DateTimeZone(timezone: 'UTC'));
-
-        if ($date === false || $date->format(format: self::FORMAT) !== $value) {
+        try {
+            $date = CarbonImmutable::createFromFormat(format: '!' . self::FORMAT, time: $value, timezone: 'UTC');
+        } catch (InvalidFormatException) {
             return null;
         }
 
-        return new self(start: CarbonImmutable::instance(date: $date));
+        if (!$date || $date->format(format: self::FORMAT) !== $value) {
+            return null;
+        }
+
+        return new self(start: $date);
     }
 
     public static function today(): self
