@@ -44,7 +44,7 @@ These come from the spec and are not decided again here:
 #### Task 0: Commit the spec and the plan
 
 **Acceptance criteria:**
-- [ ] `docs(specs): specify user filters on view execution` commits the spec and this plan on `feat/custom-views`.
+- [x] `docs(specs): specify user filters on view execution` commits the spec and this plan on `feat/custom-views`.
 
 **Verification:** `make check` before the commit.
 
@@ -57,14 +57,14 @@ These come from the spec and are not decided again here:
 **Description:** Add `user_filter` to saved filters: in the domain, the stored JSON, the request and the response (D1, D5, D6, D7).
 
 **Acceptance criteria:**
-- [ ] `Domain/ValueObject/CustomView/UserFilterMode` (`restricted`, `open`, `locked`) with `allowsUserFilter()`, `replacesSavedFilters()` and `requiresDiscreteValues()`.
-- [ ] `ViewFilters::fromList()` requires a valid `user_filter` in every item. A missing or unknown mode raises `InvalidViewFilterException` (422). `modeOf(field)` returns the mode of a field, and `toArray()` includes `user_filter` in each filter.
-- [ ] `ValidatesViewConfiguration`:
+- [x] `Domain/ValueObject/CustomView/UserFilterMode` (`restricted`, `open`, `locked`) with `allowsUserFilter()`, `replacesSavedFilters()` and `requiresDiscreteValues()`.
+- [x] `ViewFilters::fromList()` requires a valid `user_filter` in every item. A missing or unknown mode raises `InvalidViewFilterException` (422). `modeOf(field)` returns the mode of a field, and `toArray()` includes `user_filter` in each filter.
+- [x] `ValidatesViewConfiguration`:
   - `filters.*.user_filter` is `nullable` and must be one of the enum values;
   - `listOf('filters')` fills in `locked` where it is missing.
-- [ ] The stored JSON and `CustomViewDetailsView` carry `user_filter`. A stored filter without it raises `CorruptedRecordException`.
-- [ ] Explicit modes in `CustomViewFactory`, in `DemoDataSeeder` (the table of D7), and in every test that builds saved filters: `CustomViewMother`, `ViewExecutionCriteriaMother`, the `ViewFilters`, `ViewDefinition` and `CustomView` unit tests, the repository, cache and details-view tests, and the create, update and show feature tests.
-- [ ] `openapi.yaml`: `ViewFilter.user_filter`, with the table of modes and the default.
+- [x] The stored JSON and `CustomViewDetailsView` carry `user_filter`. A stored filter without it raises `CorruptedRecordException`.
+- [x] Explicit modes in `CustomViewFactory`, in `DemoDataSeeder` (the table of D7), and in every test that builds saved filters: `CustomViewMother`, `ViewExecutionCriteriaMother`, the `ViewFilters`, `ViewDefinition` and `CustomView` unit tests, the repository, cache and details-view tests, and the create, update and show feature tests.
+- [x] `openapi.yaml`: `ViewFilter.user_filter`, with the table of modes and the default.
 
 **Verification:**
 - Unit tests: `UserFilterModeTest`; `ViewFiltersTest` (the mode is required and round-trips).
@@ -80,22 +80,22 @@ These come from the spec and are not decided again here:
 **Description:** Reject saved definitions that break D2.
 
 **Acceptance criteria:**
-- [ ] 422 with the messages of D2 for:
+- [x] 422 with the messages of D2 for:
   - mixed modes on one field;
   - a `restricted` filter with an operator other than `eq` or `in`;
   - two `restricted` filters on one field.
 
   The mixed-modes check lives in `ViewFilters`; the other two in `ViewDefinition`, which knows the operators allowed per field.
-- [ ] `open` and `locked` ranges (`gte` and `lte` on one field) are accepted.
-- [ ] `openapi.yaml` states the rules in the `ViewFilter` description.
+- [x] `open` and `locked` ranges (`gte` and `lte` on one field) are accepted.
+- [x] `openapi.yaml` states the rules in the `ViewFilter` description.
 
 **Verification:** `ViewDefinitionTest` and `ViewFiltersTest` cases for each rule; one 422 feature test per rule in the create endpoint test. `make docs`, `make check`.
 
 **Dependencies:** T1 · **Scope:** S · **Commit:** `feat(views): validate the user filter modes of saved definitions`
 
 ### Checkpoint: Saved filters
-- [ ] `GET /views/1` shows `locked` and `restricted` filters after `make fresh`.
-- [ ] `make check` is green. Post-implementation flow. Human review before the execution slice.
+- [x] `GET /views/1` shows `locked` and `restricted` filters after `make fresh`.
+- [x] `make check` is green. Post-implementation flow. Human review before the execution slice.
 
 ### Phase 2 — User filters on execution
 
@@ -104,18 +104,18 @@ These come from the spec and are not decided again here:
 **Description:** Build `UserFilters` and `ViewDefinition::refinedBy()` following D3 and D4, tested without HTTP or a database.
 
 **Acceptance criteria:**
-- [ ] `UserFilters` (`Domain/ValueObject/CustomView/`):
+- [x] `UserFilters` (`Domain/ValueObject/CustomView/`):
   - `fromList(array)`: at most 20 filters, each built with `ViewFilter::fromArray()`;
   - `isEmpty()` and `byField()`.
-- [ ] `ViewDefinition::refinedBy(UserFilters)` returns a new definition, following every row of D3:
+- [x] `ViewDefinition::refinedBy(UserFilters)` returns a new definition, following every row of D3:
   - `locked` → 422;
   - `restricted` → accepts a subset with `eq` or `in`, and replaces the saved filter;
   - `open` → replaces every saved filter of the field;
   - a column without a saved filter → added;
   - a field that is neither a column nor has an `open` or `restricted` filter → 422;
   - the catalog rules still apply.
-- [ ] The saved filters that stay keep their modes. Added user filters carry no mode of their own and are only used for execution.
-- [ ] New `InvalidViewFilterException` named constructors with the messages of D3.
+- [x] The saved filters that stay keep their modes. Added user filters carry no mode of their own and are only used for execution.
+- [x] New `InvalidViewFilterException` named constructors with the messages of D3.
 
 **Verification:** `ViewDefinitionTest` (or a new `ViewDefinitionRefinementTest`) covers every row of D3 and the limit of 20 filters; `UserFiltersTest`. `make check`.
 
@@ -126,14 +126,14 @@ These come from the spec and are not decided again here:
 **Description:** Expose the refinement on `POST /views/{id}/execute` (D4, D6).
 
 **Acceptance criteria:**
-- [ ] `ExecuteCustomView` gains `filters: array`. The handler builds `UserFilters` and puts `definition->refinedBy()` in `ViewExecutionCriteria`. With no filters, the saved definition is passed unchanged.
-- [ ] `ExecuteCustomViewRequest` validates:
+- [x] `ExecuteCustomView` gains `filters: array`. The handler builds `UserFilters` and puts `definition->refinedBy()` in `ViewExecutionCriteria`. With no filters, the saved definition is passed unchanged.
+- [x] `ExecuteCustomViewRequest` validates:
   - `filters`: `nullable`, `array`, `list`, at most 20;
   - `filters.*.column`: `required`, `string`;
   - `filters.*.operator`: `required`, one of the operators;
   - `filters.*.value`: `present`;
   - `filters.*.user_filter`: `prohibited`.
-- [ ] `openapi.yaml`: `ViewExecutionInput.filters`, the rules of D3, and 422 examples.
+- [x] `openapi.yaml`: `ViewExecutionInput.filters`, the rules of D3, and 422 examples.
 
 **Verification:**
 - `ExecuteCustomViewHandlerTest`: the builder receives the refined definition, and receives the saved one without filters.
@@ -151,9 +151,15 @@ These come from the spec and are not decided again here:
 **Dependencies:** T3 · **Scope:** M · **Commit:** `feat(views): accept user filters when executing a view`
 
 ### Checkpoint: Complete
-- [ ] Every success criterion of the spec is met.
-- [ ] `make fresh`, `make docs` and `make check` are green.
-- [ ] Post-implementation flow (`make qa`, code-simplify, `make test`, code review, `make check`). The spec is marked `done`, in a `docs(specs)` commit.
+- [x] Every success criterion of the spec is met.
+- [x] `make fresh`, `make docs` and `make check` are green.
+- [x] Post-implementation flow (`make qa`, code-simplify, `make test`, code review, `make check`). The spec is marked `done`, in a `docs(specs)` commit.
+
+## Deviations during implementation
+
+- **T1:** the OpenAPI `user_filter` was added in an amend, and after the checkpoint review the details response got its own `SavedViewFilter` schema, where `user_filter` is required (`fix(views)` commit).
+- **T3:** `UserFilters::none()` and `isEmpty()` were dropped as unused. User filters are grouped by field in alphabetical order, so the cache key doesn't depend on the order they are sent in.
+- **After the final review:** a filter the user adds on a column without a saved filter counts as `open` in the effective definition, so every effective filter has a mode. The spec states it in D3, together with the limit of 40 effective filters.
 
 ## Risks and mitigations
 

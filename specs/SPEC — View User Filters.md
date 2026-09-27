@@ -1,6 +1,6 @@
 # SPEC — View User Filters
 
-Status: approved
+Status: done
 
 ## Objective
 
@@ -64,7 +64,8 @@ A field is filterable at execution when:
 | No saved filter, not a column of the view | 422 `"location" is not a column of this view, so it cannot be filtered.` |
 
 - Each user filter also passes the catalog rules of `SPEC — Custom Asset Views.md` (D2, D3): known field, allowed operator, valid value.
-- At most 20 user filters. They are combined with `AND`, with each other and with the saved filters that stay.
+- At most 20 user filters. They are combined with `AND`, with each other and with the saved filters that stay, so an execution runs up to 40 filters (20 saved and 20 from the user).
+- A filter the user adds on a column without a saved filter counts as `open` in the effective definition, so every effective filter has a mode.
 - Visibility doesn't change: `visibleTo()` is always applied.
 
 ### D4. The effective definition
